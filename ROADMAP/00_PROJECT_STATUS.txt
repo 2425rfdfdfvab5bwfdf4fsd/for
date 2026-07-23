@@ -3,7 +3,7 @@ PROJECT STATUS TRACKER
 ================================================================================
 Project: MT5 Automated Forex Trading Bot
 Last Updated: 2026-07-23
-Updated By: Replit Agent — Phase 08 Filters
+Updated By: Replit Agent — Phase 10 Position Management
 
 STATUS LEGEND:
   [ ] NOT STARTED
@@ -23,8 +23,8 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   03  | MT5 Integration         | [✓]    | 2026-07-23   | Complete — 86/86 tests pass
   04  | Data Layer              | [✓]    | 2026-07-23   | Complete — 70/70 tests pass
   05  | Strategy Engine         | [✓]    | 2026-07-23   | Complete — 134/134 tests pass
-  06  | Confluence Engine       | [✓]    | 2026-07-23   | Complete — 35/35 tests pass
-  07  | Risk Engine             | [✓]    | 2026-07-23   | Complete — 54/54 tests pass
+  06  | Confluence Engine       | [✓]    | 2026-07-23   | Complete — 37/37 tests pass
+  07  | Risk Engine             | [✓]    | 2026-07-23   | Complete — 57/57 tests pass
   08  | Filters                 | [✓]    | 2026-07-23   | Complete — 119/119 tests pass
   09  | Execution Engine        | [✓]    | 2026-07-23   | Complete — 65/65 tests pass
   10  | Position Management     | [✓]    | 2026-07-23   | Complete — 60/60 tests pass
@@ -243,15 +243,10 @@ because they operate on completely different file sets:
   Phase 04 → app/database/ only
 
 ================================================================================
-PHASE 03 — MT5 INTEGRATION
+PHASE 03 — MT5 INTEGRATION  [see detailed section above]
 ================================================================================
-Status:          [ ] NOT STARTED
-Last Updated:    -
-Completed Tasks: None
-Failed Tasks:    None
-Known Issues:    None
-Next Action:     Open ROADMAP/03_MT5_INTEGRATION/01_PHASE_OVERVIEW.txt
-                 then ROADMAP/03_MT5_INTEGRATION/01_TASK_MT5_CONNECTION.txt
+Status:          [✓] COMPLETE — see full detail in the Phase 03 section above
+                 (this stub entry is kept for structural completeness only)
 
 ================================================================================
 PHASE 04 — DATA LAYER
@@ -423,22 +418,115 @@ Next Action:     → Phase 06: ROADMAP/06_CONFLUENCE_ENGINE/01_PHASE_OVERVIEW.tx
 ================================================================================
 PHASE 06 — CONFLUENCE ENGINE
 ================================================================================
-Status:          [ ] NOT STARTED
-Last Updated:    -
-Completed Tasks: None
+Status:          [✓] COMPLETE
+Last Updated:    2026-07-23
+Updated By:      Replit Agent — Phase 06 Confluence Engine
+Completed Tasks: 06-01 SCORING
+                 06-02 TRADE QUALITY
+                 06-03 SIGNAL DEDUPLICATION
 Failed Tasks:    None
-Known Issues:    None
-Next Action:     Complete Phase 05 first.
+
+Files Created:
+  app/confluence/factors.py          — 10-factor weight table, factor presence checks
+  app/confluence/scorer.py           — ConfluenceScorer, score(), grade(), is_accepted()
+  app/confluence/quality_classifier.py — A+/A/B/C/REJECTED quality grading logic
+  app/confluence/deduplication.py    — SignalDeduplicator (M15 bar fingerprinting)
+  app/confluence/__init__.py
+  tests/test_confluence/test_scorer.py
+  tests/test_confluence/test_quality.py
+  tests/test_confluence/test_deduplication.py
+
+Files Modified:
+  app/database/models.py             — ScoredSignal stub promoted to full dataclass
+  app/config.py                      — Added confluence scoring thresholds
+
+Test Results:    37/37 tests pass
+
+Key Decisions Implemented:
+  Decision-016: ORDER_BLOCK_FRESH merged into ORDER_BLOCK_PRESENT (single factor)
+  Decision-018: SESSION_ALIGNMENT replaced by HTF_OB_CONFLUENCE
+  Weight sum = 9.0 (not 10.0); A+ threshold = 9.0 (achievable maximum)
+  M15 bar fingerprinting floors signal timestamp to 15-min bucket to prevent
+  duplicate signals on the same bar across loop iterations
+
+Known Issues / Notes:
+  - A+ requires all 9 weighted factors (weight sum = 9.0, not 10.0)
+  - Deduplication cache is in-memory; cleared on restart (by design)
+
+Next Action:     → Phase 07 complete; proceed to Phase 08 or beyond
+
+PHASE 06 ACCEPTANCE CRITERIA:
+  [✓] Score computed from 10 defined factors with correct weights
+  [✓] A+/A/B/C/REJECTED grades assigned correctly
+  [✓] Duplicate signals on the same M15 bar suppressed
+  [✓] 37/37 tests pass
+
+PHASE 06 STATUS: [✓] COMPLETE
 
 ================================================================================
 PHASE 07 — RISK ENGINE
 ================================================================================
-Status:          [ ] NOT STARTED
-Last Updated:    -
-Completed Tasks: None
+Status:          [✓] COMPLETE
+Last Updated:    2026-07-23
+Updated By:      Replit Agent — Phase 07 Risk Engine
+Completed Tasks: 07-01 POSITION SIZING
+                 07-02 SL/TP CALCULATION
+                 07-03 RR VALIDATION
+                 07-04 DAILY LIMITS
+                 07-05 CONSECUTIVE LOSS
+                 07-06 CORRELATION
+                 07-07 MARGIN SAFETY
+                 07-08 RISK MANAGER (orchestrator)
 Failed Tasks:    None
-Known Issues:    None
-Next Action:     Complete Phases 03 + 04 first.
+
+Files Created:
+  app/risk/position_sizer.py         — Equity-based lot calculation, pip value
+  app/risk/sl_tp_calculator.py       — SL/TP from structure, equal-level preference
+  app/risk/rr_validator.py           — Minimum R:R enforcement (default 1:2)
+  app/risk/daily_limits.py           — Daily loss %, max trades/day checks
+  app/risk/consecutive_loss.py       — Stop-trading after N consecutive losses
+  app/risk/correlation.py            — Correlated-pair open-position guard
+  app/risk/margin_safety.py          — Margin level ≥ 150% check
+  app/risk/risk_manager.py           — RiskManager orchestrator → TradeParameters
+  app/risk/__init__.py
+  tests/test_risk/test_position_sizer.py
+  tests/test_risk/test_sl_tp.py
+  tests/test_risk/test_rr_validator.py
+  tests/test_risk/test_daily_limits.py
+  tests/test_risk/test_consecutive_loss.py
+  tests/test_risk/test_correlation.py
+  tests/test_risk/test_margin_safety.py
+  tests/test_risk/test_risk_manager.py
+
+Files Modified:
+  app/database/models.py             — TradeParameters, PositionSizeResult fully defined
+  app/config.py                      — Risk config keys (RISK_PER_TRADE, MIN_RR_RATIO, etc.)
+
+Test Results:    57/57 tests pass
+
+Key Decisions Implemented:
+  Decimal arithmetic for lot-step validation (avoids float rounding errors)
+  datetime.now(timezone.utc) used throughout (not deprecated utcnow())
+  SymbolInfo extended with stops_level, point, trade_mode fields
+  TradeParameters is the single output object passed to Phase 09
+
+Known Issues / Notes:
+  - Two deprecation warnings remain in app/mt5/account.py (utcnow/utcfromtimestamp)
+    — harmless, tracked for Phase 03 cleanup
+
+Next Action:     → Phase 08 complete; proceed to Phase 09 or beyond
+
+PHASE 07 ACCEPTANCE CRITERIA:
+  [✓] Lot size calculated from equity × RISK_PER_TRADE
+  [✓] SL/TP placed at valid structure levels
+  [✓] R:R < MIN_RR_RATIO rejects the trade
+  [✓] Daily loss limit and trade count enforced
+  [✓] Consecutive loss limit halts trading
+  [✓] Correlated pair already open blocks new entry
+  [✓] Margin level check enforced
+  [✓] 57/57 tests pass
+
+PHASE 07 STATUS: [✓] COMPLETE
 
 ================================================================================
 PHASE 08 — FILTERS
@@ -502,22 +590,119 @@ Next Action:     → Phase 09: ROADMAP/09_EXECUTION_ENGINE/01_PHASE_OVERVIEW.txt
 ================================================================================
 PHASE 09 — EXECUTION ENGINE
 ================================================================================
-Status:          [ ] NOT STARTED
-Last Updated:    -
-Completed Tasks: None
+Status:          [✓] COMPLETE
+Last Updated:    2026-07-23
+Updated By:      Replit Agent — Phase 09 Execution Engine
+Completed Tasks: 09-01 ORDER VALIDATION (pre-flight broker checks)
+                 09-02 ORDER EXECUTION (order_send + retcode handling)
+                 09-03 EXECUTION RECONCILIATION (verify + periodic reconcile)
+                 09-04 DUPLICATE TRADE PROTECTION
+                 09-05 ORPHAN POSITION RECOVERY (startup scan)
 Failed Tasks:    None
-Known Issues:    None
-Next Action:     Complete Phases 03 + 04 + 07 first.
+
+Files Created:
+  app/execution/order_validator.py      — 6 broker-level pre-flight checks
+  app/execution/order_executor.py       — order_send, retcode table, requote retry,
+                                          timeout recovery (CHG-005), partial fill (CHG-009)
+  app/execution/execution_reconciler.py — verify_after_execution + reconcile_all
+  app/execution/duplicate_protection.py — DB + MT5 dual-source duplicate guard
+  app/execution/orphan_recovery.py      — alert/adopt/close policies on startup
+  app/execution/__init__.py
+  tests/test_execution/test_order_validator.py
+  tests/test_execution/test_order_executor.py
+  tests/test_execution/test_reconciliation.py
+  tests/test_execution/test_duplicate_protection.py
+  tests/test_execution/test_orphan_recovery.py
+
+Files Modified:
+  app/database/models.py    — ExecutionResult, OrderValidationResult,
+                              ReconciliationResult, ReconciliationReport,
+                              DuplicateCheckResult, OrphanReport fully defined
+
+Test Results:    65/65 tests pass
+
+Key Decisions Implemented:
+  CHG-005: Timeout recovery — history_deals_get query before retry to prevent double-entry
+  CHG-009: Partial fill (retcode 10010) detected and surfaced in ExecutionResult
+  EXECUTION_ENABLED=false flag blocks ALL order placement as a kill-switch
+  Decimal lot-step validation (no float rounding edge cases)
+
+Known Issues / Notes:
+  - MT5 order_send is Windows-only; all tests use the shared mock_mt5 fixture
+  - Orphan adoption reconstructs TradeParameters from MT5 position fields;
+    partial data (no original SL pips) is flagged in the OrphanReport
+
+Next Action:     → Phase 10 complete; proceed to Phase 11
+
+PHASE 09 ACCEPTANCE CRITERIA:
+  [✓] Orders only placed after full 6-point validation
+  [✓] Execution always verified (retcode checked, never silently ignored)
+  [✓] Failed executions logged at WARNING/CRITICAL level
+  [✓] Duplicate protection prevents double-entry on same signal
+  [✓] Orphan positions detected and handled on startup
+  [✓] 65/65 tests pass
+
+PHASE 09 STATUS: [✓] COMPLETE
 
 ================================================================================
 PHASE 10 — POSITION MANAGEMENT
 ================================================================================
-Status:          [ ] NOT STARTED
-Last Updated:    -
-Completed Tasks: None
+Status:          [✓] COMPLETE
+Last Updated:    2026-07-23
+Updated By:      Replit Agent — Phase 10 Position Management
+Completed Tasks: 10-01 POSITION MANAGER (orchestrator)
+                 10-02 BREAK-EVEN (move SL to entry after TP1)
+                 10-03 PARTIAL PROFIT (close 50% at TP1)
+                 10-04 TRAILING STOP (ATR-based, tighten-only)
+                 10-05 TRADE EXPIRATION (max duration, EOD, Friday cutoffs)
 Failed Tasks:    None
-Known Issues:    None
-Next Action:     Complete Phase 09 first.
+
+Files Created:
+  app/management/position_manager.py    — PositionManager.process_all() orchestrator
+  app/management/break_even.py          — BreakEvenManager (buffer configurable)
+  app/management/partial_profit.py      — PartialProfitManager (lot-step aware)
+  app/management/trailing_stop.py       — TrailingStopManager (ATR × multiplier)
+  app/management/trade_expiration.py    — TradeExpirationManager (3 rules)
+  app/management/__init__.py
+  tests/test_position_management/test_position_manager.py
+  tests/test_position_management/test_break_even.py
+  tests/test_position_management/test_partial_profit.py
+  tests/test_position_management/test_trailing_stop.py
+  tests/test_position_management/test_expiration.py
+  tests/test_position_management/test_partial_profit_integration.py
+  tests/test_position_management/test_schema_migration.py
+
+Files Modified:
+  app/database/models.py    — PositionManagementEvent dataclass added
+  app/database/repositories.py — mark_partial_closed(), partial_closed field
+  app/database/database.py  — schema migration v1→v2 (adds partial_closed column)
+
+Test Results:    60/60 tests pass
+
+Key Decisions Implemented:
+  SL never widens — all three managers (BE, trail, partial) enforce tighten-only
+  partial_closed flag guarded in-memory AND in DB (prevents double-fire across ticks)
+  Schema migration tested: pre-Phase-10 DB (no partial_closed column) upgrades cleanly
+  process_all() flags orphan positions with ORPHAN_FLAG event (CRITICAL log)
+  Individual managers disableable via ENABLE_BREAK_EVEN, ENABLE_PARTIAL_PROFIT,
+  ENABLE_TRAILING_STOP without affecting expiration or position closing
+
+Known Issues / Notes:
+  - MT5 SL modification (TRADE_ACTION_SLTP) is issued by the caller (Phase 11);
+    Phase 10 only computes and returns actions — it never calls MT5 directly
+  - Trailing stop activates only after TP1 (≥ 1R in profit), not at entry
+
+Next Action:     → Phase 11: ROADMAP/11_AUTOMATION/01_PHASE_OVERVIEW.txt
+
+PHASE 10 ACCEPTANCE CRITERIA:
+  [✓] Break-even moves SL to entry (+ buffer) once TP1 reached
+  [✓] Partial close fires exactly once per trade (DB + in-memory guard)
+  [✓] Trailing stop activates after TP1; SL never widens
+  [✓] EOD, Friday, and max-duration closures enforced
+  [✓] PositionManager.process_all() iterates all open positions each tick
+  [✓] 60/60 tests pass
+
+PHASE 10 STATUS: [✓] COMPLETE
 
 ================================================================================
 PHASE 11 — AUTOMATION
@@ -643,20 +828,31 @@ Next Action:     Complete all phases first.
 OVERALL PROJECT METRICS
 ================================================================================
 Total Phases:         22
-Completed Phases:     3  (Phase 01, Phase 02, Phase 06)
+Completed Phases:     10  (Phases 01–10)
 In Progress:          0
 Blocked:              0
-Not Started:          20
+Not Started:          12  (Phases 11–22)
 
 Total Tasks:          ~90
-Completed Tasks:      6  (01-01, 01-03, 02-01, 02-02, 02-03, 02-04)
-Skipped Tasks:        1  (01-02 — no existing code)
-Tests Passing:        N/A (no implementation tests yet — pytest collects 0 tests)
+Completed Tasks:      ~45  (all tasks in Phases 01–10 complete)
+Skipped Tasks:        1    (01-02 — no existing Python code found at project start)
+Tests Passing:        628/628  (100% — Python 3.12, pytest 9.x, pandas 3+)
 Log Files Active:     4  (app.log, trading.log, errors.log, strategy.log)
 
-Current Phase:        03 — MT5 INTEGRATION  (or 04 — DATA LAYER in parallel)
-Recommended Action:   Open ROADMAP/03_MT5_INTEGRATION/01_PHASE_OVERVIEW.txt
-                      Read it, then start 01_TASK_MT5_CONNECTION.txt
+Per-Phase Test Counts (verified 2026-07-23):
+  Phase 03 (MT5 Integration):    86 tests
+  Phase 04 (Data Layer):         70 tests
+  Phase 05 (Strategy Engine):   134 tests
+  Phase 06 (Confluence Engine):  37 tests
+  Phase 07 (Risk Engine):        57 tests
+  Phase 08 (Filters):           119 tests
+  Phase 09 (Execution Engine):   65 tests
+  Phase 10 (Position Mgmt):      60 tests
+  TOTAL:                        628 tests (all pass)
+
+Current Phase:        11 — AUTOMATION (main bot loop)
+Recommended Action:   Open ROADMAP/11_AUTOMATION/01_PHASE_OVERVIEW.txt
+                      Read it, then start the first task file
 
 ================================================================================
 ROADMAP AUDIT — COMPLETE (2026-07-23)
