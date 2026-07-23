@@ -1,0 +1,61 @@
+================================================================================
+TASK ID:     16-01
+TASK NAME:   In-Sample Validation
+PHASE:       16 — Validation
+================================================================================
+
+OBJECTIVE:
+    Run the backtest on the in-sample data period and document baseline results.
+    This establishes the performance benchmark that out-of-sample results
+    will be compared against.
+
+CONTEXT:
+    In-sample = first 70% of available historical data.
+    Run backtest for all 3 symbols simultaneously.
+    Record all metrics.
+    NEVER adjust strategy parameters after seeing in-sample results;
+    parameters must be set before running.
+
+DEPENDENCIES:
+    - Phase 15 BacktestEngine complete
+
+FILES TO CREATE:
+    validation/in_sample.py
+    results/in_sample/          (directory for output reports)
+
+FILES FORBIDDEN TO MODIFY:
+    app/strategy/     (parameters must be frozen before this task)
+    app/risk/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class InSampleValidator:
+        run(config: BacktestConfig) -> ValidationResult
+        save_results(results: ValidationResult, output_dir: str) -> None
+
+    OUTPUT:
+        results/in_sample/in_sample_report.html
+        results/in_sample/trades_EURUSD_in_sample.csv
+        results/in_sample/trades_GBPUSD_in_sample.csv
+        results/in_sample/trades_USDJPY_in_sample.csv
+        results/in_sample/in_sample_summary.json
+
+    MINIMUM CRITERIA TO CONTINUE (soft thresholds — log WARNING if not met):
+        Win rate: > 45% (any lower suggests strategy needs redesign)
+        Profit factor: > 1.2
+        Max drawdown: < 15%
+        Total trades: >= 30 per symbol
+
+ACCEPTANCE CRITERIA:
+    [ ] In-sample backtest runs to completion
+    [ ] All outputs saved
+    [ ] Summary JSON contains all key metrics
+    [ ] WARNING logged if below soft thresholds
+
+DEFINITION OF DONE:
+    [ ] in_sample.py created and functional
+    [ ] In-sample results saved to results/in_sample/
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 16-02 — TASK_OUT_OF_SAMPLE.txt
+================================================================================

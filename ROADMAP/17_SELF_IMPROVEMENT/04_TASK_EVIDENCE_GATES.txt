@@ -1,0 +1,99 @@
+================================================================================
+TASK ID:     17-04
+TASK NAME:   Evidence Gates
+PHASE:       17 — Self-Improvement Analytics
+================================================================================
+
+OBJECTIVE:
+    Implement EvidenceGates that enforce minimum statistical requirements before
+    any recommendation is surfaced, preventing decisions based on noise.
+
+CONTEXT:
+    Evidence gates are a set of checks applied to each potential recommendation.
+    If any gate fails, the recommendation is suppressed.
+
+    EVIDENCE GATE RULES:
+EVIDENCE GATE RULES:
+
+================================================================================
+EVIDENCE GATE THRESHOLD CLARIFICATION — REQUIRED (CHG-C06)
+================================================================================
+
+The master roadmap states: "min 20 trades total, 8 trades/segment"
+This task file states: MINIMUM_SEGMENT_SAMPLE = 15
+
+These are NOT contradictory — they apply at different evaluation levels:
+
+  GLOBAL GATE (applied before any segment analysis begins):
+    Minimum 20 total CLOSED trades across ALL segments combined.
+    If total_closed_trades < 20: suppress ALL recommendations.
+    Reason: insufficient overall sample for any reliable inference.
+
+  SEGMENT GATE (applied per-segment when global gate passes):
+    Minimum 8 closed trades within the SPECIFIC segment being analyzed.
+    (e.g., EURUSD trades, or London-session trades, or OB-setup trades)
+    If segment_trades < 8: suppress recommendation for THAT segment only.
+
+  STATISTICAL GATE (applied after segment gate):
+    MINIMUM_SEGMENT_SAMPLE = 15 applies to the STATISTICAL SIGNIFICANCE check.
+    A segment needs >= 15 trades before a win-rate confidence interval is
+    computed (normal approximation requires n >= 15 for adequate accuracy).
+    Below 15: evidence_level = SUGGESTIVE (surfaced but flagged as low-confidence).
+
+SUMMARY:
+  20 total trades    → unlock global analysis
+   8 per segment     → unlock segment-level analysis
+  15 per segment     → unlock statistical significance calculation
+
+================================================================================
+    1. MINIMUM_SAMPLE: segment must have >= MINIMUM_SEGMENT_SAMPLE trades (default: 15)
+    2. MINIMUM_PERIOD: data must span >= MINIMUM_PERIOD_DAYS (default: 30)
+    3. CONSISTENCY: the finding must be consistent across at least 2 separate weeks
+    4. NOT_CHERRY_PICKED: the comparison group must also have adequate sample
+    5. STATISTICAL_SIGNIFICANCE: win rate difference >= 10 percentage points
+
+DEPENDENCIES:
+    - 17-03 RecommendationEngine
+
+FILES TO CREATE:
+    app/analytics/evidence_gates.py
+    tests/test_self_improvement/test_evidence_gates.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class EvidenceGates:
+        apply(recommendation: Recommendation, trades: list[TradeJournalEntry]) -> GateResult
+
+    GateResult:
+        passed: bool
+        failed_gates: list[str]
+        evidence_level: str   # INSUFFICIENT / SUGGESTIVE / MODERATE / STRONG
+
+    Gate levels:
+        1 gate passed: SUGGESTIVE (suppressed)
+        2-3 gates passed: MODERATE (surfaced)
+        4-5 gates passed: STRONG (prioritized)
+
+TEST REQUIREMENTS:
+    - test_insufficient_sample_suppresses()
+    - test_all_gates_pass_strong_evidence()
+    - test_partial_gates_moderate()
+
+ACCEPTANCE CRITERIA:
+    [ ] Insufficient data suppresses recommendations
+    [ ] Evidence levels correctly calculated
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] evidence_gates.py created and tested
+    [ ] Phase 17 acceptance criteria met
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated: Phase 17 COMPLETE
+
+NEXT TASK:
+    Begin Phase 18 — Windows Automation
+    Start with: ROADMAP/18_WINDOWS_AUTOMATION/01_PHASE_OVERVIEW.txt
+================================================================================

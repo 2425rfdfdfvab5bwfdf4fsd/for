@@ -1,0 +1,74 @@
+================================================================================
+TASK ID:     11-05
+TASK NAME:   Auto Recovery
+PHASE:       11 — Automation
+================================================================================
+
+OBJECTIVE:
+    Implement AutoRecovery that handles the bot's startup sequence after
+    a crash or restart, ensuring a safe and consistent state before
+    the main loop begins.
+
+CONTEXT:
+    RECOVERY STEPS ON STARTUP (in order):
+    1. Acquire singleton lock
+    2. Connect to MT5 (with retry)
+    3. Validate account (mode, balance, equity)
+    4. Run orphan position recovery (Phase 09-05)
+    5. Reconcile database vs MT5 positions (Phase 09-03)
+    6. Load daily stats from database
+    7. Check if daily limits already hit (Phase 07-04)
+    8. Verify all configured symbols are available
+    9. Log recovery summary
+    10. Start heartbeat
+    11. Start main loop
+
+    If any step 2–8 fails: log CRITICAL, notify, retry or exit.
+
+DEPENDENCIES:
+    - 11-01 MainLoop
+    - 11-02 Singleton
+    - 11-04 Heartbeat
+    - Phase 09: OrphanRecovery, ExecutionReconciler
+
+FILES TO CREATE:
+    app/automation/auto_recovery.py
+    tests/test_automation/test_auto_recovery.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class AutoRecovery:
+        run_startup_sequence(config, mt5, db) -> StartupResult
+
+    StartupResult:
+        success: bool
+        steps_completed: list[str]
+        failed_step: str | None
+        warnings: list[str]
+        orphans_found: int
+        orphans_adopted: int
+
+TEST REQUIREMENTS:
+    - test_clean_startup_all_steps_pass()
+    - test_mt5_connection_failure_exits()
+    - test_orphan_detection_on_startup()
+    - test_daily_limit_already_hit_logged()
+
+ACCEPTANCE CRITERIA:
+    [ ] All recovery steps run in correct order
+    [ ] Failures in critical steps stop startup
+    [ ] Recovery summary logged
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] auto_recovery.py created and tested
+    [ ] Phase 11 acceptance criteria met
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated: Phase 11 COMPLETE
+
+NEXT TASK:
+    Begin Phase 12 — Notifications
+    Start with: ROADMAP/12_NOTIFICATIONS/01_PHASE_OVERVIEW.txt
+================================================================================

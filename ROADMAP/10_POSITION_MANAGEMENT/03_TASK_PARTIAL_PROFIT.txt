@@ -1,0 +1,72 @@
+================================================================================
+TASK ID:     10-03
+TASK NAME:   Partial Profit Manager
+PHASE:       10 — Position Management
+================================================================================
+
+OBJECTIVE:
+    Implement PartialProfitManager that closes 50% of the position when price
+    reaches TP1, locking in partial profit and reducing risk.
+
+CONTEXT:
+    PARTIAL PROFIT RULE:
+    - Trigger: price reaches TP1 level
+    - Action: close 50% of open lot size (PARTIAL_CLOSE_PERCENT default: 50)
+    - Remaining 50% runs to TP2 with BE SL applied (handled by BreakEvenManager)
+    - Partial close uses MT5 TRADE_ACTION_DEAL with reduced volume
+
+    ENABLE_PARTIAL_PROFIT=true (default, configurable)
+
+    NOTE: Only one partial close per trade. Once fired, do not re-trigger.
+
+DEPENDENCIES:
+    - 10-01 PositionManager
+    - 10-02 BreakEvenManager (BE applied after partial close)
+    - Phase 03 MT5
+
+FILES TO CREATE:
+    app/management/partial_profit.py
+    tests/test_position_management/test_partial_profit.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class PartialProfitManager:
+        check_and_apply(
+            position: Position,
+            trade_record: TradeRecord,
+            current_price: float
+        ) -> PartialCloseAction | None
+
+    PartialCloseAction:
+        close_lots: float      # 50% of original, rounded to lot step
+        remaining_lots: float
+        reason: str
+        executed: bool
+
+    GUARDS:
+        - partial_already_taken flag in TradeRecord (prevent double-close)
+        - close_lots rounded DOWN to lot step
+        - close_lots >= min_lot (else skip partial close)
+
+TEST REQUIREMENTS:
+    - test_partial_triggered_at_tp1()
+    - test_correct_partial_lot_calculation()
+    - test_partial_not_triggered_twice()
+    - test_partial_skipped_if_below_min_lot()
+
+ACCEPTANCE CRITERIA:
+    [ ] 50% closed at TP1
+    [ ] Only fires once per trade
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] partial_profit.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 10-04 — TASK_TRAILING_STOP.txt
+================================================================================

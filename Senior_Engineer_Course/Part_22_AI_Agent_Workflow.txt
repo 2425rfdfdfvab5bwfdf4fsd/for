@@ -1,0 +1,972 @@
+ ================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 22: AI AGENT PROJECT WORKFLOW
+(Idea Se Deployment Tak AI Agent Ke Saath)
+================================================================
+
+SEEKHNE KE MAQASID:
+- Complete project lifecycle mein AI agent ka sahi role samajhna
+- Har stage pe exactly kya karna hai
+- Agent tasks ko breakdown karna (granularity ka science)
+- Agent output verify karna — har step pe
+- Real-world agentic patterns jo senior engineers follow karte hain
+
+================================================================
+SECTION 1: THE COMPLETE AI-ASSISTED PROJECT WORKFLOW
+================================================================
+
+16 STAGES (Updated 2026):
+
+  1.  Idea Clarification
+  2.  Requirements Engineering
+  3.  Architecture Design
+  4.  Context Files Creation (CRITICAL)
+  5.  Technical Decisions (ADRs)
+  6.  Project Scaffolding
+  7.  Feature Specification Writing
+  8.  Task Decomposition
+  9.  Implementation (agent-driven, human-reviewed)
+  10. Unit + Integration Testing
+  11. Code Review (human + AI assist)
+  12. Security Review
+  13. Performance Review
+  14. Deployment Pipeline Setup
+  15. Monitoring Setup
+  16. Iteration Loop
+
+Human ka role: Stages 1, 2, 3, 4, 5 mein LEAD karo
+AI ka role:    Stages 6-16 mein ASSIST karo — par har output verify karo
+
+================================================================
+SECTION 2: STAGE 1 — IDEA CLARIFICATION
+================================================================
+
+AI ka role: Structured brainstorming partner
+Aapka role: Final vision decide karna (AI nahi karega yeh)
+
+─── BRAINSTORMING PROMPT ───
+
+  "I want to build: [your idea in 2-3 sentences]
+  
+  Help me think through this by:
+  1. What clarifying questions should I answer before building?
+  2. What similar products already exist? (so I know the space)
+  3. What are the core technical challenges?
+  4. What is a realistic MVP scope?
+  5. What risks am I NOT thinking about?
+  6. What could go wrong technically at scale?
+  
+  Note: You are a brainstorming partner.
+  Ask me hard questions. Present options.
+  I will make the final decisions."
+
+─── WHAT TO DO AFTER BRAINSTORMING ───
+
+  ✅ Apna core problem likho (1 sentence)
+  ✅ Target user define karo (specific person, not "everyone")
+  ✅ MVP scope decide karo (3-5 features MAX)
+  ✅ What is OUT of scope — explicitly
+  ✅ Success metric decide karo ("kab MVP done hai?")
+
+================================================================
+SECTION 3: STAGE 2 — REQUIREMENTS ENGINEERING
+================================================================
+
+AI ka role: Requirements refine + edge cases dhundhna
+Aapka role: Business requirements validate karna, priority set karna
+
+─── REQUIREMENTS PROMPT ───
+
+  "I'm building [product]. Help me write requirements.
+  
+  MVP scope:
+  - [Feature 1]
+  - [Feature 2]
+  - [Feature 3]
+  
+  For each feature, give me:
+  - Functional requirements (exact behavior)
+  - Non-functional requirements (performance, security, scale)
+  - Edge cases I might have missed
+  - Out of scope items
+  
+  Start with: Authentication (register + login)
+  Format as: numbered requirements list"
+
+─── REQUIREMENTS REVIEW CHECKLIST ───
+
+  □ Business logic AI ne sahi samjhi?
+  □ Edge cases realistic hain?
+  □ Scale requirements accurate hain?
+  □ Security requirements included hain?
+  □ Koi requirement business ke against toh nahi?
+
+================================================================
+SECTION 4: STAGE 3 — ARCHITECTURE DESIGN
+================================================================
+
+AI ka role: Options + trade-offs batana
+Aapka role: FINAL ARCHITECTURE DECISION (always yours, never AI's)
+
+─── ARCHITECTURE DISCUSSION PROMPT ───
+
+  "Design architecture options for [product].
+  
+  Constraints:
+  - Team: [X developers]
+  - Timeline: [X months]
+  - Scale target: [users/requests at launch]
+  - Budget: [rough infra budget]
+  - My existing expertise: [tech stack you know]
+  
+  Requirements summary:
+  [paste 5-10 key requirements]
+  
+  Please:
+  1. Suggest 2-3 architecture options (e.g., Monolith, Modular Monolith, Microservices)
+  2. Trade-offs of each for OUR constraints (not generic)
+  3. Questions I should answer before deciding
+  4. Your recommendation with reasoning
+  
+  Note: I will make the final decision. Show me options."
+
+─── ARCHITECTURE DECISION RECORD (ADR) ───
+
+Har major decision ke liye ADR likho.
+AI se draft karwao, aap finalize karo.
+
+File: docs/decisions/001-database-choice.md
+
+  # ADR-001: Database Choice
+  
+  ## Status: Accepted
+  ## Date: 2026-XX-XX
+  
+  ## Context
+  [Why we needed to make this decision]
+  
+  ## Options Considered
+  1. PostgreSQL — [pros/cons]
+  2. MongoDB — [pros/cons]
+  
+  ## Decision
+  PostgreSQL
+  
+  ## Reasoning
+  [Why we chose this]
+  
+  ## Consequences
+  [What this means going forward]
+
+================================================================
+SECTION 5: STAGE 4 — CONTEXT FILES CREATION (MOST IMPORTANT)
+================================================================
+
+Yeh stage SABSE ZYADA IMPORTANT hai agentic development ke liye.
+Context files = Agent ka "project manual"
+
+Agar yeh files nahi hain → agent blind hai → galat code likhta hai.
+
+─── FILES TO CREATE ───
+
+  docs/
+  ├── PROJECT_OVERVIEW.md    ← Kya banaya ja raha hai
+  ├── ARCHITECTURE.md        ← System structure
+  ├── CODE_STANDARDS.md      ← Patterns aur conventions
+  ├── DATABASE.md            ← Schema + query patterns
+  ├── API.md                 ← Endpoint format + examples
+  ├── TESTING.md             ← Testing strategy + examples
+  ├── SECURITY.md            ← Security requirements
+  ├── AI_RULES.md            ← Agent rules (NEVER/ALWAYS)
+  └── decisions/             ← ADRs
+
+─── AI_RULES.md TEMPLATE (FILL THIS) ───
+
+  # AI Agent Rules — [ProjectName]
+  
+  ## Project Identity
+  You are a Senior TypeScript engineer on [ProjectName].
+  Tech stack: [list]
+  Architecture pattern: [your pattern]
+  
+  ## ALWAYS
+  - Read ARCHITECTURE.md before ANY change
+  - Follow patterns shown in CODE_STANDARDS.md
+  - Use [your error class] for all errors
+  - Write tests for new business logic
+  - [your always rules]
+  
+  ## NEVER
+  - Modify files outside stated task scope
+  - Add npm packages without explicit permission
+  - Change database schema unless specifically asked
+  - Use console.log (use [your logger])
+  - Use TypeScript 'any' type
+  - Create files in locations not matching ARCHITECTURE.md
+  - [your never rules]
+  
+  ## Patterns to Follow
+  [Paste 1 example from your codebase for each major pattern:
+   - Error handling example
+   - API response format example
+   - DB query example
+   - Test example]
+
+─── CODE_STANDARDS.md TEMPLATE ───
+
+  # Code Standards — [ProjectName]
+  
+  ## File Naming
+  - Files: kebab-case (user-profile.service.ts)
+  - Classes: PascalCase (UserProfileService)
+  - Functions: camelCase (getUserProfile)
+  - Constants: SCREAMING_SNAKE_CASE (MAX_RETRY_COUNT)
+  
+  ## Module Structure
+  src/modules/[feature]/
+  ├── [feature].controller.ts   ← HTTP handling ONLY
+  ├── [feature].service.ts      ← Business logic
+  ├── [feature].repository.ts   ← DB queries
+  ├── [feature].schema.ts       ← Zod validation
+  ├── [feature].types.ts        ← TypeScript types
+  ├── [feature].routes.ts       ← Route definitions
+  └── __tests__/
+      ├── [feature].service.test.ts
+      └── [feature].controller.test.ts
+  
+  ## Response Format
+  Success: { success: true, data: {...}, message: "..." }
+  Error:   { success: false, error: "...", code: "ERROR_CODE" }
+  
+  ## Error Handling
+  throw new AppError(400, 'Validation failed', 'VALIDATION_ERROR');
+  // NEVER: throw new Error(...)
+  // NEVER: res.status(400).json(...)
+
+================================================================
+SECTION 6: STAGE 5 — PROJECT SCAFFOLDING
+================================================================
+
+AI ka role: Folder structure + boilerplate generate karna
+Aapka role: Review karo, agar galat ho toh fix karo
+
+─── SCAFFOLDING PROMPT ───
+
+  "Generate project scaffolding for [ProjectName].
+  
+  Architecture: [paste ARCHITECTURE.md]
+  Code standards: [paste CODE_STANDARDS.md]
+  
+  Create:
+  1. Full folder structure (tree format)
+  2. package.json with these exact dependencies:
+     [list your dependencies]
+  3. tsconfig.json (strict mode, paths)
+  4. Base Express app setup (src/app.ts)
+  5. Basic error handling middleware
+  6. Logger setup (pino)
+  7. Environment validation (zod)
+  
+  DO NOT implement features — only skeleton.
+  DO NOT add extra packages.
+  Follow folder structure in ARCHITECTURE.md exactly."
+
+================================================================
+SECTION 7: STAGE 6 — FEATURE SPECIFICATION WRITING
+================================================================
+
+Har feature ke liye full spec likhna ZAROORI hai PEHLE implement karne se.
+
+AI ka role: Spec template fill karna, edge cases dhundhna
+Aapka role: Business logic verify karna, approve karna
+
+─── FEATURE SPEC TEMPLATE ───
+
+File: docs/features/[feature-name].md
+
+  # Feature: [Feature Name]
+  
+  ## User Story
+  As a [user type], I want to [goal] so that [reason].
+  
+  ## Functional Requirements
+  FR-01: [exact requirement]
+  FR-02: [exact requirement]
+  ...
+  
+  ## Non-Functional Requirements
+  NFR-01: Response time < 200ms at p99
+  NFR-02: Rate limited: 5 requests/minute per user
+  
+  ## API Endpoints
+  
+  ### POST /api/v1/[resource]
+  
+  Request:
+  ```json
+  {
+    "field": "type — required/optional"
+  }
+  ```
+  
+  Response 200:
+  ```json
+  {
+    "success": true,
+    "data": { ... },
+    "message": "..."
+  }
+  ```
+  
+  Error Cases:
+  - 400: [validation failure case]
+  - 401: [auth failure case]
+  - 404: [not found case]
+  - 409: [conflict case]
+  
+  ## Database Changes
+  Table: [table name]
+  New columns: [if any]
+  New indexes: [if any]
+  
+  ## Business Logic Steps
+  1. [step 1]
+  2. [step 2]
+  3. [step 3]
+  
+  ## Edge Cases
+  - [edge case 1 + expected behavior]
+  - [edge case 2 + expected behavior]
+  
+  ## Out of Scope
+  - [what is NOT being built in this feature]
+  
+  ## Acceptance Criteria
+  - [ ] [test condition 1]
+  - [ ] [test condition 2]
+
+─── SPEC GENERATION PROMPT ───
+
+  "Write a feature specification for [feature name].
+  
+  Context files:
+  [paste PROJECT_OVERVIEW.md]
+  [paste ARCHITECTURE.md]
+  [paste API.md — format section]
+  
+  User story: As a [user], I want [goal] so that [reason]
+  
+  Generate complete spec following this template:
+  [paste the template above]
+  
+  Pay special attention to:
+  - All error cases
+  - Race conditions (e.g., concurrent requests)
+  - Security requirements
+  - What is OUT of scope
+  
+  After generating, list 5 questions I should answer
+  to validate this spec."
+
+================================================================
+SECTION 8: STAGE 7 — TASK DECOMPOSITION (CRITICAL SKILL)
+================================================================
+
+Yeh skill aapko SENIOR engineer banati hai.
+Bahut bade task = agent drift karta hai.
+Bahut chhote task = efficient output.
+
+─── THE GOLDEN RULE ───
+
+  One task = One reviewable unit = 1-3 files max
+
+─── DECOMPOSITION EXAMPLE ───
+
+  Feature: "User Reviews System"
+  
+  BAD (one big task):
+  ❌ "Implement the complete user reviews feature"
+  
+  GOOD (8 small tasks):
+  
+  Task 1: Database Schema
+    Files: prisma/schema.prisma
+    Do: Add Review model (userId, productId, rating, comment, createdAt)
+    Tests: None (schema only)
+  
+  Task 2: Prisma Migration
+    Files: prisma/migrations/
+    Do: Run migration, verify schema created correctly
+    Tests: None
+  
+  Task 3: Review Repository
+    Files: src/modules/reviews/review.repository.ts
+    Do: findByProductId, findByUserId, create, delete
+    Tests: src/modules/reviews/__tests__/review.repository.test.ts
+  
+  Task 4: Review Service — Create Review
+    Files: src/modules/reviews/review.service.ts (createReview only)
+    Do: Validate input, check user purchased product, create review
+    Tests: src/modules/reviews/__tests__/review.service.test.ts
+  
+  Task 5: Review Service — Read Reviews
+    Files: src/modules/reviews/review.service.ts (getProductReviews)
+    Do: Paginated fetch, average rating calculation
+    Tests: append to existing test file
+  
+  Task 6: POST /reviews endpoint
+    Files: review.controller.ts, review.routes.ts, review.schema.ts
+    Do: Validate, call service, return response
+    Tests: review.controller.test.ts
+  
+  Task 7: GET /products/:id/reviews endpoint
+    Files: review.controller.ts, review.routes.ts
+    Do: Paginated list with filters
+    Tests: append to existing test file
+  
+  Task 8: Integration Tests
+    Files: __tests__/reviews.integration.test.ts
+    Do: End-to-end tests for complete flow
+
+─── TASK DECOMPOSITION RULES ───
+
+  ✅ 1-3 files per task (strictly)
+  ✅ Each task independently deployable / testable
+  ✅ Dependencies explicit: "Task 4 depends on Task 3 being done"
+  ✅ Tests included in SAME task as implementation
+  ✅ Each task has clear success criteria
+
+================================================================
+SECTION 9: STAGE 8 — IMPLEMENTATION (AGENT TASK EXECUTION)
+================================================================
+
+Yeh wo stage hai jahan agent actually kaam karta hai.
+
+─── PERFECT AGENT TASK PROMPT ───
+
+Format:
+
+  ═══════════════════════════════════
+  TASK: [Task Name — what it does]
+  ═══════════════════════════════════
+  
+  CONTEXT (read before starting):
+  [paste relevant 10-20 lines from ARCHITECTURE.md]
+  [paste relevant 10-20 lines from CODE_STANDARDS.md]
+  [paste 1 existing file as pattern to follow]
+  
+  TASK DESCRIPTION:
+  Implement [specific thing].
+  
+  Specification:
+  [paste relevant section from feature spec]
+  
+  ALLOWED FILES (ONLY modify these):
+  1. [file path 1] — [what to do in this file]
+  2. [file path 2] — [what to do in this file]
+  
+  FORBIDDEN:
+  □ Do NOT modify any file not in the above list
+  □ Do NOT add npm packages
+  □ Do NOT change DB schema
+  □ Do NOT use console.log
+  □ Do NOT use TypeScript 'any'
+  □ Do NOT change error handling patterns
+  
+  FOLLOW EXACTLY:
+  [paste 5-10 lines of pattern to follow]
+  
+  SUCCESS CRITERIA:
+  □ TypeScript compiles: tsc --noEmit passes
+  □ Tests pass: npm test
+  □ [specific functional criteria]
+  ═══════════════════════════════════
+
+─── REAL EXAMPLE ───
+
+  ═══════════════════════════════════
+  TASK: Review Repository — CRUD Methods
+  ═══════════════════════════════════
+  
+  CONTEXT:
+  Architecture: Modular monolith, Controller→Service→Repository.
+  DB: PostgreSQL via Prisma. No raw SQL.
+  Error handling: throw new AppError(code, message).
+  
+  Pattern to follow (copy this style exactly):
+  ```typescript
+  // src/modules/products/product.repository.ts
+  export class ProductRepository {
+    async findById(id: string): Promise<Product | null> {
+      return prisma.product.findUnique({ where: { id } });
+    }
+    async findAll(page: number, limit: number): Promise<Product[]> {
+      return prisma.product.findMany({
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createdAt: 'desc' }
+      });
+    }
+  }
+  ```
+  
+  TASK:
+  Create ReviewRepository class with:
+  - findByProductId(productId, page, limit): paginated reviews
+  - findByUserId(userId): all reviews by user
+  - create(data: CreateReviewInput): Review
+  - deleteById(id, userId): delete only if userId matches
+  - getAverageRating(productId): number
+  
+  ALLOWED FILES:
+  1. src/modules/reviews/review.repository.ts (CREATE NEW)
+  2. src/modules/reviews/__tests__/review.repository.test.ts (CREATE NEW)
+  
+  FORBIDDEN:
+  □ Do NOT modify any other files
+  □ Do NOT use raw SQL
+  □ Do NOT add packages
+  
+  SUCCESS CRITERIA:
+  □ tsc --noEmit passes
+  □ npm test passes
+  □ All 5 methods implemented
+  □ Tests cover: happy path + not found + unauthorized delete
+  ═══════════════════════════════════
+
+================================================================
+SECTION 10: STAGE 9 — POST-TASK REVIEW RITUAL
+================================================================
+
+Har agent task ke baad MANDATORY review karo.
+Skip karna = time bomb plant karna.
+
+─── POST-TASK REVIEW CHECKLIST ───
+
+  STEP 1: SCOPE CHECK (30 seconds)
+  □ git diff — kitni files change hui?
+  □ Koi unexpected file change hui? → REJECT immediately
+  □ package.json change hua? → Kyon? Approve/reject
+  
+  STEP 2: CODE READ (5-10 minutes)
+  □ Har nai file padhni zaroori hai
+  □ Business logic trace karo: happy path + 2 edge cases
+  □ Error handling sab cases mein hai?
+  □ TypeScript types sahi hain? 'any' use hua?
+  
+  STEP 3: BUILD
+  □ tsc --noEmit → zero errors
+  □ eslint → acceptable
+  
+  STEP 4: TEST
+  □ npm test → all pass
+  □ New tests meaningful hain? (copy-paste tests → reject)
+  
+  STEP 5: QUICK SECURITY SCAN
+  □ Input validation hai?
+  □ Auth check hai (agar required)?
+  □ Sensitive data logged nahi?
+
+─── WHEN TO REJECT ───
+
+  REJECT if:
+  ✗ Unexpected files modified
+  ✗ TypeScript errors
+  ✗ Tests don't pass
+  ✗ Business logic wrong (trace karo)
+  ✗ Pattern inconsistent with codebase
+  ✗ Security hole visible
+  ✗ 'any' types used
+  ✗ Code duplicates existing functionality
+
+  When rejecting:
+  "The code has these specific issues:
+   1. [exact issue with line number]
+   2. [exact issue]
+   Please fix ONLY these issues. Do not change anything else."
+
+================================================================
+SECTION 11: STAGE 10 — TESTING WORKFLOW
+================================================================
+
+─── TESTING WITH AI AGENT ───
+
+  After implementation, agent ko test generation task do:
+
+  "Generate comprehensive tests for:
+  [paste the implemented code]
+  
+  Framework: Vitest
+  Pattern: [paste existing test file]
+  
+  Test cases (must include):
+  - Happy path
+  - [edge case 1]
+  - [edge case 2]
+  - Error: [error case 1]
+  - Error: [error case 2]
+  
+  Mocks needed:
+  - [dependency 1]: mock behavior: [what it should return]
+  - [dependency 2]: mock behavior: [what it should return]
+  
+  Only create: [test file path]
+  Do NOT modify: [source file]"
+
+─── REVIEWING AI-GENERATED TESTS ───
+
+  WATCH OUT FOR:
+
+  ❌ Tests that always pass (no assertion):
+     it('creates user', async () => {
+       await userService.create(data); // no expect!
+     });
+  
+  ❌ Tests that test implementation not behavior:
+     expect(userRepository.create).toHaveBeenCalledTimes(1);
+     // This breaks on refactor — test behavior instead
+  
+  ❌ Copy-pasted tests with different names but same logic:
+     // Same test 5 times — doesn't add value
+  
+  ✅ GOOD test:
+     it('throws 422 when user has insufficient funds', async () => {
+       // Arrange
+       accountRepo.findById.mockResolvedValue({ balance: 50 });
+       
+       // Act & Assert
+       await expect(
+         transferService.transfer('acc1', 'acc2', 100)
+       ).rejects.toThrow(AppError);
+       
+       const error = await transferService.transfer(...).catch(e => e);
+       expect(error.statusCode).toBe(422);
+       expect(error.message).toContain('Insufficient');
+     });
+
+================================================================
+SECTION 12: STAGE 11-12 — REVIEWS
+================================================================
+
+─── AI-ASSISTED CODE REVIEW ───
+
+  "Review this code diff as a senior engineer.
+  
+  ```diff
+  [paste git diff output]
+  ```
+  
+  Context: This is the [feature name] implementation.
+  
+  Check FOR:
+  1. Logic correctness (trace through manually)
+  2. Security: auth, input validation, injection
+  3. N+1 queries or performance issues
+  4. Error handling completeness
+  5. Code consistency with rest of codebase
+  6. Missing edge cases from the spec
+  
+  Spec reference:
+  [paste relevant spec section]
+  
+  For each issue:
+  - File + line number
+  - Severity: CRITICAL / HIGH / MEDIUM / LOW
+  - What's wrong
+  - Fix"
+
+─── AI-ASSISTED SECURITY REVIEW ───
+
+  "Perform security review of this feature.
+  
+  Code:
+  [paste code]
+  
+  OWASP checks:
+  □ A01 Broken Access Control
+  □ A02 Cryptographic Failures
+  □ A03 Injection
+  □ A04 Insecure Design
+  □ A05 Security Misconfiguration
+  □ A07 Identification & Auth Failures
+  □ A08 Software & Data Integrity
+  □ A09 Logging & Monitoring
+  
+  For each finding:
+  - OWASP category
+  - CWE (if known)
+  - Severity
+  - Exact location
+  - Exploit scenario (how would attacker use this?)
+  - Remediation code"
+
+================================================================
+SECTION 13: STAGE 13 — DEPLOYMENT PIPELINE
+================================================================
+
+─── CI/CD PIPELINE PROMPT ───
+
+  "Generate a GitHub Actions CI/CD workflow for:
+  
+  Stack:
+  - Node.js 20 + Express + TypeScript
+  - Docker container
+  - Deploy to: [your platform]
+  
+  Pipeline should:
+  On PR:
+    1. Install dependencies (with cache)
+    2. TypeScript type check
+    3. ESLint
+    4. Unit tests (with coverage)
+    5. Integration tests
+    6. Build Docker image
+    7. Security scan (npm audit)
+  
+  On main merge:
+    1. All PR checks
+    2. Build + push Docker image (tag: git SHA)
+    3. Deploy to staging
+    4. Run smoke tests
+    5. Notify Slack
+  
+  Requirements:
+  - Secrets: DATABASE_URL, [list your secrets]
+  - Node cache between steps
+  - Fail fast on any step
+  - Coverage threshold: 80%"
+
+================================================================
+SECTION 14: GIVING AI AGENTS SMALL PRECISE TASKS — THE SCIENCE
+================================================================
+
+Itna important hai ke dobara cover karte hain.
+
+─── TASK SIZE ANALYSIS ───
+
+  VERY LARGE TASK:
+  "Implement the entire authentication system"
+  Problems:
+  - Agent will make architectural decisions (wrong!)
+  - 15+ files touched
+  - Hard to review
+  - Errors cascade and compound
+  - Result: garbage you have to rewrite anyway
+  
+  LARGE TASK:
+  "Implement login endpoint with JWT"
+  Problems:
+  - Still too vague
+  - Agent decides schema, validation pattern, error format
+  - 5-7 files touched
+  - Harder to catch mistakes
+  
+  CORRECT TASK SIZE:
+  "Add loginSchema (Zod) to src/modules/auth/auth.schema.ts
+   following the existing registerSchema pattern (shown below).
+   
+   Fields: email (required email), password (required min 8 chars)
+   Export as: loginSchema
+   Also export: LoginInput = z.infer<typeof loginSchema>
+   
+   Only modify: src/modules/auth/auth.schema.ts
+   Pattern to follow: [paste registerSchema]"
+  
+  Why this works:
+  - One file
+  - Exact pattern to follow
+  - Clear success criteria
+  - Easy to review (30 seconds)
+  - If wrong: easy to fix
+
+─── TASK BREAKDOWN FRAMEWORK ───
+
+  When you have a big feature, break it down like this:
+
+  Layer 1: Data (schema/migration)
+    → 1-2 tasks max
+
+  Layer 2: Data access (repository)
+    → 1 task per repository
+    → Include tests
+
+  Layer 3: Business logic (service)
+    → Break by METHOD — one task per method if complex
+    → Always include tests
+
+  Layer 4: HTTP layer (controller + routes + schema)
+    → 1 task per endpoint or group of related endpoints
+
+  Layer 5: Tests (integration tests)
+    → 1 task for integration test file
+
+  Each layer depends on the previous.
+  Do them in order.
+  Review each before moving to next.
+
+================================================================
+SECTION 15: AGENT CONVERSATION MANAGEMENT
+================================================================
+
+─── LONG RUNNING AGENT SESSIONS ───
+
+  Problem: Context window fills up → agent "forgets" earlier instructions
+
+  Signs that agent context is degrading:
+  - Agent starts making mistakes it didn't make before
+  - Agent ignores your rules files
+  - Inconsistent pattern usage
+  - Keeps re-asking questions already answered
+
+  Solutions:
+  1. New conversation for new task (fresh context)
+  2. Always paste AI_RULES.md at start of each conversation
+  3. Keep conversations SHORT — one task per conversation
+  4. Summarize context instead of pasting full files
+
+─── AGENT FAILURE RECOVERY ───
+
+  Agent ne galat kiya? Don't pile on corrections in same session.
+
+  Instead:
+  1. git checkout -- . (discard all agent changes)
+  2. Start NEW conversation
+  3. More specific instructions
+  4. Smaller task scope
+  5. Show exactly what pattern to follow (copy from codebase)
+
+  If agent keeps making same mistake:
+  → Add it explicitly to AI_RULES.md NEVER list
+  → Paste the rule at start of every relevant conversation
+
+================================================================
+SECTION 16: REAL-WORLD AGENT WORKFLOW IN PRACTICE
+================================================================
+
+─── DAY IN THE LIFE: SENIOR ENGINEER + AI AGENT ───
+
+  Morning planning (YOU do this, AI assists):
+  
+  "Aaj kya implement karna hai?"
+  → Feature spec review karo
+  → Tasks break down karo (5-8 small tasks)
+  → Dependencies note karo
+  
+  Each task cycle (repeat for each task):
+  
+  1. SETUP (2 min)
+     - New agent conversation open karo
+     - AI_RULES.md paste karo
+     - Task write karo (template se)
+  
+  2. AGENT WORKS (varies — 2-10 min)
+     - Agent code likhta hai
+     - Aap observe karo — kuch galat lagay toh stop karo
+  
+  3. REVIEW (5-10 min)
+     - git diff check karo
+     - Unexpected changes? → Reject
+     - Code padhna
+     - tsc + tests run karo
+  
+  4. ITERATE (if needed — max 2 iterations)
+     - Agar minor fix: "Fix only this: [specific issue]"
+     - Agar major wrong: git reset, start fresh with better prompt
+  
+  5. COMMIT
+     - git add [specific files only]
+     - git commit -m "feat: [task description]"
+  
+  End of day:
+  → What did agent do well?
+  → Any patterns to add to AI_RULES.md?
+  → Context files update karo agar architecture changes hua
+
+─── ANTI-PATTERNS TO AVOID ───
+
+  ❌ "Just let agent run for hours"
+     → You lose oversight, mistakes compound
+
+  ❌ "Accept all changes without review"
+     → Time bomb — will explode in production
+
+  ❌ "Same large conversation for entire feature"
+     → Context degrades, agent forgets rules
+
+  ❌ "Build first, write specs later"
+     → Agent will invent wrong architecture
+
+  ❌ "Let agent decide architecture"
+     → Architecture is YOUR job, not agent's
+
+  ❌ "Skip tests because agent was confident"
+     → Confidence ≠ correctness for LLMs
+
+================================================================
+EXERCISE — PART 22
+================================================================
+
+TASK: "User Reviews" feature implement karna hai.
+
+1. Decompose karo: 8 small tasks likho.
+   Har task ke liye: task name, files, dependencies, success criteria.
+
+2. Task 1 ke liye complete agent prompt likho (schema creation).
+   Include: context, task, allowed files, forbidden list, success criteria.
+
+3. Task 4 ke liye complete agent prompt likho (review service).
+   Include: pattern to follow, exact method signatures, test cases list.
+
+4. Post-task review checklist likho.
+   (Specifically for review service task — kya verify karoge?)
+
+5. Koi ek "agent failure scenario" likho jo ho sakta hai
+   aur batao aap kaise recover karoge.
+
+================================================================
+QUIZ — PART 22
+================================================================
+
+Q1: Agent ko task dene mein ideal task size kya hai?
+    (a) Bahut bara — ek agent pura system banaye, efficient hai
+    (b) 1-3 files max — small, precise, reviewable unit
+    (c) Medium — feature level
+    (d) Koi farak nahi padta
+
+    Jawab: (b)
+
+Q2: Architecture decision mein AI ka role kya hona chahiye?
+    (a) Final decision lena — AI better jaanta hai
+    (b) Options aur trade-offs present karna — final decision engineer ka
+    (c) Decision implement karna
+    (d) Decision test karna
+
+    Jawab: (b)
+
+Q3: Agent-generated code accept karne se pehle sabse pehle kya karna chahiye?
+    (a) PM ko batana
+    (b) git diff dekho — koi unexpected file change hua?
+    (c) Direct deploy karo
+    (d) Documentation update karo
+
+    Jawab: (b)
+
+Q4: AI_RULES.md mein kya hona chahiye?
+    (a) Project ka business plan
+    (b) Agent ke liye ALWAYS/NEVER rules, patterns, file structure
+    (c) User documentation
+    (d) Database schema
+
+    Jawab: (b)
+
+Q5: Agent ka context window "fill" ho jaaye toh kya karna chahiye?
+    (a) Conversation continue karo, agent theek ho jaata hai
+    (b) New conversation start karo, fresh context ke saath
+    (c) More files paste karo
+    (d) Agent restart karo
+
+    Jawab: (b)
+
+================================================================
+AGLA PART: Part 23 — Capstone Project (ShopFlow)
+================================================================

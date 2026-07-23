@@ -1,0 +1,70 @@
+================================================================================
+TASK ID:     13-02
+TASK NAME:   Rejection Journal
+PHASE:       13 — Trade Journal
+================================================================================
+
+OBJECTIVE:
+    Implement RejectionJournal that records every signal or trade candidate
+    that was rejected, along with the reason and score.
+
+CONTEXT:
+    Every rejection is valuable data. By logging rejections, we can:
+    - Tune confluence thresholds
+    - Identify the most common rejection reasons
+    - Review near-misses (scored 7-7.9) to see if threshold is appropriate
+
+    REJECTION CATEGORIES:
+        CONFLUENCE_TOO_LOW      — score < 8
+        DAILY_LIMIT_REACHED     — trade count or loss limit
+        CONSECUTIVE_LOSS_BLOCK  — 2 consecutive losses
+        CORRELATION_BLOCK       — correlated position open
+        RR_INSUFFICIENT         — R:R < 2
+        SESSION_BLOCKED         — outside trading session
+        SPREAD_TOO_WIDE         — spread exceeded
+        NEWS_BLACKOUT           — high-impact news
+        FILTER_BLOCKED          — generic filter rejection
+        DUPLICATE_SIGNAL        — signal deduplication
+        EXECUTION_FAILED        — order send failed
+
+DEPENDENCIES:
+    - Phase 04 database
+
+FILES TO CREATE:
+    app/journal/rejection_journal.py
+    tests/test_journal/test_rejection_journal.py
+
+FILES TO MODIFY:
+    app/database/models.py       — add RejectionEntry
+    app/database/repositories.py — add rejection CRUD
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class RejectionJournal:
+        record(signal, rejection_category, details) -> None
+        get_summary_for_date(date) -> RejectionSummary
+
+    RejectionEntry fields:
+        id, timestamp_utc, symbol, direction, confluence_score,
+        rejection_category, rejection_detail, factor_breakdown (JSON),
+        session, spread_pips
+
+TEST REQUIREMENTS:
+    - test_rejection_recorded()
+    - test_summary_counts_by_category()
+    - test_near_miss_queryable()
+
+ACCEPTANCE CRITERIA:
+    [ ] All rejection categories stored
+    [ ] Summary statistics queryable
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] rejection_journal.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 13-03 — TASK_SCREENSHOTS.txt
+================================================================================

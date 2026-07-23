@@ -1,0 +1,442 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 12: DISTRIBUTED SYSTEMS
+(Network Failures, Consistency, Reliability)
+================================================================
+
+SEEKHNE KE MAQASID:
+- Distributed systems ke fundamentals
+- Network failures handle karna
+- Consistency models
+- Sagas, Outbox pattern, idempotency
+
+================================================================
+SECTION 1: DISTRIBUTED SYSTEMS KYA HAIN?
+================================================================
+
+Distributed System = Multiple computers jo ek system ki tarah kaam karein
+
+Real Examples:
+  - Netflix (1000s of services, millions of servers)
+  - WhatsApp (messages globally distribute)
+  - Google (distributed storage, search)
+
+Why Distributed:
+  - Scale: Single machine ki limit ke baad
+  - Availability: Single point of failure khatam
+  - Geographic distribution: Users ke paas data
+
+THE HARD TRUTH:
+  "A distributed system is one in which the failure of a computer
+   you didn't even know existed can render your own computer unusable"
+   — Leslie Lamport
+
+Distributed systems mein:
+  - Networks WILL fail
+  - Servers WILL crash
+  - Clocks WILL drift
+  - Partial failures WILL happen
+
+================================================================
+SECTION 2: NETWORK FAILURES
+================================================================
+
+Fallacies of Distributed Computing (8 common wrong assumptions):
+
+1. ❌ Network is reliable
+2. ❌ Latency is zero
+3. ❌ Bandwidth is infinite
+4. ❌ Network is secure
+5. ❌ Topology doesn't change
+6. ❌ There is one administrator
+7. ❌ Transport cost is zero
+8. ❌ Network is homogeneous
+
+Reality:
+  - Networks packets drop karte hain
+  - Latency variable hai
+  - Connections timeout hoti hain
+  - Partial connectivity possible hai
+
+--- HANDLING NETWORK FAILURES ---
+
+1. TIMEOUTS:
+   Har external call pe timeout set karo.
+   
+   BAD:
+     const response = await axios.get(externalUrl); // No timeout!
+     // Agar server hang ho → request hamesha hang rahe gi
+   
+   GOOD:
+     const response = await axios.get(externalUrl, {
+       timeout: 5000 // 5 seconds max
+     });
+
+2. RETRIES:
+   Failed requests retry karo — lekin carefully.
+   
+   BAD (dumb retry):
+     for (let i = 0; i < 3; i++) {
+       try { return await callService(); break; }
+       catch { continue; } // Immediately retry — server overload
+     }
+   
+   GOOD (exponential backoff + jitter):
+     async function retryWithBackoff(fn, maxAttempts = 3) {
+       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+         try {
+           return await fn();
+         } catch (err) {
+           if (attempt === maxAttempts) throw err;
+           
+           const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+           const jitter = Math.random() * 1000; // Random jitter
+           await sleep(delay + jitter);
+         }
+       }
+     }
+
+3. CIRCUIT BREAKER:
+   Service fail hoti rehay → trips circuit → requests immediately reject karo
+   
+   States:
+     CLOSED → Normal operation (requests pass)
+     OPEN → Failure threshold exceeded → Fail fast
+     HALF-OPEN → Test one request → Success? Close again
+   
+   Benefits:
+     - Cascade failures rokna
+     - Failing service pe load nahi
+     - Fast fail (timeout ka wait nahi)
+   
+   Libraries: Opossum (Node.js), Resilience4j (Java), Polly (.NET)
+
+================================================================
+SECTION 3: IDEMPOTENCY (REVISITED — DEEPER)
+================================================================
+
+Distributed systems mein idempotency critical hai.
+
+Problem:
+  1. Client → Payment Service: "Charge $100"
+  2. Payment Service: Charges successfully
+  3. Network error → Client doesn't get response
+  4. Client retries: "Charge $100" again
+  5. DOUBLE CHARGE!
+
+Solution: Idempotency Keys
+
+  // Client generates unique key per operation
+  const idempotencyKey = `${userId}-${orderId}-${timestamp}`;
+  
+  // Server side:
+  async function processPayment(amount, idempotencyKey) {
+    // Check if already processed
+    const existing = await redis.get(`payment:${idempotencyKey}`);
+    if (existing) {
+      return JSON.parse(existing); // Return same result
+    }
+    
+    // Process payment
+    const result = await stripeCharge(amount);
+    
+    // Store result with expiry
+    await redis.setEx(
+      `payment:${idempotencyKey}`,
+      86400, // 24 hours
+      JSON.stringify(result)
+    );
+    
+    return result;
+  }
+
+================================================================
+SECTION 4: CONSISTENCY MODELS
+================================================================
+
+--- STRONG CONSISTENCY ---
+
+Read hamesha latest write reflect karta hai.
+
+Example: Bank balance
+  Ali ne $1000 deposit kiya.
+  Koi bhi server pe balance check kare → $1000 dikhega.
+
+How: Synchronous replication, distributed locks
+Trade-off: Slower writes, reduced availability
+
+--- EVENTUAL CONSISTENCY ---
+
+Eventually sab nodes sync hote hain — thodi der baad.
+
+Example: Social media likes
+  Aapne post like kiya → 500 likes dikhay hain.
+  Dusra user 1 second baad dekhta hai → 499 dikhta hai.
+  Thodi der baad → dono 501 dekhte hain.
+
+How: Async replication
+Trade-off: Reads might be stale briefly
+
+Where each is appropriate:
+  Strong Consistency: Payments, inventory, banking
+  Eventual Consistency: Social feeds, analytics, search indexes
+
+================================================================
+SECTION 5: DISTRIBUTED TRANSACTIONS
+================================================================
+
+Problem:
+  Order service → Order create karo
+  Payment service → Payment charge karo
+  Inventory service → Stock reduce karo
+  
+  Agar payment succeed hua lekin inventory update fail? → Inconsistency!
+
+--- SAGA PATTERN ---
+
+Long-running transactions ko sequence of local transactions mein todna.
+
+Choreography Saga (events ke zariye):
+  1. Order Service: Order create karo → OrderCreated event publish
+  2. Payment Service: Listen → Payment charge karo → PaymentProcessed event
+  3. Inventory Service: Listen → Stock reduce karo → InventoryReduced event
+  4. Order Service: Listen → Order confirm karo
+  
+  Agar kuch fail ho (Compensating Transactions):
+  Payment fail → OrderCancelled event → Order cancel karo
+  Inventory fail → RefundPayment event → Payment refund karo
+
+Orchestration Saga (central coordinator):
+  Saga Orchestrator:
+  1. → Order Service: Create order
+  2. ← Success
+  3. → Payment Service: Charge payment
+  4. ← Success
+  5. → Inventory Service: Reduce stock
+  6. ← Fail! → Payment Service: Refund → Order Service: Cancel
+
+Pros/Cons:
+  Choreography: Loose coupling, lekin debugging complex
+  Orchestration: Clear flow, lekin central coordinator bottleneck
+
+================================================================
+SECTION 6: OUTBOX PATTERN
+================================================================
+
+Problem:
+  async function createOrder(orderData) {
+    await db.orders.create(orderData); // DB save
+    await eventBus.publish('OrderCreated', orderData); // Event publish
+    
+    // Kya hoga agar event publish fail ho?
+    // → Order created lekin event never published
+    // → Downstream services ko pata nahi chala!
+  }
+
+Solution: Outbox Pattern
+
+  Database transaction ke andar event bhi write karo:
+  
+  async function createOrder(orderData) {
+    await db.transaction(async (tx) => {
+      const order = await tx.orders.create(orderData);
+      
+      // Outbox table mein event write karo (same transaction!)
+      await tx.outbox.create({
+        eventType: 'OrderCreated',
+        payload: JSON.stringify(order),
+        status: 'pending'
+      });
+    });
+    // Transaction commit → dono ya dono nahi
+  }
+  
+  // Separate poller/worker:
+  async function processOutbox() {
+    const events = await db.outbox.findAll({ status: 'pending' });
+    for (const event of events) {
+      await eventBus.publish(event.eventType, event.payload);
+      await db.outbox.update({ status: 'published' }, { id: event.id });
+    }
+  }
+
+Benefits:
+  - Exactly-once semantics (database transaction)
+  - No message loss
+  - At-least-once delivery (retry possible)
+
+================================================================
+SECTION 7: DISTRIBUTED LOCKS
+================================================================
+
+Problem:
+  2 servers simultaneously ek hi resource modify karein → race condition
+
+Solution: Redis Distributed Lock (Redlock)
+
+  async function acquireLock(key, ttlMs = 30000) {
+    const lockValue = crypto.randomUUID();
+    const acquired = await redis.set(
+      `lock:${key}`,
+      lockValue,
+      'PX', ttlMs,  // Expire after ttl
+      'NX'          // Only set if not exists
+    );
+    
+    if (!acquired) return null; // Lock already held
+    return lockValue;
+  }
+  
+  async function releaseLock(key, lockValue) {
+    // Only release OUR lock (not someone else's)
+    const script = `
+      if redis.call('get', KEYS[1]) == ARGV[1] then
+        return redis.call('del', KEYS[1])
+      else
+        return 0
+      end
+    `;
+    await redis.eval(script, 1, `lock:${key}`, lockValue);
+  }
+  
+  // Usage:
+  const lock = await acquireLock('order-processing');
+  if (!lock) throw new Error('Could not acquire lock');
+  
+  try {
+    await processOrder(orderId);
+  } finally {
+    await releaseLock('order-processing', lock);
+  }
+
+================================================================
+SECTION 8: MESSAGE DELIVERY GUARANTEES
+================================================================
+
+AT-MOST-ONCE:
+  Message ya ek baar deliver hoga ya kabhi nahi.
+  - No retry
+  - Fast
+  - Data loss possible
+  - Use: Metrics, analytics (occasional miss OK)
+
+AT-LEAST-ONCE:
+  Message kam az kam ek baar deliver hoga.
+  - Retry on failure
+  - Duplicates possible
+  - Requires idempotent consumers
+  - Use: Email notifications, order events
+
+EXACTLY-ONCE:
+  Message exactly ek baar deliver hoga.
+  - Most complex
+  - Expensive
+  - Kafka transactions ya 2-phase commit
+  - Use: Financial transactions, inventory
+
+Practical advice:
+  - At-least-once + idempotent processing = effective exactly-once
+  - Idempotency key use karo
+
+================================================================
+SECTION 9: CLOCK DRIFT IN DISTRIBUTED SYSTEMS
+================================================================
+
+Problem:
+  Multiple servers ke clocks drift karte hain (ek dusre se slightly off)
+  
+  Example:
+    Server A timestamp: 14:00:00.001
+    Server B timestamp: 14:00:00.003 (2ms ahead)
+    
+    Causal ordering mein problem:
+    User sends message at A → timestamp 001
+    Server B processes at 003 → "Earlier" event dikhega aage
+
+Solutions:
+
+  NTP (Network Time Protocol): Clocks sync rakho — better lekin na perfect
+
+  Logical Clocks (Lamport Timestamps):
+    Counter-based ordering instead of wall clock
+    Har event increment karo, message ke saath bhejo
+    
+  Vector Clocks:
+    Ek vector (array of counters), distributed causality track karna
+
+  Practical: Mostly NTP + retry logic kaafi hai production mein.
+
+================================================================
+SECTION 10: REAL WORLD EXERCISE
+================================================================
+
+SCENARIO:
+  E-commerce site pe payment system design karo.
+  
+  Requirements:
+  - User order place karta hai
+  - Payment charge hota hai
+  - Inventory deduct hota hai
+  - Confirmation email jaata hai
+  - Agar kuch fail ho → full rollback
+
+TASK:
+  1. Saga pattern use karke design karo
+  2. Compensating transactions define karo
+  3. Idempotency kaise ensure karoge?
+  4. Agar payment service down ho toh kya hoga?
+  5. Outbox pattern kahan use karoge?
+
+SAMPLE DESIGN:
+  Orchestration Saga:
+  
+  Step 1: Create Order (pending) → SUCCESS
+  Step 2: Reserve Inventory     → SUCCESS
+  Step 3: Charge Payment        → SUCCESS / FAIL
+    If FAIL:
+      Compensate: Release Inventory → Cancel Order → Return error
+  Step 4: Confirm Order         → SUCCESS
+  Step 5: Send Email (async)    → Via Queue
+  
+  Idempotency: orderId as idempotency key for payment
+  Outbox: Order events via outbox table
+
+================================================================
+QUIZ — PART 12
+================================================================
+
+Q1: Circuit breaker ka kaam kya hai?
+    (a) Electrical circuit protect karna
+    (b) Failing service pe fast fail karna, cascade failures rokna
+    (c) Network speed increase karna
+    (d) Database connections limit karna
+
+Jawab: (b)
+
+Q2: Saga pattern kyun use karte hain?
+    (a) Single database transactions ke liye
+    (b) Multiple services ke beech distributed transactions manage karne ke liye
+    (c) Caching ke liye
+    (d) Load balancing ke liye
+
+Jawab: (b)
+
+Q3: Outbox pattern kya solve karta hai?
+    (a) Database ko fast banata hai
+    (b) DB aur message broker mein dual write atomicity ensure karta hai
+    (c) Events encrypt karta hai
+    (d) Queue size limit karta hai
+
+Jawab: (b)
+
+Q4: "At-least-once" delivery mein consumer kise hona chahiye?
+    (a) Fast
+    (b) Idempotent (duplicate messages safe handle kare)
+    (c) Stateless
+    (d) Synchronous
+
+Jawab: (b)
+
+================================================================
+AGLA PART: Part 13 — Security Engineering
+================================================================

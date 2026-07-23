@@ -1,0 +1,80 @@
+================================================================================
+PHASE 12 — NOTIFICATIONS
+================================================================================
+
+PHASE NAME:         Notifications
+PHASE OBJECTIVE:    Implement Telegram notifications and automated daily
+                    performance reports delivered to the user's phone.
+
+WHY THIS PHASE EXISTS:
+    The bot operates autonomously in the background. The user needs real-time
+    alerts for key events (trade entry, exit, errors, daily summary) without
+    having to monitor a screen. Telegram is free, reliable, and requires no
+    paid API.
+
+DEPENDENCIES:
+    - Phase 02 (Foundation): config, logging
+    - Phase 04 (Data Layer): trade records, daily stats
+    - Phase 11 (Automation): main loop integration points
+
+INPUTS:
+    - Trade events (entry, exit, management)
+    - Daily statistics
+    - Error alerts
+    - Telegram Bot Token and Chat ID (from .env)
+
+OUTPUTS:
+    - Telegram messages sent to configured chat
+    - Daily report at configured time (default: 20:30 UTC)
+
+FILES EXPECTED TO BE CREATED:
+    app/notifications/telegram_client.py
+    app/notifications/message_templates.py
+    app/notifications/daily_reporter.py
+    app/notifications/notifier.py
+    app/notifications/__init__.py
+    tests/test_notifications/test_telegram.py
+    tests/test_notifications/test_daily_reporter.py
+
+FILES EXPECTED TO BE MODIFIED:
+    None (notifications consumed by main loop via notifier interface)
+
+FILES THAT MUST NOT BE MODIFIED:
+    app/mt5/
+    app/strategy/
+    app/risk/
+    app/execution/
+    ROADMAP/
+
+TASK ORDER:
+    1. 01_TASK_TELEGRAM.txt
+    2. 02_TASK_DAILY_REPORTS.txt
+
+TESTING REQUIREMENTS:
+    - All Telegram tests use mock HTTP (no live Telegram API in tests)
+    - Daily reporter tested with mock database data
+    - Message templates tested for correct formatting
+
+ACCEPTANCE CRITERIA:
+    [ ] Trade entry alert sent within 5 seconds of execution
+    [ ] Trade exit alert sent on position close
+    [ ] Error alerts sent for CRITICAL log events
+    [ ] Daily report generated and sent at configured time
+    [ ] Telegram unavailable does NOT crash the bot (graceful degradation)
+    [ ] All tests pass
+
+KNOWN RISKS:
+    - Telegram API rate limits (30 messages/second); queue messages if needed
+    - If TELEGRAM_ENABLED=false, all notification calls must be no-ops
+    - Never include account password or full API keys in messages
+
+ROLLBACK STRATEGY:
+    Set TELEGRAM_ENABLED=false to disable all notifications without affecting
+    any trading functionality.
+
+HANDOFF REQUIREMENTS:
+    Before Phase 13 (Trade Journal):
+    - Notifier.notify(event) fully functional
+    - TelegramClient tested with mock
+    - Daily reporter functional
+================================================================================

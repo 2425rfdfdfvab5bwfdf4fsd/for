@@ -1,0 +1,92 @@
+================================================================================
+PHASE 02 — PROJECT FOUNDATION
+================================================================================
+PHASE NAME:       Project Foundation
+PHASE OBJECTIVE:  Establish the complete project structure, configuration
+                  system, logging infrastructure, and all AI agent context
+                  files. This phase creates the skeleton that all other
+                  phases build upon.
+
+WHY THIS PHASE EXISTS:
+  Before any trading logic is implemented, the project needs:
+  - A clean, consistent folder structure
+  - A .env-based configuration system (no hardcoded values)
+  - Structured logging (critical for production trading systems)
+  - Context files that guide every future AI agent task
+  - A requirements.txt with all dependencies
+  - A .gitignore that protects secrets
+
+DEPENDENCIES:     Phase 01 complete
+
+INPUTS:
+  - ROADMAP/00_MASTER_ROADMAP.txt (architecture section)
+  - Phase 01 audit findings
+
+OUTPUTS:
+  - Complete project folder structure
+  - app/config.py (configuration loader)
+  - app/logger.py (logging setup)
+  - .env.example (complete template)
+  - requirements.txt
+  - replit.md, AI_RULES.md, ARCHITECTURE.md
+  - CODE_STANDARDS.md, TESTING.md, SECURITY.md
+  - TRADING_RULES.md, RISK_MANAGEMENT.md
+  - .gitignore
+
+FILES EXPECTED TO BE CREATED:
+  app/__init__.py
+  app/config.py
+  app/logger.py
+  .env.example
+  .gitignore
+  requirements.txt
+  replit.md
+  AI_RULES.md
+  ARCHITECTURE.md
+  CODE_STANDARDS.md
+  TESTING.md
+  SECURITY.md
+  TRADING_RULES.md
+  RISK_MANAGEMENT.md
+  (all subdirectory __init__.py files)
+
+FILES EXPECTED TO BE MODIFIED:
+  ROADMAP/00_PROJECT_STATUS.txt
+
+FILES THAT MUST NOT BE MODIFIED:
+  Any existing source code from Phase 01 findings (if applicable)
+
+TASK ORDER:
+  01_TASK_PROJECT_STRUCTURE.txt    → Create folders + __init__.py files
+  02_TASK_CONFIGURATION.txt        → app/config.py + .env.example
+  03_TASK_LOGGING.txt              → app/logger.py
+  04_TASK_ENVIRONMENT_SETUP.txt    → requirements.txt + context docs
+
+TESTING REQUIREMENTS:
+  □ python -c "from app.config import Config" → no errors
+  □ python -c "from app.logger import get_logger" → no errors
+  □ python -m py_compile app/config.py → no syntax errors
+  □ python -m py_compile app/logger.py → no syntax errors
+
+ACCEPTANCE CRITERIA:
+  □ All directories created
+  □ Configuration loads from .env.example defaults
+  □ Logger creates log files correctly
+  □ All context files created and contain meaningful content
+  □ requirements.txt lists all needed packages
+  □ .gitignore protects .env and logs
+
+KNOWN RISKS:
+  - Configuration system must handle missing .env gracefully
+  - Logger must not crash the bot if log directory is missing
+
+ROLLBACK STRATEGY:
+  Delete created files and restart Phase 02.
+  No production data at risk at this stage.
+
+HANDOFF REQUIREMENTS:
+  Before starting Phase 03, confirm:
+  □ from app.config import Config works
+  □ from app.logger import get_logger works
+  □ All context files are meaningful and accurate
+================================================================================

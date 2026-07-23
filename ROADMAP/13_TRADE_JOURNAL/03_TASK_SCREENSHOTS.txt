@@ -1,0 +1,86 @@
+================================================================================
+TASK ID:     13-03
+TASK NAME:   Chart Screenshots
+PHASE:       13 — Trade Journal
+================================================================================
+
+OBJECTIVE:
+    Implement ScreenshotManager that optionally captures MT5 chart screenshots
+    at trade entry and exit for visual review.
+
+CONTEXT:
+    MT5 Python API does not provide a direct screenshot method. Screenshots
+    are captured using Windows screenshot APIs (mss library) targeting the
+    MT5 window.
+
+    SCREENSHOT_ENABLED=false by default (Windows-only feature, optional).
+    If disabled: all screenshot calls are no-ops.
+
+    Screenshots saved to: screenshots/{date}/{symbol}_{ticket}_{event}.png
+
+DEPENDENCIES:
+    - Phase 02 config
+    - Phase 09 ExecutionResult (for ticket)
+    - mss library (Windows screenshot)
+
+FILES TO CREATE:
+    app/journal/screenshot_manager.py
+    tests/test_journal/test_screenshots.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class ScreenshotManager:
+        capture_entry(symbol: str, ticket: int, timeframe: str) -> str | None
+        capture_exit(symbol: str, ticket: int) -> str | None
+        is_enabled() -> bool
+
+    If SCREENSHOT_ENABLED=false or mss not installed: return None silently.
+
+    Screenshot filename format:
+        screenshots/2026-01-01/EURUSD_12345_entry.png
+
+    CHART CONTENT SPECIFICATION (CHG-028):
+    Screenshots use matplotlib to generate chart images (not MT5 GUI capture).
+    See DECISION-015 for why matplotlib is used instead of MT5 screenshots.
+
+    REQUIRED CHART ELEMENTS:
+    Entry screenshot content:
+      - M15 OHLCV candlestick chart (last 100 bars)
+      - Overlay: EMA_FAST (20) and EMA_SLOW (50) lines
+      - Horizontal line: order block zone (shaded rectangle, bullish=green, bearish=red)
+      - Horizontal line: entry price
+      - Horizontal line: stop loss price (dashed red)
+      - Horizontal line: take profit price (dashed green)
+      - Vertical line: current bar (entry point)
+      - Title: "{symbol} {direction} Entry — Score: {score}/10 ({grade})"
+      - Timestamp in UTC shown in chart subtitle
+      - R:R ratio displayed in top-right corner
+
+    Exit screenshot content:
+      - Same chart as entry BUT also marks exit bar with vertical line
+      - Shows P&L result in title: "+{pips}p (+{r:.1f}R)" or "-{pips}p (-{r:.1f}R)"
+      - Equity curve for the day shown as inset (small panel below main chart)
+
+    IMPLEMENTATION NOTE:
+      Use mplfinance library (add to requirements.txt if chosen) or raw matplotlib.
+      Chart DPI: 150 (good quality without excessive file size)
+      Chart size: (16, 10) inches at 150 DPI = 2400x1500 pixels
+
+TEST REQUIREMENTS:
+    - test_screenshot_disabled_returns_none()
+    - test_screenshot_path_format()
+
+ACCEPTANCE CRITERIA:
+    [ ] Disabled mode is a complete no-op
+    [ ] Path format is consistent
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] screenshot_manager.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 13-04 — TASK_MISSED_TRADE_ANALYSIS.txt
+================================================================================

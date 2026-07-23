@@ -1,0 +1,60 @@
+================================================================================
+PHASE 21 — FINAL VALIDATION
+================================================================================
+
+PHASE NAME:         Final Validation
+PHASE OBJECTIVE:    Execute a comprehensive production readiness audit,
+                    complete demo trading validation, and prepare the system
+                    for optional live deployment.
+
+WHY THIS PHASE EXISTS:
+    All components are built and tested. Before any live money is at risk,
+    this phase performs the final gate: production readiness, demo trading
+    period, and live readiness confirmation.
+
+    *** LIVE TRADING MAY ONLY BEGIN AFTER THIS PHASE IS COMPLETE ***
+    *** AND ALL ACCEPTANCE CRITERIA ARE MET ***
+
+DEPENDENCIES:
+    - ALL phases 02–20 complete
+    - Phase 15/16 validation results: at least CAUTION verdict or better
+    - Phase 19 testing: all tests passing
+    - Phase 20 security: all P0/P1 issues resolved
+
+CRITICAL PREREQUISITE CHECKLIST (all must be ✓):
+    [ ] Backtesting complete (Phase 15)
+    [ ] Out-of-sample validated (Phase 16): verdict not FAIL
+    [ ] Walk-forward validated (Phase 16)
+    [ ] All unit + integration tests pass (Phase 19)
+    [ ] Security audit passed (Phase 20)
+    [ ] Demo trading period >= 4 weeks (minimum)
+    [ ] Demo: no critical bugs observed
+    [ ] Demo: risk management behaved as expected
+    [ ] Demo: recovery mechanisms tested
+
+FILES EXPECTED TO BE CREATED:
+    validation/production_readiness.py
+    docs/PRODUCTION_CHECKLIST.md
+    docs/DEMO_TRADING_LOG.md
+    docs/LIVE_READINESS_CHECKLIST.md
+
+TASK ORDER:
+    1. 01_TASK_PRODUCTION_READINESS.txt
+    2. 02_TASK_DEMO_READINESS.txt
+    3. 03_TASK_LIVE_READINESS.txt
+    4. 04_TASK_FINAL_AUDIT.txt
+
+ACCEPTANCE CRITERIA:
+    [ ] Production readiness checklist passes (all items green)
+    [ ] Demo trading run >= 4 weeks with no critical issues
+    [ ] Live readiness checklist complete (human sign-off required)
+    [ ] Final audit report generated
+    [ ] User acknowledges: "Past performance does not guarantee future results"
+
+HANDOFF REQUIREMENTS:
+    Before live trading:
+    - HUMAN REVIEW AND SIGN-OFF REQUIRED
+    - All 4 tasks complete
+    - All checklists documented
+    - Risk warning acknowledged in writing
+================================================================================

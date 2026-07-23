@@ -1,0 +1,103 @@
+================================================================================
+TASK ID:     08-03
+TASK NAME:   News Filter
+PHASE:       08 — Filters
+================================================================================
+
+OBJECTIVE:
+    Implement NewsFilter that blocks scanning within ±30 minutes of any
+    high-impact news event affecting the traded pairs.
+
+CONTEXT:
+    Data source: ForexFactory RSS feed (free, no API key required).
+    URL: https://nfs.faireconomy.media/ff_calendar_thisweek.xml
+
+    Cache the feed locally: update once per hour maximum.
+    If feed is unavailable: apply NEWS_FILTER_FAIL_SAFE setting.
+        - "BLOCK": block all trading (safest, default)
+        - "ALLOW": allow trading (use only if news impact is low risk for user)
+
+    News blackout window: configurable NEWS_BLACKOUT_MINUTES (default: 30)
+
+    Currencies affected:
+    - EURUSD: EUR, USD events
+    - GBPUSD: GBP, USD events
+    - USDJPY: USD, JPY events
+
+DEPENDENCIES:
+    - Phase 02 config, logging
+    - Internet access (optional — graceful fallback required)
+
+FILES TO CREATE:
+    app/filters/news_filter.py
+    app/filters/news_cache.py
+    tests/test_filters/test_news.py
+    data/news_cache.json   (created at runtime, not at deploy time)
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class NewsFilter:
+        check(symbol: str, utc_datetime: datetime) -> FilterResult
+
+    class NewsCache:
+        refresh_if_stale() -> None       (max once per hour)
+        get_events(from_utc, to_utc) -> list[NewsEvent]
+
+    NewsEvent:
+        event_time_utc: datetime
+        currency: str
+        impact: str    # "HIGH", "MEDIUM", "LOW"
+        title: str
+
+    BLACKOUT LOGIC:
+        For each HIGH impact event affecting symbol's currencies:
+            if abs(event_time - now) <= NEWS_BLACKOUT_MINUTES: BLOCK
+
+FAIL-SAFE BEHAVIOR (CHG-022 — robust implementation required):
+    - HTTP request TIMEOUT: 5 seconds (NEWS_REQUEST_TIMEOUT_SECONDS = 5)
+    - Cache TTL: 4 hours maximum (NEWS_CACHE_TTL_HOURS = 4)
+    - On HTTP failure OR timeout: log WARNING, use cached data if within TTL
+    - If cached data is stale (> 4 hours) AND request failed:
+        Apply NEWS_FILTER_FAIL_SAFE setting immediately, log WARNING
+    - On any unhandled exception in news_filter.check(): log CRITICAL,
+        treat as if fail-safe applies (never crash the main loop)
+    - Cache stored in: data/news_cache.json (auto-created)
+
+    NEWS_FILTER_FAIL_SAFE options:
+      "BLOCK" (default): block all trading until news data is available
+        → Safest option — prevents trading during unknown news periods
+      "ALLOW": allow trading (use only if user explicitly accepts this risk)
+
+    IMPORTANT: The news filter must NEVER cause the main loop to crash.
+    All exceptions must be caught internally and logged.
+
+    LEGAL NOTE: Use ForexFactory's XML/JSON feed (not HTML scraping).
+    URL: https://nfs.faireconomy.media/ff_calendar_thisweek.xml
+    This is a publicly available XML feed. Do NOT scrape HTML pages.
+
+TEST REQUIREMENTS:
+    - test_no_news_passes()
+    - test_high_impact_within_30min_blocked()
+    - test_high_impact_outside_window_passes()
+    - test_medium_impact_not_blocked()
+    - test_feed_unavailable_fail_safe_block()
+    - test_feed_unavailable_fail_safe_allow()
+
+ACCEPTANCE CRITERIA:
+    [ ] High-impact news within 30 min blocks scanning
+    [ ] Medium/low impact events do not block
+    [ ] RSS feed cached (max 1 refresh per hour)
+    [ ] Fail-safe behavior works
+    [ ] All tests pass (using mock HTTP, no live internet in tests)
+
+DEFINITION OF DONE:
+    [ ] news_filter.py and news_cache.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 08-04 — TASK_VOLATILITY_FILTER.txt
+================================================================================

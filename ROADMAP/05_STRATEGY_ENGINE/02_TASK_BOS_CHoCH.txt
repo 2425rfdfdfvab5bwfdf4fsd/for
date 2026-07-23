@@ -1,0 +1,162 @@
+================================================================================
+TASK: 05-02 — BOS AND CHoCH DETECTION
+================================================================================
+TASK ID:        05-02
+TASK NAME:      Break of Structure (BOS) + Change of Character (CHoCH)
+PHASE:          05 — Strategy Engine
+OBJECTIVE:      Implement deterministic BOS and CHoCH detection algorithms
+                in app/strategy/bos_choch.py.
+
+CONTEXT:
+  BOS (Break of Structure): Price breaks a swing high/low in the
+  direction of the existing trend. Confirms trend continuation.
+  
+  CHoCH (Change of Character): Price breaks a swing high/low AGAINST
+  the existing trend. Signals potential trend reversal.
+  These are key signals for directional bias in the SMC framework.
+
+DEPENDENCIES:   Task 05-01 complete
+PREVIOUS TASKS: 05-01 MARKET STRUCTURE
+
+FILES TO INSPECT:   app/strategy/market_structure.py
+FILES TO CREATE:
+  app/strategy/bos_choch.py
+  tests/unit/test_bos_choch.py
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: app/strategy/market_structure.py
+
+
+================================================================================
+BOS/CHoCH DETECTION RULE — CANDLE CLOSE REQUIRED (CHG-013)
+================================================================================
+
+CRITICAL: A BOS or CHoCH is confirmed ONLY when a candle CLOSES above or
+below the structural level. Intrabar wicks that touch or temporarily breach
+the level but do NOT result in a candle close beyond it do NOT constitute
+a BOS or CHoCH event.
+
+RULE (applies to all timeframes and all detection modes):
+  BOS_CONFIRMED = (candle.close > structural_level)  for bullish BOS
+  BOS_CONFIRMED = (candle.close < structural_level)  for bearish BOS
+  CHoCH_CONFIRMED = same logic with appropriate level
+
+  NEVER use: candle.high > structural_level  (intrabar wick — NOT a break)
+  NEVER use: candle.low < structural_level   (intrabar wick — NOT a break)
+
+WHY THIS MATTERS:
+  1. Prevents look-ahead bias in backtesting (wick touches are not actionable)
+  2. Reduces false positives (many wicks touch levels without real breakout)
+  3. Ensures consistency between live detection and backtesting
+
+IMPLEMENTATION NOTE:
+  In detect_structure_breaks(), use data['close'] exclusively for break detection.
+  The candle's high/low may be used to confirm the structural level itself was
+  "touched" by price, but only close confirms the break.
+
+================================================================================
+================================================================================
+ALGORITHMIC DEFINITIONS — BOS
+================================================================================
+
+BULLISH BOS:
+  In a bullish trend (Higher Highs, Higher Lows):
+  A candle's close price breaks ABOVE the previous swing high.
+  This confirms bullish continuation.
+  
+  Detection:
+    current_close > previous_swing_high.price
+    AND trend == "BULLISH"
+    AND this break has not been previously detected (dedup by swing index)
+
+BEARISH BOS:
+  In a bearish trend (Lower Highs, Lower Lows):
+  A candle's close price breaks BELOW the previous swing low.
+  This confirms bearish continuation.
+  
+  Detection:
+    current_close < previous_swing_low.price
+    AND trend == "BEARISH"
+    AND this break has not been previously detected
+
+================================================================================
+ALGORITHMIC DEFINITIONS — CHoCH
+================================================================================
+
+BULLISH CHoCH (potential bullish reversal):
+  In a bearish trend:
+  A candle's close price breaks ABOVE the most recent swing high.
+  This signals character change — potential bullish reversal.
+  
+  Detection:
+    current_close > most_recent_swing_high.price
+    AND trend == "BEARISH"
+
+BEARISH CHoCH (potential bearish reversal):
+  In a bullish trend:
+  A candle's close price breaks BELOW the most recent swing low.
+  This signals character change — potential bearish reversal.
+  
+  Detection:
+    current_close < most_recent_swing_low.price
+    AND trend == "BULLISH"
+
+================================================================================
+DETAILED REQUIREMENTS
+================================================================================
+
+@dataclass
+class StructureBreak:
+    break_type: str       # "BULLISH_BOS", "BEARISH_BOS", "BULLISH_CHoCH", "BEARISH_CHoCH"
+    broken_level: float   # The price level that was broken
+    break_candle_index: int
+    break_candle_time: datetime
+    break_close: float    # Closing price that caused the break
+
+def detect_structure_breaks(data: pd.DataFrame,
+                             market_structure: dict,
+                             lookback_candles: int = 50) -> list[StructureBreak]:
+    """
+    Scans the last lookback_candles candles for BOS and CHoCH events.
+    Uses market_structure dict from get_market_structure().
+    Returns list of StructureBreak events, most recent last.
+    """
+
+def get_latest_bos(data: pd.DataFrame,
+                   market_structure: dict) -> Optional[StructureBreak]:
+    """Returns the most recent BOS event, or None."""
+
+def get_latest_choch(data: pd.DataFrame,
+                     market_structure: dict) -> Optional[StructureBreak]:
+    """Returns the most recent CHoCH event, or None."""
+
+def has_recent_bos(data: pd.DataFrame,
+                   market_structure: dict,
+                   direction: str,
+                   max_candles_ago: int = 20) -> bool:
+    """
+    Returns True if there is a BOS in the given direction
+    within the last max_candles_ago candles.
+    direction: "BULLISH" or "BEARISH"
+    """
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+python -m py_compile app/strategy/bos_choch.py
+pytest tests/unit/test_bos_choch.py -v
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ BOS detected correctly in trending conditions
+□ CHoCH detected correctly when trend changes
+□ No false positives in ranging conditions
+□ No lookahead bias
+□ All tests pass
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/05_STRATEGY_ENGINE/03_TASK_LIQUIDITY.txt
+================================================================================

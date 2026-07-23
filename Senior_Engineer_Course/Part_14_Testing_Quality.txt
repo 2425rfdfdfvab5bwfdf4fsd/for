@@ -1,0 +1,559 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 14: TESTING & QUALITY ENGINEERING
+(Test Strategy aur Implementation)
+================================================================
+
+SEEKHNE KE MAQASID:
+- Test pyramid samajhna
+- Unit, integration, e2e tests likhna
+- Test strategy decide karna
+- Mocking aur fixtures
+
+================================================================
+SECTION 1: WHY TESTING MATTERS
+================================================================
+
+Bina tests ke:
+  - Code change karo → production mein kuch toot jaata hai
+  - Bug fix karo → naya bug paida ho jaata hai
+  - Refactor karo → kuch aur toot jaata hai
+  - Confident nahi hote release ke liye
+
+Tests ke fayde:
+  - Regressions catch karna
+  - Refactoring confident karna
+  - Documentation (tests show expected behavior)
+  - Design improve karna (testable code = good code)
+  - Quick feedback loop
+
+================================================================
+SECTION 2: TEST PYRAMID
+================================================================
+
+           ___________
+          /  E2E Tests  \    ← Kam, Slow, Expensive
+         /_______________\
+        /  Integration    \  ← Medium
+       /___________________\
+      /    Unit Tests       \← Zyada, Fast, Cheap
+     /_______________________ \
+
+Ratio (guideline):
+  Unit Tests:        70%
+  Integration Tests: 20%
+  E2E Tests:         10%
+
+Senior engineer principle:
+  "Tests sirf confident deploy karne ke liye hain.
+   Woh mechanism nahi hain jo code quality ki jagah lein."
+
+================================================================
+SECTION 3: UNIT TESTS
+================================================================
+
+Unit test = Ek function/class ko isolation mein test karna
+           External dependencies mock karo
+
+Characteristics:
+  - Fast (milliseconds)
+  - No external dependencies (DB, API, filesystem)
+  - Deterministic (same result hamesha)
+  - Independent (ek test fail ho → baaki run)
+
+Example — UserService test:
+
+  // user.service.ts
+  class UserService {
+    constructor(
+      private userRepo: UserRepository,
+      private emailService: EmailService
+    ) {}
+    
+    async createUser(data: CreateUserDto): Promise<User> {
+      const existing = await this.userRepo.findByEmail(data.email);
+      if (existing) throw new ConflictError('Email already exists');
+      
+      const hashedPassword = await bcrypt.hash(data.password, 12);
+      const user = await this.userRepo.create({
+        ...data,
+        password: hashedPassword
+      });
+      
+      await this.emailService.sendWelcome(user.email, user.name);
+      return user;
+    }
+  }
+
+  // user.service.test.ts
+  import { describe, it, expect, vi, beforeEach } from 'vitest';
+  
+  describe('UserService', () => {
+    let userService: UserService;
+    let mockUserRepo: any;
+    let mockEmailService: any;
+    
+    beforeEach(() => {
+      mockUserRepo = {
+        findByEmail: vi.fn(),
+        create: vi.fn()
+      };
+      mockEmailService = {
+        sendWelcome: vi.fn().mockResolvedValue(undefined)
+      };
+      userService = new UserService(mockUserRepo, mockEmailService);
+    });
+    
+    describe('createUser', () => {
+      it('should create user with hashed password', async () => {
+        mockUserRepo.findByEmail.mockResolvedValue(null); // Not exists
+        mockUserRepo.create.mockResolvedValue({
+          id: '123',
+          email: 'ali@test.com',
+          name: 'Ali'
+        });
+        
+        const user = await userService.createUser({
+          email: 'ali@test.com',
+          name: 'Ali',
+          password: 'SecurePass123'
+        });
+        
+        expect(user.id).toBe('123');
+        expect(mockUserRepo.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            email: 'ali@test.com',
+            name: 'Ali',
+            password: expect.not.stringContaining('SecurePass123') // Hashed!
+          })
+        );
+        expect(mockEmailService.sendWelcome).toHaveBeenCalledWith(
+          'ali@test.com', 'Ali'
+        );
+      });
+      
+      it('should throw ConflictError if email already exists', async () => {
+        mockUserRepo.findByEmail.mockResolvedValue({ id: 'existing' });
+        
+        await expect(
+          userService.createUser({
+            email: 'ali@test.com',
+            name: 'Ali',
+            password: 'SecurePass123'
+          })
+        ).rejects.toThrow(ConflictError);
+        
+        expect(mockUserRepo.create).not.toHaveBeenCalled();
+      });
+      
+      it('should not call email service if user creation fails', async () => {
+        mockUserRepo.findByEmail.mockResolvedValue(null);
+        mockUserRepo.create.mockRejectedValue(new Error('DB error'));
+        
+        await expect(
+          userService.createUser({ email: 'ali@test.com', name: 'Ali', password: 'pass' })
+        ).rejects.toThrow();
+        
+        expect(mockEmailService.sendWelcome).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+================================================================
+SECTION 4: INTEGRATION TESTS
+================================================================
+
+Integration test = Real dependencies ke saath test karna
+                 (real DB, real Redis, lekin mock external APIs)
+
+Tools:
+  - Supertest: HTTP endpoints test karna
+  - Testcontainers: Real PostgreSQL, Redis in Docker
+
+Example:
+
+  // auth.integration.test.ts
+  import request from 'supertest';
+  import { app } from '../app';
+  import { db } from '../db';
+  
+  describe('POST /api/v1/auth/register', () => {
+    beforeEach(async () => {
+      await db.users.deleteMany(); // Clean slate
+    });
+    
+    afterAll(async () => {
+      await db.$disconnect();
+    });
+    
+    it('should register user and return 201', async () => {
+      const response = await request(app)
+        .post('/api/v1/auth/register')
+        .send({
+          email: 'ali@test.com',
+          name: 'Ali',
+          password: 'SecurePass123!'
+        });
+      
+      expect(response.status).toBe(201);
+      expect(response.body.data).toMatchObject({
+        email: 'ali@test.com',
+        name: 'Ali'
+      });
+      expect(response.body.data.password).toBeUndefined(); // Not exposed
+    });
+    
+    it('should return 409 for duplicate email', async () => {
+      // Create user first
+      await db.users.create({
+        data: { email: 'ali@test.com', name: 'Ali', password: 'hash' }
+      });
+      
+      const response = await request(app)
+        .post('/api/v1/auth/register')
+        .send({
+          email: 'ali@test.com',
+          name: 'Ali',
+          password: 'SecurePass123!'
+        });
+      
+      expect(response.status).toBe(409);
+      expect(response.body.error.code).toBe('CONFLICT');
+    });
+    
+    it('should return 400 for invalid email', async () => {
+      const response = await request(app)
+        .post('/api/v1/auth/register')
+        .send({ email: 'not-an-email', name: 'Ali', password: 'SecurePass123!' });
+      
+      expect(response.status).toBe(400);
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+    });
+  });
+
+================================================================
+SECTION 5: E2E TESTS
+================================================================
+
+E2E = Browser se real user ki tarah test karna
+
+Tool: Playwright (recommended in 2026)
+
+  // checkout.e2e.ts
+  import { test, expect } from '@playwright/test';
+  
+  test.describe('Checkout flow', () => {
+    test('user can complete purchase', async ({ page }) => {
+      // Login
+      await page.goto('/login');
+      await page.fill('[name="email"]', 'test@example.com');
+      await page.fill('[name="password"]', 'TestPass123!');
+      await page.click('[type="submit"]');
+      await expect(page).toHaveURL('/dashboard');
+      
+      // Add to cart
+      await page.goto('/products');
+      await page.click('[data-testid="product-1"] .add-to-cart');
+      await expect(page.locator('.cart-count')).toHaveText('1');
+      
+      // Checkout
+      await page.click('.cart-icon');
+      await page.click('.checkout-btn');
+      await page.fill('[name="card-number"]', '4242424242424242');
+      await page.click('.pay-btn');
+      
+      await expect(page.locator('.success-message')).toBeVisible();
+      await expect(page).toHaveURL('/order-confirmation');
+    });
+  });
+
+E2E Rules:
+  - Sirf critical user journeys
+  - Stable selectors (data-testid, not CSS classes)
+  - Isolated test data
+  - Slow — parallel mein run karo
+  - Flaky tests immediate fix karo
+
+================================================================
+SECTION 6: TEST STRATEGY — KYA TEST KARNA HAI?
+================================================================
+
+WHAT TO TEST:
+  ✅ Business logic (services)
+  ✅ API endpoints (happy path + error cases)
+  ✅ Edge cases (empty input, max size, null values)
+  ✅ Security checks (auth, authorization)
+  ✅ Critical user journeys (E2E)
+  ✅ Data transformations
+  ✅ Error handling
+
+WHAT NOT TO TEST:
+  ❌ Third-party libraries (trust them)
+  ❌ Framework internals
+  ❌ Trivial getters/setters
+  ❌ Simple database CRUD (test at integration level)
+  ❌ UI pixel-perfect rendering
+
+SENIOR RULE:
+  "Test behavior, not implementation.
+   Agar implementation change ho aur behavior same rahe →
+   tests still pass hone chahiye."
+
+================================================================
+SECTION 7: MOCKING
+================================================================
+
+Mock = Real dependency ki fake version
+
+Kab mock karo:
+  - External APIs (payment, email, SMS)
+  - Database (unit tests mein)
+  - Time (Date.now())
+  - Random values
+
+Kab real use karo:
+  - Integration tests mein: real DB (test container)
+  - Sirf baahari services mock karo
+
+Types:
+  Mock: Expected calls verify karo
+  Stub: Fake return value do
+  Spy: Real function wrap karo, calls track karo
+  Fake: Working implementation jo simple ho
+
+Vitest Mocking:
+  // Mock module
+  vi.mock('../email-service', () => ({
+    sendWelcome: vi.fn().mockResolvedValue(undefined)
+  }));
+  
+  // Mock date
+  vi.setSystemTime(new Date('2024-01-15'));
+  
+  // Spy
+  const spy = vi.spyOn(console, 'error');
+  // ... code run ...
+  expect(spy).toHaveBeenCalledWith('Error message');
+  
+  // Restore
+  vi.restoreAllMocks();
+
+================================================================
+SECTION 8: TEST DATA
+================================================================
+
+Fixtures = Predefined test data
+
+Factories = Dynamic test data generation
+
+  // factories/user.factory.ts
+  import { faker } from '@faker-js/faker';
+  
+  export function createUserData(overrides = {}) {
+    return {
+      id: faker.string.uuid(),
+      email: faker.internet.email(),
+      name: faker.person.fullName(),
+      password: 'TestPass123!',
+      role: 'user',
+      createdAt: new Date(),
+      ...overrides
+    };
+  }
+  
+  // Usage in tests:
+  const adminUser = createUserData({ role: 'admin' });
+  const specificUser = createUserData({ email: 'ali@test.com' });
+
+Test Data Rules:
+  - Never hardcode IDs
+  - Never use production data
+  - Clean up after tests
+  - Use realistic data (faker)
+  - Independent tests (no shared state)
+
+================================================================
+SECTION 9: CI TESTING
+================================================================
+
+Tests automatically run hone chahiye on every push:
+
+  // .github/workflows/ci.yml
+  name: CI
+  
+  on: [push, pull_request]
+  
+  jobs:
+    test:
+      runs-on: ubuntu-latest
+      
+      services:
+        postgres:
+          image: postgres:16
+          env:
+            POSTGRES_DB: test_db
+            POSTGRES_USER: test
+            POSTGRES_PASSWORD: test
+          ports: ['5432:5432']
+        
+        redis:
+          image: redis:7
+          ports: ['6379:6379']
+      
+      steps:
+        - uses: actions/checkout@v4
+        - uses: actions/setup-node@v4
+          with: { node-version: '20' }
+        
+        - run: npm ci
+        - run: npm run type-check
+        - run: npm run lint
+        - run: npm run test:unit
+        - run: npm run test:integration
+        - run: npm run test:e2e
+
+================================================================
+SECTION 10: TDD (Test-Driven Development)
+================================================================
+
+TDD = Pehle test likho, phir code
+
+Cycle: RED → GREEN → REFACTOR
+
+RED: Failing test likho (test nahi pass hogi kyunki code nahi)
+GREEN: Minimum code likho jo test pass kare
+REFACTOR: Code clean karo (test still pass)
+
+Example:
+
+  // Step 1: RED — Test likho
+  it('should calculate order total with discount', () => {
+    const order = new Order([
+      { price: 100, quantity: 2 },
+      { price: 50, quantity: 1 }
+    ]);
+    order.applyDiscount(10); // 10% discount
+    
+    expect(order.getTotal()).toBe(225); // 250 - 10% = 225
+  });
+  
+  // Step 2: GREEN — Simple implementation
+  class Order {
+    constructor(private items: OrderItem[]) {}
+    private discount = 0;
+    
+    applyDiscount(percent: number) {
+      this.discount = percent;
+    }
+    
+    getTotal() {
+      const subtotal = this.items.reduce(
+        (sum, item) => sum + item.price * item.quantity, 0
+      );
+      return subtotal * (1 - this.discount / 100);
+    }
+  }
+  
+  // Step 3: REFACTOR — Clean up, add edge cases
+
+Benefits:
+  - Better design (testable code forced)
+  - Better coverage
+  - Confidence
+  - Regression prevention
+
+Challenges:
+  - Slower at first
+  - Hard for UI, DB tests
+  - Overkill for trivial code
+
+================================================================
+SECTION 11: WHAT MAKES A GOOD TEST
+================================================================
+
+F — Fast (milliseconds)
+I — Independent (order nahi matter karta)
+R — Repeatable (deterministic)
+S — Self-validating (pass/fail clear)
+T — Timely (code ke saath, baad mein nahi)
+
+Bad test signs:
+  ❌ "Flaky" — sometimes pass sometimes fail
+  ❌ Slow (minutes per test)
+  ❌ Depends on other tests
+  ❌ Depends on environment
+  ❌ Hard to understand
+  ❌ Tests implementation not behavior
+
+================================================================
+EXERCISE — PART 14
+================================================================
+
+TASK: Write tests for this function:
+
+  async function transferMoney(
+    fromAccountId: string,
+    toAccountId: string,
+    amount: number
+  ): Promise<void> {
+    if (amount <= 0) throw new ValidationError('Amount must be positive');
+    
+    const fromAccount = await accountRepo.findById(fromAccountId);
+    if (!fromAccount) throw new NotFoundError('From account');
+    
+    if (fromAccount.balance < amount) throw new InsufficientFundsError();
+    
+    await db.transaction(async (tx) => {
+      await tx.accounts.update({ balance: { decrement: amount } }, { id: fromAccountId });
+      await tx.accounts.update({ balance: { increment: amount } }, { id: toAccountId });
+    });
+    
+    await auditService.log('TRANSFER', { fromAccountId, toAccountId, amount });
+  }
+
+Write tests for:
+  1. Happy path
+  2. Negative amount
+  3. Account not found
+  4. Insufficient funds
+  5. DB transaction fail hone pe audit log nahi hona
+
+================================================================
+QUIZ — PART 14
+================================================================
+
+Q1: Unit test mein database kyun mock karte hain?
+    (a) DB expensive hai
+    (b) Isolation — sirf business logic test karna hai, DB nahi
+    (c) Tests fast likhne ke liye
+    (d) Coverage badhane ke liye
+
+Jawab: (b)
+
+Q2: Test pyramid mein sabse zyada kaunse tests hone chahiye?
+    (a) E2E tests
+    (b) Integration tests
+    (c) Unit tests
+    (d) Manual tests
+
+Jawab: (c)
+
+Q3: "Test behavior, not implementation" ka matlab:
+    (a) Sirf UI test karo
+    (b) Tests implementation change hone pe break nahi honay chahiye
+    (c) Behavior test nahi karna chahiye
+    (d) TDD use nahi karna chahiye
+
+Jawab: (b)
+
+Q4: Flaky test kya hai?
+    (a) Test jo hamesha fail ho
+    (b) Test jo kabhi pass kabhi fail ho — non-deterministic
+    (c) Test jo bahut slow ho
+    (d) Test jo integration test ho
+
+Jawab: (b)
+
+================================================================
+AGLA PART: Part 15 — Debugging Like a Senior Engineer
+================================================================

@@ -1,0 +1,194 @@
+================================================================================
+TASK: 05-01 — MARKET STRUCTURE
+================================================================================
+TASK ID:        05-01
+TASK NAME:      Market Structure — Swing High/Low Detection
+PHASE:          05 — Strategy Engine
+OBJECTIVE:      Implement app/strategy/market_structure.py with deterministic
+                algorithms for detecting swing highs and swing lows, trend
+                direction, and market structure labels.
+
+CONTEXT:
+  All SMC/ICT concepts (BOS, CHoCH, OB, FVG) depend on correctly
+  identifying swing highs and lows. This is the foundational module.
+  The algorithm must be deterministic: same OHLCV data → same swing points.
+
+DEPENDENCIES:   Phases 03 + 04 complete
+PREVIOUS TASKS: 04-04
+
+FILES TO INSPECT:   app/config.py (SWING_LOOKBACK)
+FILES TO CREATE:
+  app/strategy/market_structure.py
+  tests/unit/test_market_structure.py
+  tests/unit/helpers/make_ohlcv.py  (if not already created)
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: app/mt5/, app/database/, app/config.py
+
+================================================================================
+ALGORITHMIC DEFINITIONS — SWING HIGH/LOW
+================================================================================
+
+SWING HIGH DEFINITION:
+  A candle at index i is a swing high if:
+    data['high'][i] > data['high'][i-n] for ALL n in [1..LOOKBACK]
+    AND
+    data['high'][i] > data['high'][i+n] for ALL n in [1..LOOKBACK]
+  Where LOOKBACK = config.SWING_LOOKBACK (default: 5 candles each side)
+  
+  NOTE: Only completed candles can be swing points.
+  The most recent LOOKBACK candles cannot yet be confirmed as swing highs.
+
+SWING LOW DEFINITION:
+  A candle at index i is a swing low if:
+    data['low'][i] < data['low'][i-n] for ALL n in [1..LOOKBACK]
+    AND
+    data['low'][i] < data['low'][i+n] for ALL n in [1..LOOKBACK]
+
+================================================================================
+SWING CONFIRMATION RULE — CRITICAL (DECISION-017)
+================================================================================
+
+  EXACT CONFIRMATION ALGORITHM:
+    Swing High at index i is confirmed when:
+      ALL(data['high'][i] >= data['high'][j]
+          for j in range(i - SWING_LOOKBACK_CANDLES, i + SWING_LOOKBACK_CANDLES + 1)
+          if j != i)
+    where SWING_LOOKBACK_CANDLES = config.SWING_LOOKBACK_CANDLES (default: 2)
+
+    Swing Low at index i is confirmed when:
+      ALL(data['low'][i] <= data['low'][j]
+          for j in range(i - SWING_LOOKBACK_CANDLES, i + SWING_LOOKBACK_CANDLES + 1)
+          if j != i)
+
+  RULES (non-negotiable):
+    1. Only CLOSED candles are used. The current forming candle (index 0 from
+       the right) is NEVER included in swing detection.
+    2. Minimum SWING_LOOKBACK_CANDLES = 1 (one candle required on each side).
+    3. Default SWING_LOOKBACK_CANDLES = 2 (two candles each side for confirmation).
+    4. This introduces a 2-candle lag — intentional trade-off to prevent look-ahead.
+    5. The same value of SWING_LOOKBACK_CANDLES MUST be used in both live trading
+       and backtesting to ensure consistent strategy behavior.
+    6. Configurable via SWING_LOOKBACK_CANDLES in app/config.py.
+
+  WHY THIS MATTERS:
+    Without a defined N, each agent will choose a different lookback, making
+    strategy behavior non-deterministic and backtesting non-reproducible.
+    An N=0 value introduces look-ahead bias (using an unconfirmed swing).
+
+  NOTE: The existing SWING_LOOKBACK=20 parameter in config is the SCAN WINDOW
+  (how far back to look for swings in the data). SWING_LOOKBACK_CANDLES=2 is
+  the CONFIRMATION window (how many candles each side must be lower/higher).
+  These are separate parameters serving different purposes.
+
+TREND DETERMINATION:
+  Given a sequence of confirmed swing highs (SH) and swing lows (SL):
+  
+  BULLISH TREND:
+    Current SH > Previous SH (Higher High)
+    AND Current SL > Previous SL (Higher Low)
+  
+  BEARISH TREND:
+    Current SH < Previous SH (Lower High)
+    AND Current SL < Previous SL (Lower Low)
+  
+  RANGING/UNCLEAR:
+    Mixed — not fitting bullish or bearish criteria
+
+================================================================================
+DETAILED REQUIREMENTS
+================================================================================
+
+@dataclass
+class SwingPoint:
+    index: int
+    price: float
+    point_type: str  # "HIGH" or "LOW"
+    candle_time: datetime
+    confirmed: bool  # True once enough candles have passed
+
+def detect_swing_highs(data: pd.DataFrame,
+                       lookback: int = 5) -> list[SwingPoint]:
+    """
+    Detects all confirmed swing highs in the OHLCV DataFrame.
+    Uses the pivot detection algorithm defined above.
+    Only returns CONFIRMED swing points (not the last LOOKBACK candles).
+    data['high'] column used.
+    """
+
+def detect_swing_lows(data: pd.DataFrame,
+                      lookback: int = 5) -> list[SwingPoint]:
+    """
+    Detects all confirmed swing lows.
+    data['low'] column used.
+    """
+
+def get_recent_swings(data: pd.DataFrame,
+                      lookback: int = 5,
+                      max_count: int = 10) -> dict:
+    """
+    Returns dict:
+      highs: list[SwingPoint] (most recent max_count swing highs)
+      lows: list[SwingPoint] (most recent max_count swing lows)
+    """
+
+def determine_trend(swing_highs: list[SwingPoint],
+                    swing_lows: list[SwingPoint]) -> str:
+    """
+    Returns: "BULLISH", "BEARISH", or "RANGING"
+    Uses last 2 swing highs and last 2 swing lows.
+    Requires at least 2 of each to determine trend.
+    """
+
+def get_market_structure(data: pd.DataFrame,
+                         config: Config) -> dict:
+    """
+    Main entry point. Returns:
+      trend: str ("BULLISH", "BEARISH", "RANGING")
+      swing_highs: list[SwingPoint]
+      swing_lows: list[SwingPoint]
+      last_high: SwingPoint or None
+      last_low: SwingPoint or None
+      previous_high: SwingPoint or None
+      previous_low: SwingPoint or None
+    """
+
+NO LOOKAHEAD RULE:
+  At time T, the function only uses data[0:T+1].
+  Never peek at future candles. In backtesting, this is enforced by
+  passing only the historical slice up to the current bar.
+
+================================================================================
+IMPLEMENTATION STEPS
+================================================================================
+
+1. Create tests/unit/helpers/make_ohlcv.py with test data generator
+2. Create app/strategy/market_structure.py
+3. Write unit tests:
+   test_detects_swing_high_in_uptrend()
+   test_detects_swing_low_in_downtrend()
+   test_no_swing_in_flat_market()
+   test_trend_is_bullish_with_higher_highs_and_lows()
+   test_trend_is_bearish_with_lower_highs_and_lows()
+   test_no_lookahead_with_recent_candles()
+4. Run tests and verify
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+python -m py_compile app/strategy/market_structure.py
+pytest tests/unit/test_market_structure.py -v
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ Swing detection algorithm is deterministic
+□ No lookahead bias — recent LOOKBACK candles not incorrectly labeled
+□ Trend determination correct for all 3 states
+□ All unit tests pass with synthetic data
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/05_STRATEGY_ENGINE/02_TASK_BOS_CHoCH.txt
+================================================================================

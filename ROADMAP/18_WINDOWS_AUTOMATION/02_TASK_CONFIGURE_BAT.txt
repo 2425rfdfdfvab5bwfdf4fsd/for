@@ -1,0 +1,80 @@
+================================================================================
+TASK ID:     18-02
+TASK NAME:   Configuration Wizard (configure.bat)
+PHASE:       18 — Windows Automation
+================================================================================
+
+OBJECTIVE:
+    Create configure.bat and scripts/setup_wizard.py that guide the user
+    through interactive configuration of all bot settings.
+
+CONTEXT:
+    The user runs configure.bat after setup.bat.
+    It launches a Python-based interactive wizard that prompts for each setting,
+    validates input, and writes to .env.
+
+    CONFIGURATION SECTIONS:
+    1. MT5 Settings
+       - MT5 executable path (auto-detected or user-provided)
+       - Login / account number
+       - Server name
+       - Demo or Live mode (DEFAULT: DEMO)
+
+    2. Trading Settings
+       - Symbols to trade (default: EURUSD,GBPUSD,USDJPY)
+       - Risk per trade % (default: 0.5)
+       - Max daily trades (default: 3)
+       - Max daily loss % (default: 2.0)
+       - Max consecutive losses (default: 2)
+       - Min confluence score (default: 8)
+
+    3. Session Settings
+       - Enable London session (default: yes)
+       - Enable New York session (default: yes)
+
+    4. Features
+       - Enable break-even (default: yes)
+       - Enable trailing stop (default: yes)
+       - Enable partial profit (default: yes)
+       - Enable news filter (default: yes)
+
+    5. Telegram (optional)
+       - Enable Telegram (default: no)
+       - Bot token (only if enabled)
+       - Chat ID (only if enabled)
+
+    NEVER store MT5 password in .env unless user explicitly opts in.
+    Explain that MT5 password is optional if terminal is already logged in.
+
+FILES TO CREATE:
+    configure.bat
+    scripts/setup_wizard.py
+    scripts/__init__.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    setup_wizard.py:
+    - Reads existing .env if present (pre-fills defaults)
+    - Each question has default value shown in brackets [default]
+    - Press Enter to accept default
+    - Validates input (e.g. risk must be 0.1–5.0)
+    - Shows summary before saving
+    - Asks for confirmation: "Save these settings? [y/n]"
+    - Writes to .env with comments preserved
+
+ACCEPTANCE CRITERIA:
+    [ ] configure.bat launches wizard without errors
+    [ ] All settings configurable interactively
+    [ ] Existing .env values preserved as defaults
+    [ ] Validation prevents invalid values
+    [ ] .env written correctly after confirmation
+
+DEFINITION OF DONE:
+    [ ] configure.bat and setup_wizard.py created
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 18-03 — TASK_START_STOP_RESTART.txt
+================================================================================

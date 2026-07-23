@@ -1,0 +1,103 @@
+================================================================================
+PHASE 07 — RISK ENGINE
+================================================================================
+
+PHASE NAME:         Risk Engine
+PHASE OBJECTIVE:    Implement all pre-trade and portfolio-level risk controls
+                    that must pass before any order is placed. This is a
+                    SAFETY-CRITICAL phase. No trade may bypass the risk engine.
+
+WHY THIS PHASE EXISTS:
+    Capital preservation is the primary goal. The risk engine enforces:
+    - 0.5% risk per trade (position sizing)
+    - Minimum 1:2 R:R
+    - 2% maximum daily loss limit
+    - 2 consecutive loss protection
+    - Correlation filter across open positions
+    - Margin safety check
+
+DEPENDENCIES:
+    - Phase 02 (Foundation): config, logging
+    - Phase 03 (MT5 Integration): account info, symbol info, current positions
+    - Phase 04 (Data Layer): trade records, daily stats
+    - Phase 06 (Confluence Engine): ScoredSignal passed in for validation
+
+INPUTS:
+    - ScoredSignal (from confluence engine)
+    - Current account equity/balance (from MT5)
+    - Open positions (from MT5)
+    - Daily trade history (from database)
+    - Symbol trading constraints (from MT5 symbol info)
+
+OUTPUTS:
+    - RiskValidationResult: APPROVED or REJECTED with reason
+    - Calculated lot size
+    - Validated SL price
+    - Validated TP price
+
+FILES EXPECTED TO BE CREATED:
+    app/risk/position_sizer.py
+    app/risk/sl_tp_calculator.py
+    app/risk/rr_validator.py
+    app/risk/daily_limits.py
+    app/risk/consecutive_loss.py
+    app/risk/correlation.py
+    app/risk/margin_safety.py
+    app/risk/risk_manager.py
+    app/risk/__init__.py
+    tests/test_risk/test_position_sizer.py
+    tests/test_risk/test_sl_tp.py
+    tests/test_risk/test_daily_limits.py
+    tests/test_risk/test_consecutive_loss.py
+    tests/test_risk/test_correlation.py
+    tests/test_risk/test_risk_manager.py
+
+FILES EXPECTED TO BE MODIFIED:
+    app/database/models.py         (add RiskValidationResult, TradeParameters)
+
+FILES THAT MUST NOT BE MODIFIED:
+    app/mt5/
+    app/strategy/
+    app/confluence/
+    ROADMAP/
+
+TASK ORDER:
+    1. 01_TASK_POSITION_SIZING.txt
+    2. 02_TASK_SL_TP.txt
+    3. 03_TASK_RR_VALIDATION.txt
+    4. 04_TASK_DAILY_LIMITS.txt
+    5. 05_TASK_CONSECUTIVE_LOSS.txt
+    6. 06_TASK_CORRELATION.txt
+    7. 07_TASK_MARGIN_SAFETY.txt
+    8. 08_TASK_RISK_MANAGER.txt
+
+TESTING REQUIREMENTS:
+    - All position sizing formulas tested with known inputs/outputs
+    - Daily limit tests simulate various account states
+    - Consecutive loss counter resets correctly at day boundary
+    - Correlation filter blocks highly correlated pairs
+    - Risk manager integration test: full validation pipeline
+
+ACCEPTANCE CRITERIA:
+    [ ] No trade can be placed without passing all 8 risk checks
+    [ ] Position sizing formula matches expected lot size for 0.5% risk
+    [ ] 2% daily loss triggers a full trading halt until next day
+    [ ] 2 consecutive losses stops new trade entry
+    [ ] Correlated positions are detected and blocked
+    [ ] All unit tests pass
+
+KNOWN RISKS:
+    - Floating point precision in lot size calculation; always round DOWN
+    - MT5 lot step constraints must be respected (e.g. 0.01 minimum)
+    - Daily loss calculation must use equity, not balance
+
+ROLLBACK STRATEGY:
+    If risk engine produces incorrect results, set RISK_ENGINE_ENABLED=false
+    in config to block ALL trading (fail-safe default). Never silently pass.
+
+HANDOFF REQUIREMENTS:
+    Before Phase 08 (Filters):
+    - RiskManager.validate(scored_signal) fully functional
+    - All 8 sub-components tested individually
+    - Integration test demonstrates full pipeline: signal → risk → APPROVED/REJECTED
+================================================================================

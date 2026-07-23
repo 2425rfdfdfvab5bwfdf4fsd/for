@@ -1,0 +1,57 @@
+================================================================================
+TASK ID:     07-03
+TASK NAME:   Risk/Reward Validation
+PHASE:       07 — Risk Engine
+================================================================================
+
+OBJECTIVE:
+    Implement RRValidator that verifies the calculated R:R ratio meets the
+    minimum threshold (1:2) before the trade is approved.
+
+CONTEXT:
+    Even if the SLTPCalculator produces valid levels, the RRValidator performs
+    a final independent check. This separation ensures no single code path
+    can inadvertently skip the R:R check.
+
+DEPENDENCIES:
+    - 07-02 (TASK_SL_TP) complete
+
+FILES TO CREATE:
+    app/risk/rr_validator.py
+    tests/test_risk/test_rr_validator.py
+
+FILES TO MODIFY:
+    None (standalone validator)
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/strategy/
+    app/confluence/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class RRValidator:
+        validate(sltp_result: SLTPResult) -> RRValidationResult
+
+    Logic:
+        actual_rr = sltp_result.tp2_pips / sltp_result.sl_pips
+        if actual_rr < MIN_RR_RATIO: REJECTED
+        else: APPROVED
+
+TEST REQUIREMENTS:
+    - test_rr_2_approved()
+    - test_rr_1_9_rejected()
+    - test_rr_3_approved()
+    - test_zero_sl_rejected()
+
+ACCEPTANCE CRITERIA:
+    [ ] R:R below 2.0 is always rejected
+    [ ] R:R at exactly 2.0 is approved
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] rr_validator.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 07-04 — TASK_DAILY_LIMITS.txt
+================================================================================

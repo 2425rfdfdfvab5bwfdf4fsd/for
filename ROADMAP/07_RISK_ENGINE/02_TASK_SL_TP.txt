@@ -1,0 +1,120 @@
+================================================================================
+TASK ID:     07-02
+TASK NAME:   SL/TP Calculator
+PHASE:       07 — Risk Engine
+================================================================================
+
+OBJECTIVE:
+    Implement SLTPCalculator that derives stop-loss and take-profit price levels
+    from the signal's structural reference points and ATR.
+
+CONTEXT:
+    SL placement rules:
+    - For LONG: SL = below Order Block low OR below swing low, with ATR buffer
+    - For SHORT: SL = above Order Block high OR above swing high, with ATR buffer
+    - SL must be beyond the invalidation level of the setup
+    - Never set SL tighter than MIN_SL_PIPS (configurable, default: 10 pips)
+
+    TP placement rules:
+
+================================================================================
+TP TARGET SELECTION PRIORITY — REQUIRED (CHG-C02, DECISION-023)
+================================================================================
+
+Without explicit priority rules agents pick different liquidity levels as TP
+targets, making strategy non-deterministic across phases and backtesting runs.
+
+PRIORITY ORDER — use the highest-priority level available:
+
+  PRIORITY 1 — EQUAL LEVELS (preferred):
+    For BUY:  nearest cluster of unswept equal HIGHS above entry price.
+              Detected by liquidity.py: equal_highs list filtered for
+              level > entry_price AND level not yet swept.
+    For SELL: nearest cluster of unswept equal LOWS below entry price.
+              Detected by liquidity.py: equal_lows list filtered for
+              level < entry_price AND level not yet swept.
+
+  PRIORITY 2 — SWING LEVEL (fallback if no equal levels):
+    For BUY:  nearest previous swing HIGH above entry price.
+              From market_structure.py: first swing_high > entry_price.
+    For SELL: nearest previous swing LOW below entry price.
+              From market_structure.py: first swing_low < entry_price.
+
+  PRIORITY 3 — REJECT if neither satisfies R:R:
+    If no structural level produces rr_ratio >= MIN_RR_RATIO:
+      valid = False
+      rejection_reason = "NO_TP_TARGET_IDENTIFIED"
+    Do NOT fall back to a fixed R:R multiple as the structural TP target.
+
+POST-SELECTION R:R VALIDATION (always applied):
+  rr_ratio = (tp_price - entry_price) / (entry_price - sl_price)  # for BUY
+  if rr_ratio < MIN_RR_RATIO:
+    valid = False
+    rejection_reason = "INSUFFICIENT_RR"
+
+CONFIG additions to app/config.py:
+  TP_PREFER_EQUAL_LEVELS = True    # check equal levels before swing levels
+  TP_FALLBACK_TO_SWING   = True    # allow swing H/L as fallback
+
+================================================================================
+    TP placement rules:
+    - Primary TP = next significant liquidity level in trade direction
+    - Minimum TP = entry + (sl_pips * MIN_RR_RATIO * pip_size)
+    - Partial TP1 = entry + (sl_pips * 1.0 * pip_size)  [50% of position]
+    - Full TP2  = entry + (sl_pips * 2.0 * pip_size)    [remaining 50%]
+
+    MIN_RR_RATIO default: 2.0
+
+DEPENDENCIES:
+    - Phase 05: structural reference points in Signal object
+    - 07-01: pip values known
+
+FILES TO CREATE:
+    app/risk/sl_tp_calculator.py
+    tests/test_risk/test_sl_tp.py
+
+FILES TO MODIFY:
+    app/database/models.py    — add SLTPResult dataclass
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class SLTPCalculator:
+        calculate(signal: Signal, atr: float, pip_size: float) -> SLTPResult
+
+    SLTPResult:
+        entry_price: float
+        sl_price: float
+        tp1_price: float
+        tp2_price: float
+        sl_pips: float
+        tp2_pips: float
+        rr_ratio: float
+        valid: bool
+        rejection_reason: str | None
+
+    GUARDS:
+        - sl_pips < MIN_SL_PIPS → valid=False, reason="SL_TOO_TIGHT"
+        - rr_ratio < MIN_RR_RATIO → valid=False, reason="INSUFFICIENT_RR"
+
+TEST REQUIREMENTS:
+    - test_long_sl_below_ob()
+    - test_short_sl_above_ob()
+    - test_rr_below_minimum_invalid()
+    - test_sl_too_tight_invalid()
+    - test_tp1_and_tp2_calculated()
+
+ACCEPTANCE CRITERIA:
+    [ ] SL is placed beyond structural invalidation level
+    [ ] Minimum 1:2 R:R enforced
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] sl_tp_calculator.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 07-03 — TASK_RR_VALIDATION.txt
+================================================================================

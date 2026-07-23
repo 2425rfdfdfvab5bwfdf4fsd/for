@@ -1,0 +1,92 @@
+================================================================================
+PHASE 11 — AUTOMATION
+================================================================================
+
+PHASE NAME:         Automation
+PHASE OBJECTIVE:    Build the main bot loop, singleton guard, watchdog,
+                    heartbeat, and auto-recovery system that make the bot
+                    fully autonomous after startup.
+
+WHY THIS PHASE EXISTS:
+    All the engines are built. This phase wires them into a running system.
+    The main loop orchestrates: filters → strategy → confluence → risk →
+    execution → position management. The watchdog ensures the bot restarts
+    after failures. The singleton prevents duplicate instances.
+
+DEPENDENCIES:
+    - All phases 02–10 complete
+    - Phase 12 (Notifications) may be partially used for alerts
+
+INPUTS:
+    - All configured engines and managers
+    - System time (UTC)
+    - MT5 connection state
+
+OUTPUTS:
+    - Continuously running bot process
+    - Heartbeat file updated regularly
+    - Status file readable by status.bat
+    - Auto-restart on failure
+
+FILES EXPECTED TO BE CREATED:
+    app/automation/main_loop.py
+    app/automation/singleton.py
+    app/automation/watchdog.py
+    app/automation/heartbeat.py
+    app/automation/auto_recovery.py
+    app/automation/__init__.py
+    main.py                           (entry point)
+    tests/test_automation/test_singleton.py
+    tests/test_automation/test_heartbeat.py
+    tests/test_automation/test_main_loop.py
+
+FILES EXPECTED TO BE MODIFIED:
+    None (new entry point)
+
+FILES THAT MUST NOT BE MODIFIED:
+    app/mt5/
+    app/strategy/
+    app/risk/
+    app/confluence/
+    app/filters/
+    app/execution/
+    app/management/
+    ROADMAP/
+
+TASK ORDER:
+    1. 01_TASK_MAIN_LOOP.txt
+    2. 02_TASK_SINGLETON.txt
+    3. 03_TASK_WATCHDOG.txt
+    4. 04_TASK_HEARTBEAT.txt
+    5. 05_TASK_AUTO_RECOVERY.txt
+
+TESTING REQUIREMENTS:
+    - Main loop tested with all engines mocked
+    - Singleton tested: second instance blocked
+    - Heartbeat file creation tested
+    - Watchdog restart logic tested (no actual process spawn in unit test)
+
+ACCEPTANCE CRITERIA:
+    [ ] python main.py starts the bot without errors
+    [ ] Second instance of main.py blocked by singleton
+    [ ] Heartbeat file updated every HEARTBEAT_INTERVAL_SECONDS
+    [ ] Main loop runs full pipeline: filter→strategy→confluence→risk→execution→management
+    [ ] Watchdog detects stale heartbeat and restarts
+    [ ] All tests pass
+
+KNOWN RISKS:
+    - Main loop exception handling must be comprehensive: never let uncaught
+      exception kill the loop permanently (use retry with backoff)
+    - Singleton on Windows uses a lock file; must be cleaned up on graceful exit
+    - Watchdog must have a max restart limit to prevent restart storms
+
+ROLLBACK STRATEGY:
+    If main loop causes issues, set LOG_LEVEL=DEBUG and run in dry-run mode
+    (DRY_RUN=true) which runs the full pipeline but skips order execution.
+
+HANDOFF REQUIREMENTS:
+    Before Phase 12 (Notifications):
+    - main.py runs to completion in DRY_RUN mode
+    - Singleton, heartbeat, and watchdog all functional
+    - All automation tests pass
+================================================================================

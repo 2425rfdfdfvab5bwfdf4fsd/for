@@ -1,0 +1,137 @@
+================================================================================
+TASK ID:     18-03
+TASK NAME:   Start / Stop / Restart Scripts
+PHASE:       18 — Windows Automation
+================================================================================
+
+OBJECTIVE:
+    Create start_bot.bat, stop_bot.bat, and restart_bot.bat for full bot
+    lifecycle management.
+
+CONTEXT:
+    start_bot.bat:
+    - Check if bot is already running (singleton lock)
+    - Activate virtual environment
+    - Start main.py in background (minimized window or hidden)
+    - Start watchdog.py in background
+    - Wait 3 seconds
+    - Run status.bat to confirm start
+
+    stop_bot.bat:
+    - Find bot process by PID (from heartbeat.json)
+    - Send graceful shutdown signal (SIGTERM equivalent on Windows)
+    - Wait up to 30 seconds for clean shutdown
+    - If not stopped: force kill
+    - Stop watchdog process
+    - Confirm stopped
+
+    restart_bot.bat:
+    - Call stop_bot.bat
+    - Wait 5 seconds
+    - Call start_bot.bat
+
+FILES TO CREATE:
+    start_bot.bat
+    stop_bot.bat
+    restart_bot.bat
+    run_dashboard.bat
+    run_backtest.bat
+    run_tests.bat
+
+FILES FORBIDDEN TO MODIFY:
+    app/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+
+    start_bot.bat must check:
+    - .env exists (if not: prompt to run configure.bat first)
+    - Virtual environment exists (if not: prompt to run setup.bat first)
+    - MT5 terminal is running (optional check with warning if not)
+
+    run_dashboard.bat:
+        Starts Flask dashboard in foreground with browser auto-open.
+        start http://localhost:5000
+        venv\Scripts\python.exe app/dashboard/app.py
+
+    run_backtest.bat:
+        Prompts for date range, runs run_backtest.py with arguments.
+
+    run_tests.bat:
+        Runs full test suite: venv\Scripts\pytest.exe tests/ -v
+
+WINDOWS PROCESS MANAGEMENT:
+    Use: start /B venv\Scripts\python.exe main.py
+    Store PID: write to data/bot.pid
+    Read PID: on stop/restart
+
+
+================================================================================
+UPDATE PROCEDURE (CHG-027)
+================================================================================
+
+CREATE: update.bat
+
+PURPOSE: Safe way to pull code updates and restart the bot.
+
+PROCEDURE:
+  @echo off
+  echo === MT5 Bot Update Procedure ===
+  echo.
+  echo Stopping bot before update...
+  call stop_bot.bat
+
+  echo.
+  echo Pulling latest code...
+  git pull origin main
+  if ERRORLEVEL 1 (
+      echo ERROR: git pull failed. Check network connection.
+      pause
+      exit /b 1
+  )
+
+  echo.
+  echo Installing any new dependencies...
+  venv\Scripts\pip.exe install -r requirements.txt --quiet
+  if ERRORLEVEL 1 (
+      echo ERROR: pip install failed. Check requirements.txt.
+      pause
+      exit /b 1
+  )
+
+  echo.
+  echo Running quick self-test after update...
+  venv\Scripts\pytest.exe tests/ -x -q --tb=short 2>&1 | head -30
+  if ERRORLEVEL 1 (
+      echo WARNING: Tests failed after update. Review before restarting bot.
+      echo Press any key to restart anyway, or Ctrl+C to cancel.
+      pause
+  )
+
+  echo.
+  echo Starting bot with updated code...
+  call start_bot.bat
+
+  echo.
+  echo === Update complete ===
+
+ADD TO FILES TO CREATE LIST:
+  update.bat
+
+ACCEPTANCE CRITERIA ADDITION:
+  [ ] update.bat stops bot → git pull → pip install → test → restart
+
+================================================================================
+ACCEPTANCE CRITERIA:
+    [ ] start_bot.bat starts bot and watchdog
+    [ ] stop_bot.bat cleanly stops both
+    [ ] restart_bot.bat = stop + start
+    [ ] run_dashboard.bat opens browser
+    [ ] run_tests.bat runs full test suite
+
+DEFINITION OF DONE:
+    [ ] All 6 .bat files created
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 18-04 — TASK_STATUS_BAT.txt
+================================================================================

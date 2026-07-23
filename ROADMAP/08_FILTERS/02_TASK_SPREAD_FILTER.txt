@@ -1,0 +1,60 @@
+================================================================================
+TASK ID:     08-02
+TASK NAME:   Spread Filter
+PHASE:       08 — Filters
+================================================================================
+
+OBJECTIVE:
+    Implement SpreadFilter that blocks scanning when the live spread exceeds
+    the configured maximum for a given symbol.
+
+CONTEXT:
+    Wide spreads indicate low liquidity or market stress. Trading with high
+    spread destroys edge.
+
+    MAX_SPREAD_PIPS per symbol (configurable):
+        EURUSD: 2.0 pips
+        GBPUSD: 2.5 pips
+        USDJPY: 2.0 pips
+
+    Spread is obtained from MT5 tick data: ask - bid.
+
+DEPENDENCIES:
+    - Phase 03 (MT5): tick data
+    - Phase 02 config
+
+FILES TO CREATE:
+    app/filters/spread_filter.py
+    tests/test_filters/test_spread.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class SpreadFilter:
+        check(symbol: str, spread_pips: float) -> FilterResult
+
+    Logic:
+        max_spread = config.MAX_SPREAD_PIPS[symbol]
+        if spread_pips > max_spread: BLOCK (reason: "SPREAD_TOO_WIDE")
+        else: PASS
+
+TEST REQUIREMENTS:
+    - test_acceptable_spread_passes()
+    - test_excessive_spread_blocked()
+    - test_spread_at_limit_passes()
+
+ACCEPTANCE CRITERIA:
+    [ ] Spread above threshold blocks
+    [ ] At-threshold passes
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] spread_filter.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 08-03 — TASK_NEWS_FILTER.txt
+================================================================================

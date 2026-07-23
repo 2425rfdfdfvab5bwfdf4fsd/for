@@ -1,0 +1,87 @@
+================================================================================
+TASK ID:     06-02
+TASK NAME:   Trade Quality Classification
+PHASE:       06 — Confluence Engine
+================================================================================
+
+OBJECTIVE:
+    Implement TradeQualityClassifier that assigns an A+/A/B/C grade to ACCEPTED
+    signals based on their confluence score and factor profile. Grade is stored
+    in ScoredSignal and influences journal reporting.
+
+CONTEXT:
+    An 8/10 signal is the minimum. But not all accepted signals are equal.
+    Grade A+ (9.5–10) = premium quality — highest priority when near trade limit.
+    Grade A (8.5–9.4) = high quality, normal priority execution.
+    Grade B (8–8.9) = standard quality, normal execution.
+    Grade C = reserved for future use; currently treated same as B.
+    Grades are NOT used to modify risk — risk is always 0.5% regardless.
+    Grades are used for journal reporting and self-improvement analytics.
+
+DEPENDENCIES:
+    - 06-01 (TASK_SCORING) must be complete
+
+FILES TO INSPECT:
+    app/confluence/scorer.py
+    app/database/models.py
+
+FILES TO CREATE:
+    app/confluence/quality_classifier.py
+    tests/test_confluence/test_quality.py
+
+FILES TO MODIFY:
+    app/confluence/scorer.py    — call classifier after scoring
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/strategy/
+    ROADMAP/
+
+--------------------------------------------------------------------------------
+DETAILED REQUIREMENTS:
+--------------------------------------------------------------------------------
+
+GRADE THRESHOLDS (configurable in app/config.py):
+    A+: score >= 9.5  (premium quality — journal priority, analytics highlight)
+    A:  score >= 8.5 and < 9.5
+    B:  score >= 8.0 and < 8.5
+    C:  reserved for future use (currently treated same as B)
+    REJECTED: score < 8.0
+
+    NOTE (HI-001 fix): A+ grade is load-bearing — referenced by analytics,
+    dashboard quality filtering, and self-improvement segment analysis.
+    All downstream code handling quality grades must handle A+ as a valid grade.
+
+IMPLEMENTATION STEPS:
+    1. Create TradeQualityClassifier with classify(scored_signal) → grade str
+    2. Integrate into ConfluenceScorer.score() after total computed
+    3. Write tests covering all grade boundaries
+
+TEST REQUIREMENTS:
+    - test_grade_a_plus_at_9_5()
+    - test_grade_a_plus_at_10()
+    - test_grade_a_at_8_5()
+    - test_grade_a_at_9_4()
+    - test_grade_b_at_8()
+    - test_grade_b_at_8_4()
+    - test_rejected_at_7_9()
+    - test_grade_boundary_exactly_8_0_is_B()
+    - test_grade_boundary_exactly_9_5_is_A_plus()
+
+VALIDATION COMMANDS:
+    pytest tests/test_confluence/test_quality.py -v
+
+ACCEPTANCE CRITERIA:
+    [ ] TradeQualityClassifier importable
+    [ ] Grade boundaries are correct
+    [ ] Grades integrated into ScoredSignal.quality_grade field
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] quality_classifier.py created
+    [ ] Tests pass
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK:
+    06-03 — TASK_SIGNAL_DEDUPLICATION.txt
+================================================================================

@@ -1,0 +1,712 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 21: AI-ASSISTED SOFTWARE ENGINEERING IN 2026
+(AI Ko Sahi Tarike Se Use Karna)
+================================================================
+
+SEEKHNE KE MAQASID:
+- AI coding agents ka deep understanding
+- Agent ke liye effective prompting (chat se alag hai)
+- Context engineering — agent ka "brain fuel"
+- AI pe dependent hone se bachna
+- AI-generated code safely verify karna
+- Agent rules files banana (AI_RULES.md, .cursorrules, AGENTS.md)
+
+================================================================
+SECTION 1: AI TOOLS IN 2026 — UPDATED LANDSCAPE
+================================================================
+
+2026 mein AI tools do categories mein hain:
+
+─── CATEGORY A: CHAT LLMs ───
+  - ChatGPT (OpenAI o3, GPT-4o)
+  - Claude (Anthropic — Claude Opus 4, Sonnet 4)
+  - Gemini (Google — Gemini 2.5 Pro)
+
+  Kab use karo:
+    → Architecture brainstorming
+    → Code explain karwana
+    → Design decisions ke trade-offs poochhna
+    → One-off questions
+    → Large documents analyze karna
+
+─── CATEGORY B: AI CODING AGENTS ───
+  - Replit Agent (yeh project mein hi kaam karta hai)
+  - Cursor Agent (IDE + agentic mode)
+  - Claude Code (CLI-based agent)
+  - GitHub Copilot Workspace
+  - Windsurf (Codeium)
+  - Aider (open-source CLI agent)
+  - Devin, SWE-agent (fully autonomous)
+
+  Kab use karo:
+    → Actual code likhna / implement karna
+    → Files create/modify karna
+    → Tests run karna
+    → Bugs fix karna
+    → Refactoring
+
+─── KEY DIFFERENCE ───
+
+  Chat LLM: Aap poochho, woh jawab de. Context tab tak hai jab tak aap text paste karo.
+  
+  Coding Agent: Woh khud codebase padhta hai, files likhta hai,
+                commands run karta hai, results dekhta hai, loop karta hai.
+  
+  Agent = LLM + Tools (file read/write, shell, browser, search)
+
+================================================================
+SECTION 2: HOW AI CODING AGENTS WORK (Inside the Black Box)
+================================================================
+
+Ek agent ko samajhna bahut zaroori hai. Jab aap Replit Agent ya
+Cursor Agent ko kuch karne ko kehte ho, andar yeh hota hai:
+
+AGENT LOOP:
+
+  ┌─────────────────────────────────────────┐
+  │  1. OBSERVE: Codebase + Context padhna  │
+  │  2. PLAN: Kya steps lene hain?          │
+  │  3. ACT: File read/write, commands run  │
+  │  4. OBSERVE: Naya state dekho           │
+  │  5. Repeat until task complete          │
+  └─────────────────────────────────────────┘
+
+Tools jo agents use karte hain:
+  - read_file (koi bhi file padh sakta hai)
+  - write_file (files create/modify karta hai)
+  - run_command (npm test, python script.py, etc.)
+  - search_codebase (grep/search karna)
+  - web_search (kuch tools mein)
+  - browser (kuch tools mein)
+
+Context window limit:
+  - Agents ka context window hota hai (e.g. 200K tokens)
+  - Zyada files = zyada tokens = important cheezein "forget" ho sakti hain
+  - Isliye CONCISE aur FOCUSED context dena zaroori hai
+
+Agent ki "memory" types:
+  1. In-context: Current conversation + files jo usne padhe
+  2. External files: ARCHITECTURE.md, AI_RULES.md, etc.
+  3. Embeddings/search: Kuch agents codebase index karte hain
+
+================================================================
+SECTION 3: PROMPT ENGINEERING VS AGENT INSTRUCTION ENGINEERING
+================================================================
+
+Chat prompting aur agent instructing ALAG cheezein hain.
+
+─── CHAT PROMPT (ek sawaal, ek jawab) ───
+
+  "How do I implement JWT refresh tokens in Node.js?"
+  → AI explains, aap implement karo
+
+─── AGENT INSTRUCTION (kaam karo, files likho) ───
+
+  Agent ko instruction ek TASK hai, SAWAAL nahi.
+  
+  Structure:
+    1. CONTEXT: Yeh project kya hai (ARCHITECTURE.md paste karo)
+    2. TASK: Exactly kya karna hai (ek kaam, chhota)
+    3. FILES: Kon si files modify karo (strict list)
+    4. RULES: Kya karna FORBIDDEN hai
+    5. SUCCESS: Kab task complete maana jaaye
+
+Example — BAD Agent Instruction:
+  ❌ "Make a login system"
+  
+  Problem:
+    - Agent apna architecture invent karega
+    - Naye files banayega jo project mein fit nahi karenge
+    - Patterns follow nahi karega
+    - Security incomplete reh sakti hai
+    - Woh ek kaam mein 10 files change karega
+
+Example — GOOD Agent Instruction:
+  ✅
+  "Context:
+   [paste ARCHITECTURE.md — 3 lines summary]
+   [paste CODE_STANDARDS.md — key rules]
+   Pattern: Controller → Service → Repository (see src/modules/auth/)
+   Error handling: AppError class (see src/utils/appError.ts)
+   
+   Task:
+   Implement POST /api/v1/auth/login endpoint.
+   
+   Requirements:
+   - Accept: { email: string, password: string }
+   - Validate with Zod (see existing schema pattern in auth.schema.ts)
+   - Check user exists (UserRepository.findByEmail)
+   - Verify password with bcrypt.compare
+   - If invalid: throw AppError(401, 'Invalid credentials')
+   - If valid: return { accessToken, refreshToken, user }
+   - Rate limit: already applied via middleware (do not add)
+   
+   Files to modify (ONLY THESE):
+   - src/modules/auth/auth.schema.ts (add loginSchema)
+   - src/modules/auth/auth.service.ts (add login method)
+   - src/modules/auth/auth.controller.ts (add loginHandler)
+   - src/modules/auth/auth.routes.ts (add POST /login route)
+   
+   FORBIDDEN:
+   - Do NOT create new files
+   - Do NOT modify any files outside src/modules/auth/
+   - Do NOT add npm packages
+   - Do NOT change database schema
+   - Do NOT use console.log (use logger.info/error)
+   - Do NOT use 'any' type
+   
+   Success criteria:
+   - TypeScript compiles
+   - POST /login with valid creds returns 200 with tokens
+   - POST /login with invalid creds returns 401
+   - Follows existing code style exactly"
+
+================================================================
+SECTION 4: CONTEXT ENGINEERING — AGENT KA BRAIN FUEL
+================================================================
+
+Context engineering = Sahi information, sahi waqt pe, sahi format mein dena
+
+Agent ke bina context ke behave karta hai jaise:
+  "Naya intern jo pehle din aaya, koi docs nahi padhe, seedha code likh raha hai"
+
+Agent ke saath context ke behave karta hai jaise:
+  "Experienced developer jo project ko samajhta hai"
+
+─── WHAT CONTEXT TO GIVE ───
+
+  ZAROORI (Always include):
+  □ ARCHITECTURE.md — system overview (3-5 paragraphs max)
+  □ CODE_STANDARDS.md — naming conventions, patterns
+  □ Relevant existing code — "yeh pattern follow karo"
+  □ TypeScript interfaces/types for the feature
+  □ AI_RULES.md — forbidden actions
+  
+  OPTIONAL (task pe depends karta hai):
+  □ DATABASE.md — schema details
+  □ API.md — existing endpoint patterns
+  □ Error handling examples
+  □ Test examples
+
+─── CONTEXT DO'S AND DON'TS ───
+
+  ✅ DO: Sirf RELEVANT files paste karo
+  ✅ DO: Long files ko summarize karo (agent ko full file nahi chahiye)
+  ✅ DO: "Follow this pattern" ke saath example paste karo
+  ✅ DO: Types/interfaces hamesha include karo
+  
+  ❌ DON'T: Poora codebase paste mat karo
+  ❌ DON'T: Unrelated modules ka context dena
+  ❌ DON'T: 10 sal puraana legacy code context mein dena
+  ❌ DON'T: Context as assumptions: "Agent knows our stack" — nahi jaanta
+
+─── AI_RULES.md — Agent Constitution ───
+
+Yeh file agent ke liye "qanoon" hai. Har project mein honi chahiye.
+
+File: docs/AI_RULES.md
+
+Template:
+─────────────────────────────────────────────
+# AI Agent Rules
+
+## You Are
+A Senior TypeScript engineer on [ProjectName].
+Backend: Node.js + Express + TypeScript.
+Database: PostgreSQL via Prisma ORM.
+Pattern: Controller → Service → Repository.
+
+## ALWAYS Do
+- Read ARCHITECTURE.md before any change
+- Follow patterns in CODE_STANDARDS.md
+- Use AppError for all errors (never throw plain Error)
+- Use logger (never console.log)
+- Add types (never use 'any')
+- Write tests for new business logic
+- Use Prisma for all DB queries (never raw SQL)
+
+## NEVER Do
+- Modify files outside specified scope
+- Add npm packages without explicit permission
+- Change Prisma schema without being asked
+- Use console.log
+- Use 'any' type
+- Create new architecture patterns not in docs
+- Modify .env files
+- Add commented-out dead code
+
+## File Structure
+src/
+├── modules/          ← Feature modules only here
+│   └── [feature]/
+│       ├── [feature].controller.ts
+│       ├── [feature].service.ts
+│       ├── [feature].repository.ts
+│       ├── [feature].schema.ts
+│       └── [feature].routes.ts
+├── utils/            ← Shared utilities
+├── middleware/       ← Express middleware
+└── config/           ← Config files
+
+## Error Handling Pattern
+throw new AppError(statusCode, 'message');
+// NOT: throw new Error('message')
+// NOT: res.status(400).json({error: '...'})
+
+## Response Format
+Always return: { data: ..., message: '...', success: true/false }
+─────────────────────────────────────────────
+
+================================================================
+SECTION 5: SPECIFIC AGENT RULE FILES
+================================================================
+
+Alag alag agents ke liye alag rule files hoti hain:
+
+─── CURSOR: .cursorrules ───
+
+File: .cursorrules (root directory mein)
+
+  You are a senior TypeScript engineer on [AppName].
+  
+  Stack: Node.js + Express + TypeScript + PostgreSQL + Prisma
+  Pattern: Controller → Service → Repository
+  
+  Rules:
+  1. Always read ARCHITECTURE.md before making changes
+  2. Follow CODE_STANDARDS.md patterns
+  3. Use AppError class — never throw plain Error
+  4. Never use console.log — use logger
+  5. Never use 'any' TypeScript type
+  6. Never modify files outside the stated task scope
+  7. Never add npm packages without asking
+  
+  Code style: [paste your key formatting rules]
+
+─── REPLIT AGENT: replit.md ───
+
+Replit Agent padhta hai replit.md ko project context ke liye.
+
+File: replit.md
+
+  # [ProjectName]
+  
+  ## What is this?
+  [1-2 line description]
+  
+  ## Architecture
+  [Brief description — patterns, layers]
+  
+  ## Tech Stack
+  - Backend: Node.js + Express + TypeScript
+  - Database: PostgreSQL (Prisma ORM)
+  - Auth: JWT (access + refresh tokens)
+  
+  ## Key Rules for AI Agent
+  - Controller → Service → Repository pattern
+  - All errors via AppError class
+  - No console.log — use logger
+  - No raw SQL — use Prisma
+  - Tests in __tests__/ next to source file
+
+─── CLAUDE CODE / CLAUDE: CLAUDE.md ───
+
+File: CLAUDE.md (root directory)
+
+  # Project: [AppName] — Agent Instructions
+  
+  ## Project Overview
+  [What is being built]
+  
+  ## Architecture
+  [Key architectural decisions]
+  
+  ## DO
+  - Follow existing patterns
+  - Write tests
+  - Use TypeScript strictly
+  
+  ## DON'T
+  - Modify files outside task scope
+  - Add dependencies without permission
+  - Change DB schema unless asked
+
+─── AIDER: .aider.conf.yml ───
+
+  model: claude-opus-4
+  auto-commits: false
+  read:
+    - docs/ARCHITECTURE.md
+    - docs/CODE_STANDARDS.md
+    - docs/AI_RULES.md
+
+================================================================
+SECTION 6: AI DEBUGGING — EFFECTIVE PROMPTS
+================================================================
+
+Agent se debugging help lena:
+
+─── DEBUGGING PROMPT TEMPLATE ───
+
+  "I have a bug. Help me find and fix it.
+  
+  Error:
+  ```
+  TypeError: Cannot read property 'userId' of undefined
+    at OrderService.createOrder (src/modules/orders/order.service.ts:45:30)
+    at async POST /api/v1/orders (src/modules/orders/order.controller.ts:23:5)
+  ```
+  
+  Relevant code:
+  ```typescript
+  [paste ONLY the relevant 20-50 lines — not the whole file]
+  ```
+  
+  Context:
+  - User is authenticated (JWT middleware verified)
+  - req.user is set in auth middleware
+  - This worked before today's refactor
+  
+  What I've tried:
+  - Added console.log(req.user) — it logs correctly in middleware
+  - Verified req.body is received
+  
+  My hypothesis:
+  - req.user might not be passed correctly to service layer
+  
+  Questions:
+  1. What's causing this error?
+  2. Fix with code?
+  3. How to prevent this class of bug?
+  
+  IMPORTANT: Only modify src/modules/orders/order.service.ts.
+  Do NOT change other files."
+
+================================================================
+SECTION 7: AI CODE REVIEW
+================================================================
+
+AI se code review help lena:
+
+  "Review this code as a Senior Security + Backend Engineer.
+  
+  ```typescript
+  [paste code]
+  ```
+  
+  Check SPECIFICALLY:
+  1. SQL injection / ORM misuse
+  2. Missing authentication/authorization checks
+  3. Input validation gaps
+  4. Error handling — all paths covered?
+  5. N+1 query problems
+  6. Race conditions / concurrency issues
+  7. Hardcoded secrets or sensitive data
+  8. Missing rate limiting
+  
+  For EACH issue:
+  - Severity: CRITICAL / HIGH / MEDIUM / LOW
+  - Explanation: Kya problem hai aur kyon?
+  - Fix: Exact code ke saath
+  
+  Be precise. Don't list non-issues."
+
+================================================================
+SECTION 8: AI TESTING
+================================================================
+
+AI se tests generate karna:
+
+  "Generate comprehensive tests for this function.
+  
+  Function:
+  ```typescript
+  async function transferMoney(
+    fromAccountId: string,
+    toAccountId: string,
+    amount: number,
+    requestedBy: string
+  ): Promise<TransferResult>
+  ```
+  
+  Testing framework: Vitest
+  Test pattern: [paste one existing test file as example]
+  Mocks needed: accountRepository, transactionRepository, db.transaction
+  
+  Required test cases:
+  1. Happy path — successful transfer
+  2. Negative amount → should throw AppError(400)
+  3. Zero amount → should throw AppError(400)
+  4. fromAccount not found → AppError(404)
+  5. toAccount not found → AppError(404)
+  6. Insufficient funds → AppError(422)
+  7. DB transaction fails → rollback, throw AppError(500)
+  8. fromAccount === toAccount → AppError(400)
+  
+  Each test:
+  - Descriptive name (describe what it tests)
+  - AAA pattern (Arrange, Act, Assert)
+  - Test behavior, NOT implementation
+  - No implementation-specific assertions (e.g. 'was called 3 times')
+  
+  Output: Complete test file, ready to run."
+
+================================================================
+SECTION 9: AI REFACTORING
+================================================================
+
+  "Refactor this code. Goal: maintainability + testability.
+  
+  Current code (messy):
+  ```typescript
+  [paste messy code]
+  ```
+  
+  Problems I see:
+  - HTTP handling + business logic + DB queries all mixed
+  - No dependency injection (hard to test)
+  - Error handling inconsistent
+  
+  Target: Controller → Service → Repository pattern
+  (existing example: src/modules/auth/ — same structure)
+  
+  Constraints:
+  - TypeScript strict mode
+  - Use AppError for errors
+  - DO NOT change public API (endpoint paths/response format)
+  - DO NOT add new npm packages
+  
+  Deliver:
+  1. Refactored code (3 files)
+  2. What changed and why (bullet points)
+  3. Migration steps — how to do this safely, one step at a time
+  4. Any risks or regressions to watch for"
+
+================================================================
+SECTION 10: HOW TO USE AI WITHOUT BECOMING DEPENDENT
+================================================================
+
+─── WHAT AGENT SHOULD DO ───
+  ✅ Boilerplate generate karna
+  ✅ Patterns suggest karna
+  ✅ Bugs ka root cause suggest karna
+  ✅ Tests generate karna
+  ✅ Documentation draft karna
+  ✅ Code explain karna
+  ✅ Alternatives suggest karna
+  ✅ Deployment configs generate karna
+
+─── WHAT ENGINEER MUST PERSONALLY DO ───
+  ✅ Business requirements samajhna (AI interpret nahi karta)
+  ✅ Architecture decisions (AI options suggest karta hai — aap decide karo)
+  ✅ Security review (AI security holes miss kar sakta hai)
+  ✅ Performance impact judgment (AI scalability fully nahi sochta)
+  ✅ Every AI-generated line padhna
+  ✅ Tests run karna
+  ✅ Code review — AI output NEVER blindly accept karo
+  ✅ Trade-offs evaluate karna (AI simple answers deta hai)
+
+─── THE DEPENDENCY TRAP ───
+
+  Junior who doesn't use AI:     Slow, but learns and grows
+  Junior who uses AI correctly:  Fast AND learns
+  Junior who blindly relies AI:  Fast now, helpless later
+
+  Senior Engineer Rule:
+  "Main AI ko tool samajhta hoon, crutch nahi.
+   Har line jo AI ne likhi hai — main jaanta hoon woh kya karti hai.
+   Agar main explain nahi kar sakta, main ship nahi karta."
+
+================================================================
+SECTION 11: VERIFYING AI OUTPUT — THE GOLDEN CHECKLIST
+================================================================
+
+NEVER ship AI-generated code without:
+
+  STEP 1: READ
+  □ Every single line padhna — skip mat karo
+  □ Business logic manually trace karo (happy path + 3 edge cases)
+  □ Types check karo — 'any' use hua hai kya?
+  
+  STEP 2: BUILD
+  □ TypeScript: tsc --noEmit — zero errors
+  □ Linter: eslint — zero warnings
+  
+  STEP 3: TEST
+  □ Existing tests pass: npm test
+  □ New tests pass
+  □ Manual testing: Postman ya browser se test karo
+  
+  STEP 4: SECURITY
+  □ Input validation present? (Zod / joi)
+  □ Auth/authorization check present?
+  □ No SQL injection (raw queries?)
+  □ Sensitive data logged to console?
+  □ Secrets hardcoded?
+  
+  STEP 5: SCOPE
+  □ git diff review karo — unexpected files changed?
+  □ New npm packages added? (package.json check)
+  □ DB schema changed unexpectedly?
+  □ Config files touched?
+
+─── COMMON AI MISTAKES TO CATCH ───
+
+  ❌ Hallucinated API methods (method doesn't exist in the library)
+  ❌ Wrong business logic (plausible but incorrect for YOUR domain)
+  ❌ Missing error handling (happy path only)
+  ❌ SQL injection via string concatenation
+  ❌ Inconsistent patterns (different style from rest of codebase)
+  ❌ Unnecessary complexity (over-engineered solution)
+  ❌ Wrong assumptions about your requirements
+  ❌ Outdated package APIs (AI trained on old data)
+  ❌ Race conditions in async code
+  ❌ Missing auth checks
+  ❌ N+1 queries hidden in loops
+
+================================================================
+SECTION 12: AGENTIC DEVELOPMENT — AUTONOMOUS AGENTS
+================================================================
+
+Agentic development = AI agents jo long multi-step tasks
+autonomously complete karte hain, khud files likhte hain,
+tests run karte hain, failures fix karte hain.
+
+─── 2026 REALITY ───
+
+  AI agents ab yeh kar sakte hain:
+  ✓ Full codebase padhna
+  ✓ Multiple files likhna / modify karna
+  ✓ Terminal commands run karna
+  ✓ Test failures dekhna aur fix karna
+  ✓ Apni mistakes pe loop karna
+  ✓ Web search karna
+
+  Par ab bhi yeh nahi kar sakte:
+  ✗ Business requirements independently samajhna
+  ✗ Long-term architectural consequences predict karna
+  ✗ Novel security threats anticipate karna
+  ✗ Production impact fully judge karna
+
+─── RISKS OF AGENTIC DEVELOPMENT ───
+
+  1. CASCADING MISTAKES
+     Agent ek galti karta hai → usi pe build karta hai → problem barhti jaati hai
+     
+  2. SCOPE CREEP
+     "Refactor this function" → Agent poora module restructure kar deta hai
+     
+  3. SILENT WRONG LOGIC
+     Code compile hota hai, tests pass karte hain — lekin logic galat hai
+     
+  4. SECURITY HOLES
+     Agent authentication miss karta hai, koi rok nahi tha
+     
+  5. DEPENDENCY DRIFT
+     Agent naye packages add karta hai jo aapne approve nahi kiye
+
+─── SAFE AGENTIC WORKFLOW ───
+
+  Rule 1: SMALL TASKS ONLY
+    BAD:  "Build the entire payment system"
+    GOOD: "Add Zod validation to POST /api/v1/orders only.
+           Follow auth.schema.ts pattern.
+           Only modify: src/modules/orders/order.schema.ts"
+  
+  Rule 2: STRICT SCOPE
+    Hamesha batao: "ONLY modify these files: [list]"
+    Hamesha batao: "Do NOT touch: [list]"
+  
+  Rule 3: REVIEW BEFORE ACCEPT
+    git diff dekho — har change
+    Unexpected files → reject karo
+  
+  Rule 4: TEST AFTER EVERY TASK
+    npm test run karo
+    TypeScript compile check karo
+    Manual test karo
+  
+  Rule 5: ONE TASK, ONE REVIEW CYCLE
+    Agent ne kaam kiya → aap review karo → accept/reject → next task
+    Multiple tasks ek saath mat chodo
+
+================================================================
+EXERCISE — PART 21
+================================================================
+
+TASK 1: Context Engineering Practice
+  Apne current project ke liye docs/AI_RULES.md likho.
+  Include: what agent always/never does, file structure, error pattern.
+
+TASK 2: AI ne yeh code generate kiya — find all bugs:
+
+  async function getUserOrders(userId: string) {
+    const user = await db.query(`SELECT * FROM users WHERE id = '${userId}'`);
+    const orders = [];
+    for (const u of user.rows) {
+      const userOrders = await db.query(
+        `SELECT * FROM orders WHERE user_id = '${u.id}'`
+      );
+      orders.push(...userOrders.rows);
+    }
+    return orders;
+  }
+
+  Find karo: SQL injection, N+1 query, missing validation, missing error handling.
+
+TASK 3: Agent Instruction
+  Write a precise agent instruction to implement a "forgot password" endpoint.
+  Include: context section, task, files to modify, forbidden list, success criteria.
+
+TASK 4: Agent Rules File
+  Apne project ke liye .cursorrules file likho.
+  (Ya replit.md agent section, agar Replit use kar rahe ho)
+
+================================================================
+QUIZ — PART 21
+================================================================
+
+Q1: AI coding agent aur chat LLM mein kya farq hai?
+    (a) Agent zyada mahanga hai
+    (b) Agent khud files likhta hai, commands run karta hai, loop karta hai
+    (c) Agent sirf code explain karta hai
+    (d) Koi farq nahi
+
+    Jawab: (b)
+
+Q2: Context engineering kya hai?
+    (a) Code mein context variables banana
+    (b) Agent ko relevant, precise information sahi format mein dena
+    (c) Context menu design karna
+    (d) Database context optimize karna
+
+    Jawab: (b)
+
+Q3: AI-generated code mein sabse common security mistake kya hoti hai?
+    (a) Wrong variable names
+    (b) Missing auth checks, SQL injection, unvalidated input
+    (c) Code too verbose hai
+    (d) Wrong comments
+
+    Jawab: (b)
+
+Q4: Agent ko "scope strictly limit" karna kyun zaroori hai?
+    (a) Agent slow ho jaata hai
+    (b) Agent unrelated files modify ya unexpected architecture changes kar sakta hai
+    (c) Agent memory limit hai
+    (d) Agent tests nahi likh sakta
+
+    Jawab: (b)
+
+Q5: "AI dependency trap" se kya problem hai?
+    (a) AI bahut expensive hai
+    (b) Blindly follow karne se engineer apni understanding develop nahi karta
+    (c) AI sirf English samajhta hai
+    (d) AI aur engineer saath kaam nahi kar sakte
+
+    Jawab: (b)
+
+================================================================
+AGLA PART: Part 22 — AI Agent Project Workflow
+================================================================

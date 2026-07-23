@@ -1,0 +1,76 @@
+================================================================================
+TASK: 01-02 — EXISTING CODE ANALYSIS
+================================================================================
+TASK ID:        01-02
+TASK NAME:      Existing Code Analysis
+PHASE:          01 — Project Discovery
+OBJECTIVE:      Deeply analyze any existing trading bot code found in Task 01-01
+                to determine what can be preserved, what must be replaced,
+                and what architectural decisions were already made.
+
+CONTEXT:
+  Only run this task if Task 01-01 found existing Python code.
+  If the project is empty, skip to Task 01-03.
+  This is still a READ-ONLY analysis task. Do not modify any code.
+
+DEPENDENCIES:   Task 01-01 complete
+PREVIOUS TASKS: 01-01 PROJECT AUDIT
+
+FILES TO INSPECT:   All existing Python files identified in Task 01-01
+FILES TO CREATE:    None
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt only
+FILES FORBIDDEN TO MODIFY: All existing source files
+
+================================================================================
+AGENT EXECUTION INSTRUCTIONS
+================================================================================
+
+STEP 1 — Read all existing Python files identified in Task 01-01.
+
+STEP 2 — For each existing Python module, analyze and report:
+  - What does this module do?
+  - Is it complete or partial?
+  - Does it have bugs or security issues?
+  - Is it compatible with the planned architecture in MASTER_ROADMAP.txt?
+  - Should it be: PRESERVED as-is / REFACTORED / REPLACED?
+
+STEP 3 — Identify any existing:
+  - MT5 connection code
+  - Strategy logic
+  - Risk management logic
+  - Database code
+  - Dashboard code
+  - Telegram code
+  - Backtesting code
+  - Test files
+
+STEP 4 — Check for quality issues:
+  - Hardcoded secrets or credentials
+  - Hardcoded magic numbers that should be config
+  - Missing error handling
+  - Duplicate logic
+  - Incomplete implementations
+
+STEP 5 — Produce a MIGRATION DECISION for each file:
+  FORMAT:
+  FILE: app/some_file.py
+  STATUS: [PRESERVE / REFACTOR / REPLACE / DELETE]
+  REASON: [brief reason]
+  ISSUES: [list any bugs or security problems]
+
+STEP 6 — Update ROADMAP/00_PROJECT_STATUS.txt with findings.
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ All existing files analyzed
+□ Migration decision for each file
+□ Security issues identified
+□ No files modified
+□ Status file updated
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/01_PROJECT_DISCOVERY/03_TASK_REQUIREMENTS_TRACEABILITY.txt
+================================================================================

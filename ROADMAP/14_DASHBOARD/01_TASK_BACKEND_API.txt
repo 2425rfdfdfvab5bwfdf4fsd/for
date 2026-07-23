@@ -1,0 +1,104 @@
+================================================================================
+TASK ID:     14-01
+TASK NAME:   Dashboard Backend API
+PHASE:       14 — Dashboard
+================================================================================
+
+OBJECTIVE:
+    Build the Flask REST API backend that serves data to the dashboard frontend.
+    All endpoints are read-only GET requests. No authentication required
+    (local-only access).
+
+CONTEXT:
+    The API reads from:
+    1. SQLite database (via data layer)
+    2. Heartbeat file (for live status)
+    3. Log files (for log viewer)
+
+    Never read from MT5 directly in the dashboard — use only database and files.
+
+DEPENDENCIES:
+    - Phase 04 database
+    - Phase 11 heartbeat file
+    - Flask (install via pip)
+
+FILES TO CREATE:
+    app/dashboard/app.py
+    app/dashboard/api/routes.py
+    app/dashboard/api/data_service.py
+    app/dashboard/__init__.py
+    app/dashboard/api/__init__.py
+    tests/test_dashboard/test_api.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+
+API ENDPOINTS:
+
+    GET /api/status
+        Returns: heartbeat data (bot status, connection, session, daily stats)
+        Source: heartbeat.json file
+
+    GET /api/positions
+        Returns: list of open positions from database
+        Includes: symbol, direction, entry_price, current_pnl, lot_size,
+                  sl, tp1, tp2, duration_minutes, confluence_score
+
+    GET /api/trades?date=2026-01-01&limit=50
+        Returns: trade journal entries (paginated)
+
+    GET /api/rejections?date=2026-01-01
+        Returns: rejection journal entries for date
+
+    GET /api/stats?period=7d
+        Returns: aggregated stats for period (win_rate, pnl, avg_score, etc.)
+        Periods: 1d, 7d, 30d, all
+
+    GET /api/equity_curve?period=30d
+        Returns: daily equity data points for chart
+
+    GET /api/logs?lines=500
+        Returns: last N lines from bot.log
+
+    GET /api/health
+        Returns: all system health checks (MT5, DB, news feed, config)
+
+    GET /api/signals/history?date=2026-01-01
+        Returns: all signals scanned (accepted + rejected) for the day
+
+SECURITY:
+    - Never return raw .env values or secrets
+    - Never expose MT5 password or Telegram token
+    - Bind to 127.0.0.1 only (DASHBOARD_HOST default)
+
+TEST REQUIREMENTS:
+    - test_status_endpoint_returns_heartbeat()
+    - test_positions_endpoint()
+    - test_trades_endpoint_with_date_filter()
+    - test_stats_endpoint_aggregation()
+    - test_logs_endpoint_line_limit()
+    - test_no_secrets_in_any_response()
+
+VALIDATION COMMANDS:
+    pytest tests/test_dashboard/test_api.py -v
+    python -c "from app.dashboard.app import create_app; print('OK')"
+
+ACCEPTANCE CRITERIA:
+    [ ] All 8 endpoints functional
+    [ ] No secrets exposed
+    [ ] Graceful response when bot not running (heartbeat absent)
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] app.py and routes.py created
+    [ ] All endpoints return valid JSON
+    [ ] Tests pass
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 14-02 — TASK_OVERVIEW_UI.txt
+================================================================================

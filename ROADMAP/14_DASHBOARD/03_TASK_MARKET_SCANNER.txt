@@ -1,0 +1,52 @@
+================================================================================
+TASK ID:     14-03
+TASK NAME:   Market Scanner View
+PHASE:       14 — Dashboard
+================================================================================
+
+OBJECTIVE:
+    Build the market scanner page that shows the current status of each
+    symbol being scanned, including last signal, score, and filter results.
+
+DEPENDENCIES:
+    - 14-01 Backend API (/api/signals/history)
+    - 14-02 base.html
+
+FILES TO CREATE:
+    app/dashboard/templates/scanner.html
+    app/dashboard/static/js/scanner.js
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+PAGE CONTENT:
+
+    SYMBOL CARDS — one per symbol (EURUSD, GBPUSD, USDJPY)
+    Each card shows:
+        Symbol name
+        Last scan time
+        Current spread
+        Session status (LONDON / NEW YORK / CLOSED)
+        Filter status: ✅ Session | ✅ Spread | ⚠️ News | ✅ Volatility
+        Last signal: BUY / SELL / NONE
+        Last score: 8.5/10 (A)
+        Status: SCANNING / FILTER_BLOCKED / NO_SETUP
+
+    SIGNAL HISTORY TABLE
+        Time | Symbol | Dir | Score | Grade | Status (EXECUTED/REJECTED/BLOCKED)
+
+ACCEPTANCE CRITERIA:
+    [ ] All 3 symbol cards rendered
+    [ ] Filter status icons shown correctly
+    [ ] Signal history table populated
+    [ ] Auto-refresh works
+
+DEFINITION OF DONE:
+    [ ] scanner.html and scanner.js created
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 14-04 — TASK_OPEN_POSITIONS.txt
+================================================================================

@@ -1,0 +1,127 @@
+================================================================================
+TASK: 02-03 — LOGGING SYSTEM
+================================================================================
+TASK ID:        02-03
+TASK NAME:      Logging System Setup
+PHASE:          02 — Project Foundation
+OBJECTIVE:      Create the structured logging system (app/logger.py) that
+                provides separate log streams for application events,
+                trading decisions, errors, and strategy analysis.
+
+CONTEXT:
+  A production trading system REQUIRES excellent logging. Every trade
+  decision, rejection, execution, and error must be logged with sufficient
+  detail to diagnose problems after the fact. Logs must not crash the bot
+  if a file I/O error occurs.
+
+DEPENDENCIES:   Task 02-02 complete (config.py must exist)
+PREVIOUS TASKS: 02-02 CONFIGURATION
+
+FILES TO INSPECT:
+  - app/config.py (for LOG_LEVEL, LOG_DIR, LOG_MAX_BYTES, LOG_BACKUP_COUNT)
+
+FILES TO CREATE:
+  app/logger.py
+
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: Any other files
+
+================================================================================
+DETAILED REQUIREMENTS
+================================================================================
+
+Create app/logger.py with these functions:
+
+get_logger(name: str) -> logging.Logger
+  - Returns a configured logger for the given module name
+  - Usage: logger = get_logger(__name__)
+
+setup_logging(config: Config) -> None
+  - Called once at startup
+  - Creates log directory if it doesn't exist
+  - Sets up rotating file handlers
+  - Sets up console handler with colored output (optional)
+
+FOUR LOG FILES (RotatingFileHandler):
+  logs/app.log         ← All INFO+ events (general application log)
+  logs/trading.log     ← Trade entries, exits, rejections, positions
+  logs/errors.log      ← WARNING+ events (errors and critical issues)
+  logs/strategy.log    ← Strategy decisions, confluence scores
+
+LOGGING FORMAT:
+  %(asctime)s | %(levelname)-8s | %(name)-30s | %(message)s
+  Example:
+  2026-07-23 09:15:33 | INFO     | app.strategy.signal_engine    | EURUSD BUY signal: score=9/10
+
+SPECIAL LOGGERS:
+  trading_logger = get_logger("trading")
+    → Writes to both app.log AND trading.log
+  strategy_logger = get_logger("strategy")
+    → Writes to both app.log AND strategy.log
+
+LOG ROTATION:
+  - max_bytes = config.LOG_MAX_BYTES (default 10MB)
+  - backup_count = config.LOG_BACKUP_COUNT (default 5)
+  - This keeps 50MB of logs maximum per stream
+
+IMPORTANT RULES:
+  - NEVER log passwords, API keys, or Telegram tokens
+  - Log MT5 account numbers in masked form: "Account: XXXXX7890"
+  - Log trade details: pair, direction, score, SL, TP, lot size (NO prices of secrets)
+  - Logger setup should not crash the bot even if the logs/ directory is missing
+    (create it automatically)
+
+TRADE REJECTION LOG FORMAT:
+  trading_logger.info(
+    f"TRADE REJECTED | {pair} {direction} | Score: {score}/10 | "
+    f"Required: {min_score}/10 | Reasons: {'; '.join(reasons)}"
+  )
+
+TRADE EXECUTION LOG FORMAT:
+  trading_logger.info(
+    f"TRADE OPENED | {pair} {direction} | Entry: {entry} | "
+    f"SL: {sl} | TP: {tp} | Lots: {lots} | Risk: {risk_pct}% | "
+    f"Score: {score}/10 | Ticket: {ticket}"
+  )
+
+================================================================================
+IMPLEMENTATION STEPS
+================================================================================
+
+1. Create app/logger.py
+2. Implement setup_logging(config) function
+3. Implement get_logger(name) function
+4. Create specialized trading and strategy loggers
+5. Test: python -c "from app.logger import get_logger; l = get_logger('test'); l.info('test message')"
+6. Verify log file is created in logs/ directory
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+python -m py_compile app/logger.py
+python -c "
+from app.config import Config
+from app.logger import setup_logging, get_logger
+setup_logging(Config())
+logger = get_logger('test')
+logger.info('Logging system works')
+print('Check logs/ directory for output')
+"
+ls logs/  (should show app.log, trading.log, errors.log, strategy.log)
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ app/logger.py imports without errors
+□ setup_logging() creates log files
+□ get_logger() returns named loggers
+□ Log files appear in logs/ directory
+□ Log format is readable
+□ Rotating file handlers configured correctly
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/02_PROJECT_FOUNDATION/04_TASK_ENVIRONMENT_SETUP.txt
+================================================================================

@@ -1,0 +1,64 @@
+================================================================================
+PHASE 03 — MT5 INTEGRATION
+================================================================================
+PHASE NAME:       MT5 Integration
+PHASE OBJECTIVE:  Build a robust, testable MT5 connection layer that handles
+                  connection, symbol discovery, market data fetching, account
+                  validation, and automatic reconnection — all with full mock
+                  support for testing without a real MT5 terminal.
+
+WHY THIS PHASE EXISTS:
+  All strategy and execution logic depends on MT5. Without a solid,
+  well-tested MT5 layer, everything built on top of it is fragile.
+  This phase also establishes the mock interface used in all tests.
+
+DEPENDENCIES:     Phase 02 complete
+
+INPUTS:
+  - app/config.py (MT5 connection settings)
+  - app/logger.py
+
+OUTPUTS:
+  - app/mt5/connection.py
+  - app/mt5/symbols.py
+  - app/mt5/market_data.py
+  - app/mt5/execution.py (stub only — fully implemented in Phase 09)
+  - app/mt5/account.py
+  - tests/unit/test_mt5_connection.py
+  - tests/unit/test_mt5_symbols.py
+  - tests/unit/test_mt5_market_data.py
+
+FILES THAT MUST NOT BE MODIFIED:
+  app/config.py, app/logger.py
+
+TASK ORDER:
+  01_TASK_MT5_CONNECTION.txt     → Connection + mock interface
+  02_TASK_SYMBOL_DISCOVERY.txt   → Symbol detection + broker suffixes
+  03_TASK_MARKET_DATA.txt        → OHLCV data fetching + caching
+  04_TASK_CONNECTION_RECOVERY.txt → Reconnection logic
+  05_TASK_ACCOUNT_VALIDATION.txt  → Account info + live trading guards
+
+TESTING REQUIREMENTS:
+  ALL tests must mock MetaTrader5 package.
+  MetaTrader5 is Windows-only — tests must pass on any platform.
+  Use unittest.mock.patch("MetaTrader5.*") or a mock module.
+
+ACCEPTANCE CRITERIA:
+  □ MT5 connection module importable with mocked MT5
+  □ All unit tests pass without real MT5
+  □ Reconnection logic handles disconnection gracefully
+  □ Account validation blocks live mode when checks fail
+
+KNOWN RISKS:
+  - MT5 Python package is Windows-only; must mock everywhere for CI/CD
+  - Broker symbol names vary (EURUSD vs EURUSDm vs EURUSD.pro)
+  - MT5 API may return None on failure (must handle gracefully)
+
+ROLLBACK STRATEGY:
+  Delete app/mt5/ directory contents and restart phase.
+
+HANDOFF REQUIREMENTS:
+  Before Phase 05 (Strategy Engine), confirm:
+  □ Market data fetch works with mock (returns DataFrame with OHLCV columns)
+  □ Connection mock interface is complete
+================================================================================

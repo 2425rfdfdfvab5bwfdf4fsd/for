@@ -1,0 +1,71 @@
+================================================================================
+TASK ID:     13-01
+TASK NAME:   Trade Journal
+PHASE:       13 — Trade Journal
+================================================================================
+
+OBJECTIVE:
+    Implement TradeJournal that records complete lifecycle data for every
+    executed trade from entry to exit.
+
+CONTEXT:
+    A complete journal entry includes:
+    - All pre-trade data: signal score, factors, strategy context
+    - Execution data: fill price, slippage, execution time
+    - Management events: BE applied, partial closed, trail updates
+    - Exit data: exit price, exit reason, P&L, duration, R multiple
+
+DEPENDENCIES:
+    - Phase 04 database
+    - Phase 06 ScoredSignal
+    - Phase 09 ExecutionResult
+    - Phase 10 PositionManagementEvent
+
+FILES TO CREATE:
+    app/journal/trade_journal.py
+    app/journal/__init__.py
+    tests/test_journal/test_trade_journal.py
+
+FILES TO MODIFY:
+    app/database/models.py       — add TradeJournalEntry
+    app/database/repositories.py — add journal CRUD methods
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class TradeJournal:
+        record_entry(scored_signal, execution_result) -> JournalEntryId
+        record_management_event(entry_id, event) -> None
+        record_exit(entry_id, exit_price, exit_reason, pnl) -> None
+        get_entry(entry_id) -> TradeJournalEntry
+        get_all_for_date(date) -> list[TradeJournalEntry]
+
+    TradeJournalEntry fields:
+        id, symbol, direction, entry_price, exit_price, sl_price, tp1_price,
+        tp2_price, lot_size, risk_amount, pnl, pnl_pct, r_multiple,
+        confluence_score, quality_grade, factor_breakdown (JSON),
+        entry_time_utc, exit_time_utc, duration_minutes, exit_reason,
+        management_events (JSON), slippage_pips, execution_ticket,
+        session, mode, notes
+
+TEST REQUIREMENTS:
+    - test_entry_recorded_correctly()
+    - test_exit_updates_pnl()
+    - test_r_multiple_calculated()
+    - test_query_by_date()
+
+ACCEPTANCE CRITERIA:
+    [ ] Complete trade lifecycle recorded
+    [ ] R-multiple calculated correctly (pnl / risk_amount)
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] trade_journal.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 13-02 — TASK_REJECTION_JOURNAL.txt
+================================================================================

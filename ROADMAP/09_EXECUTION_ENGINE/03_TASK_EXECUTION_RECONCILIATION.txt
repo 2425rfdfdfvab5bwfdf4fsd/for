@@ -1,0 +1,103 @@
+================================================================================
+TASK ID:     09-03
+TASK NAME:   Execution Reconciliation
+PHASE:       09 — Execution Engine
+================================================================================
+
+OBJECTIVE:
+    Implement ExecutionReconciler that verifies after-execution that the
+    position actually exists in MT5 as expected, and detects discrepancies.
+
+CONTEXT:
+    After a successful order_send (retcode 10009), the position should appear
+    in mt5.positions_get(). Network issues or MT5 glitches can occasionally
+    cause the order to fail silently. The reconciler confirms existence.
+
+    Reconciliation runs:
+    1. Immediately after execution (within 2 seconds)
+    2. Periodically during the main loop (every 60 seconds) for all tracked trades
+
+DEPENDENCIES:
+    - Phase 03 MT5: positions_get
+    - Phase 04 database: open trades
+    - 09-02 OrderExecutor complete
+
+FILES TO CREATE:
+    app/execution/execution_reconciler.py
+    tests/test_execution/test_reconciliation.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class ExecutionReconciler:
+        verify_after_execution(ticket: int) -> ReconciliationResult
+        reconcile_all(db_open_trades: list, mt5_positions: list) -> ReconciliationReport
+
+    ReconciliationResult:
+        ticket_found: bool
+        position_matches: bool
+        discrepancies: list[str]
+
+    DISCREPANCY TYPES:
+        "POSITION_MISSING": ticket in DB but not in MT5
+        "UNEXPECTED_POSITION": position in MT5 but no DB record
+        "LOT_MISMATCH": lot size differs
+        "DIRECTION_MISMATCH": BUY/SELL differs from record
+
+================================================================================
+POSITION_MISSING RESOLUTION PROCEDURE — MANDATORY (CHG-B05)
+================================================================================
+
+When POSITION_MISSING is detected (ticket in DB, not in MT5 positions_get):
+
+STEP 1: Query MT5 history for the missing position
+    from_time = position.open_time - timedelta(seconds=60)
+    deals = mt5.history_deals_get(date_from=from_time, date_to=datetime.utcnow())
+
+STEP 2a: If matching deal found (ticket OR same symbol+magic+volume within 5s):
+    a. Calculate PNL from deal.profit
+    b. Update DB: position.status = "CLOSED"
+                  position.close_price = deal.price
+                  position.close_time = datetime.utcfromtimestamp(deal.time)
+                  position.pnl = deal.profit
+    c. Update daily_stats: realized_pnl_today += deal.profit
+       (Ensures daily loss limit reflects the actual realized loss)
+    d. Log INFO: "Position {ticket} reconciled as CLOSED from MT5 history.
+                  Close price={deal.price}, PNL={deal.profit}"
+
+STEP 2b: If no matching deal found after searching:
+    a. Mark position as SUSPICIOUS (add to status enum: "SUSPICIOUS")
+    b. Log CRITICAL: "Position {ticket} not in MT5 positions OR history.
+                      Human review required. Halting new trades for {symbol}."
+    c. Send Telegram alert: "⚠️ CRITICAL: Position {ticket} ({symbol}) missing
+                             from MT5. Manual review required."
+    d. Set symbol_trading_halted[symbol] = True in risk manager state
+       (No new trades for this symbol until human resolves and restarts)
+
+STEP 3: Always log the reconciliation outcome regardless of resolution path.
+
+ADD to models.py PositionStatus enum: SUSPICIOUS = "SUSPICIOUS"
+
+================================================================================
+
+TEST REQUIREMENTS:
+    - test_position_found_after_execution()
+    - test_position_missing_detected()
+    - test_db_mt5_match_no_discrepancies()
+    - test_unexpected_mt5_position_detected()
+
+ACCEPTANCE CRITERIA:
+    [ ] Missing positions detected and alerted
+    [ ] Unexpected positions flagged for manual review
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] execution_reconciler.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 09-04 — TASK_DUPLICATE_TRADE_PROTECTION.txt
+================================================================================

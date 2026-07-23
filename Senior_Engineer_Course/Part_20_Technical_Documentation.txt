@@ -1,0 +1,532 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 20: TECHNICAL DOCUMENTATION
+(Senior Engineers Ka Writing)
+================================================================
+
+SEEKHNE KE MAQASID:
+- Different document types jaanna
+- README likhna
+- Architecture documents
+- RFCs, ADRs, Runbooks
+- Postmortems
+
+================================================================
+SECTION 1: DOCUMENTATION KYUN ZAROORI HAI?
+================================================================
+
+"Code documentation ki jagah nahi le sakta."
+
+Kyun:
+  - Code HOW batata hai, WHY nahi
+  - New team members onboard karna
+  - Decisions ka context preserve karna
+  - System understand karna deployment ke baad
+  - Blameless post-mortems
+
+Senior engineer ka rule:
+  "Agar main kal resign kar doon, kya team bina mere kaam kar sakti hai?"
+  Agar jawab "nahi" → documentation needed.
+
+================================================================
+SECTION 2: README
+================================================================
+
+README = Repository ka front page
+
+Good README mein:
+  1. Project kya hai (1-2 lines)
+  2. Kyun banaya (problem solved)
+  3. Quick start (10 min mein running)
+  4. Architecture overview
+  5. Configuration (env variables)
+  6. Development setup
+  7. Testing kaise run karein
+  8. Deployment
+  9. Contributing guide
+  10. License
+
+Template:
+
+  # Project Name
+  
+  Brief description — kya karta hai yeh project.
+  
+  ## Quick Start
+  
+  ```bash
+  git clone https://github.com/org/repo
+  cd repo
+  cp .env.example .env
+  docker compose up -d
+  npm install
+  npm run dev
+  # Open http://localhost:3000
+  ```
+  
+  ## Architecture
+  
+  ```
+  Frontend (React) → API (Express) → PostgreSQL
+                                  → Redis
+  ```
+  
+  See [Architecture Docs](docs/ARCHITECTURE.md) for details.
+  
+  ## Environment Variables
+  
+  | Variable | Description | Required | Default |
+  |----------|-------------|----------|---------|
+  | DATABASE_URL | PostgreSQL connection | Yes | - |
+  | REDIS_URL | Redis connection | Yes | - |
+  | JWT_SECRET | JWT signing key | Yes | - |
+  | PORT | Server port | No | 3000 |
+  
+  ## Development
+  
+  ```bash
+  npm run dev         # Start with hot reload
+  npm run test        # Run all tests
+  npm run test:watch  # Watch mode
+  npm run lint        # Lint code
+  npm run type-check  # TypeScript check
+  ```
+  
+  ## Deployment
+  
+  See [Deployment Guide](docs/DEPLOYMENT.md)
+  
+  ## Contributing
+  
+  1. Fork the repo
+  2. Create feature branch: `git checkout -b feat/my-feature`
+  3. Commit changes: `git commit -m 'feat: add my feature'`
+  4. Push branch: `git push origin feat/my-feature`
+  5. Open Pull Request
+
+================================================================
+SECTION 3: ARCHITECTURE DOCUMENTS
+================================================================
+
+Architecture docs = System ki high-level design explain karna
+
+Audience: New developers, stakeholders, future self
+
+Structure:
+  # Architecture Overview
+  
+  ## System Context
+  [Who uses the system, external dependencies]
+  
+  ## High-Level Architecture
+  [Diagram ya ASCII art]
+  
+  ## Components
+  [Har component ka description]
+  
+  ## Data Flow
+  [Request/data kaise flow karta hai]
+  
+  ## Database Design
+  [Core tables, relationships]
+  
+  ## Key Technical Decisions
+  [Link to ADRs]
+  
+  ## Scaling Strategy
+  [Kaise scale karogay]
+  
+  ## Security Architecture
+  [Auth, network, secrets]
+
+C4 Model (4 levels of abstraction):
+  Level 1: System Context (external systems, users)
+  Level 2: Containers (apps, databases, services)
+  Level 3: Components (within a container)
+  Level 4: Code (optional, for complex components)
+
+================================================================
+SECTION 4: RFC (REQUEST FOR COMMENTS)
+================================================================
+
+RFC = Technical proposal document
+    = Badi changes pe consensus build karna
+
+Kab likhna chahiye:
+  - New architecture component
+  - Breaking API change
+  - New engineering standard
+  - Complex system design
+  - Controversial technical decision
+
+RFC Structure:
+
+  # RFC-001: Adopt GraphQL for Mobile API
+  
+  **Status:** Proposed | Under Review | Accepted | Rejected
+  **Author:** Ali Khan
+  **Date:** 2024-01-15
+  **Reviewers:** Sara Ahmad, Team
+  
+  ## Summary
+  [One paragraph: kya propose kar rahe ho]
+  
+  ## Motivation
+  [Kyun? Kya problem solve ho raha hai?]
+  
+  ## Detailed Design
+  [Technical details]
+  
+  ## Drawbacks
+  [Kya problems/risks hain?]
+  
+  ## Alternatives Considered
+  [Aur kya socha tha? Kyun reject kiya?]
+  
+  ## Unresolved Questions
+  [Kya abhi clear nahi?]
+  
+  ## Implementation Plan
+  [Kaise implement karein ge?]
+
+RFC Process:
+  1. Author drafts RFC
+  2. Share with team for comments (1-2 weeks)
+  3. Discussion (GitHub discussions, meetings)
+  4. Revise based on feedback
+  5. Accept or reject with clear reasoning
+  6. Accepted RFC → Implementation
+
+================================================================
+SECTION 5: ADR (ARCHITECTURE DECISION RECORD)
+================================================================
+
+ADR = Ek specific technical decision document karna
+
+Kab likhna chahiye:
+  - Major technology choice (PostgreSQL vs MongoDB)
+  - Architecture pattern choice (monolith vs microservices)
+  - Third-party service choice
+  - Breaking change
+
+ADR Template:
+
+  # ADR-001: Use PostgreSQL as Primary Database
+  
+  **Status:** Accepted
+  **Date:** 2024-01-10
+  **Context:** We need a reliable database for our e-commerce platform.
+  
+  ## Context
+  
+  We are building an e-commerce platform that requires:
+  - Complex relational queries (orders, users, products)
+  - ACID transactions (payment processing)
+  - Strong consistency
+  - Team familiarity with SQL
+  
+  ## Decision
+  
+  We will use **PostgreSQL 16** as our primary database.
+  
+  ## Rationale
+  
+  - ACID compliant — critical for payment processing
+  - Rich query language — complex joins, CTEs, window functions
+  - JSON support — flexible for product attributes
+  - Proven at scale (Instagram, Reddit use PostgreSQL)
+  - Team has SQL expertise
+  - Excellent ORM support (Prisma)
+  
+  ## Alternatives Considered
+  
+  **MongoDB:**
+  - Rejected: Eventual consistency by default,
+    complex transactions, less mature ACID support
+  
+  **MySQL:**
+  - Considered: Good choice but PostgreSQL has better feature set
+  
+  ## Consequences
+  
+  **Positive:**
+  - Strong data integrity
+  - Rich querying capabilities
+  - Easy horizontal scaling via read replicas
+  
+  **Negative:**
+  - Horizontal write scaling complex
+  - NoSQL flexibility nahi (fixed schema)
+  
+  **Risks:**
+  - Schema migrations need careful planning
+
+ADR Files:
+  docs/adr/
+  ├── 001-postgresql.md
+  ├── 002-jwt-authentication.md
+  ├── 003-redis-caching.md
+  └── 004-react-frontend.md
+
+================================================================
+SECTION 6: API DOCUMENTATION
+================================================================
+
+Good API docs:
+  - Har endpoint describe karo
+  - Request format
+  - Response format
+  - Error codes
+  - Examples
+  - Authentication
+
+Tools:
+  - OpenAPI / Swagger (generate interactive docs)
+  - Postman collections
+  - TypeDoc (TypeScript)
+
+OpenAPI Example (YAML):
+  openapi: 3.0.0
+  info:
+    title: MyApp API
+    version: 1.0.0
+  
+  paths:
+    /api/v1/users/{id}:
+      get:
+        summary: Get user by ID
+        tags: [Users]
+        security:
+          - bearerAuth: []
+        parameters:
+          - name: id
+            in: path
+            required: true
+            schema:
+              type: string
+              format: uuid
+        responses:
+          '200':
+            description: User found
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/User'
+          '404':
+            description: User not found
+          '401':
+            description: Unauthorized
+
+================================================================
+SECTION 7: RUNBOOKS
+================================================================
+
+Runbook = Step-by-step guide for common operations/incidents
+
+Kab zaroori hai:
+  - On-call engineer raat mein alert pe wake up ho → Kya kare?
+  - Database failover kaise karte hain?
+  - SSL certificate renew karna
+
+Runbook Template:
+
+  # Runbook: Database Connection Pool Exhausted
+  
+  **Alert:** "Database connection pool exhausted" / "too many clients"
+  **Severity:** SEV2
+  **On-call time:** Up to 30 min response
+  
+  ## Symptoms
+  - "too many clients already" errors in logs
+  - API 503 errors
+  - DB connection timeout errors
+  
+  ## Investigation Steps
+  
+  1. Check current connections:
+     ```sql
+     SELECT count(*) FROM pg_stat_activity;
+     SELECT state, count(*) FROM pg_stat_activity GROUP BY state;
+     ```
+  
+  2. Find long-running queries:
+     ```sql
+     SELECT pid, query, state, query_start, now() - query_start AS duration
+     FROM pg_stat_activity
+     WHERE state != 'idle'
+     ORDER BY duration DESC;
+     ```
+  
+  3. Check app logs for connection leaks:
+     ```bash
+     kubectl logs -l app=myapp --tail=200 | grep "connection"
+     ```
+  
+  ## Mitigation
+  
+  **Option A: Terminate idle connections (immediate)**
+  ```sql
+  SELECT pg_terminate_backend(pid)
+  FROM pg_stat_activity
+  WHERE state = 'idle'
+    AND query_start < now() - interval '10 minutes';
+  ```
+  
+  **Option B: Restart app pods (if leak detected)**
+  ```bash
+  kubectl rollout restart deployment/myapp
+  ```
+  
+  ## Root Cause Investigation
+  
+  - Check for missing finally{} in DB code
+  - Check for long transactions
+  - Check pool configuration
+  
+  ## Prevention
+  - Set pool max = 20 (current: check config)
+  - Add connection timeout: 2000ms
+  - Monitor pg_stat_activity in Grafana
+
+================================================================
+SECTION 8: INCIDENT REPORT / POSTMORTEM
+================================================================
+
+(Detailed in Part 18 — quick reference here)
+
+Key sections:
+  1. Summary (kya hua, impact, timeline)
+  2. Timeline (exact sequence)
+  3. Root Cause
+  4. Impact (users, revenue, duration)
+  5. What Went Well
+  6. What Went Badly
+  7. Action Items (owner + due date)
+
+================================================================
+SECTION 9: TECHNICAL PROPOSALS
+================================================================
+
+Technical proposal = Convince stakeholders of technical approach
+
+Audience: Engineering leadership, product managers
+
+Structure:
+  # Technical Proposal: Migrate to PostgreSQL
+
+  ## Executive Summary (1 paragraph)
+  
+  ## Problem
+  [Current situation aur why it's a problem]
+  
+  ## Proposed Solution
+  [What we want to do]
+  
+  ## Benefits
+  [Measurable improvements expected]
+  
+  ## Risks & Mitigations
+  [What could go wrong, how we'll handle it]
+  
+  ## Implementation Plan
+  [Timeline, phases, resources needed]
+  
+  ## Cost
+  [Engineering time, infrastructure cost]
+  
+  ## Decision Required
+  [Specific decision from stakeholders]
+  
+  ## Appendix
+  [Technical details for interested readers]
+
+================================================================
+SECTION 10: DOCUMENTATION PRINCIPLES
+================================================================
+
+1. Audience define karo:
+   New developer? Technical lead? Business stakeholder?
+   → Different docs for different audiences
+
+2. Keep it close to code:
+   Docs code ke paas rakho — same repo
+   → Docs update hoti hain jab code update hota hai
+
+3. Living documentation:
+   Docs outdated quickly ho jaati hain
+   → Review cycle set karo (quarterly)
+   → Outdated docs mislead karte hain!
+
+4. Short is better:
+   Long docs → Nobody reads
+   → Key information concisely
+
+5. Examples > Theory:
+   Abstract explanation se code example better hai
+   → Show, don't just tell
+
+6. Decision WHY capture karo:
+   Code HOW batata hai
+   Docs WHY batata hai
+   → Future engineer ne decision kyun liya samjhe
+
+================================================================
+EXERCISE — PART 20
+================================================================
+
+TASK 1: Ek simple API ka README likhna
+  API: Todo List API (REST)
+  Endpoints: CRUD for todos
+
+TASK 2: Ek ADR likhna
+  Decision: "Use Redis for session storage instead of DB"
+
+TASK 3: Ek Runbook likhna
+  Scenario: "High memory usage alert fired on production server"
+
+TASK 4: API documentation likhna
+  Endpoint: POST /api/v1/todos
+  - Authentication required
+  - Request body validation
+  - Response format
+  - Error cases
+
+================================================================
+QUIZ — PART 20
+================================================================
+
+Q1: ADR (Architecture Decision Record) kyun likhte hain?
+    (a) Code comment ke liye
+    (b) Technical decisions ka context aur reasoning document karna
+    (c) Bug reports ke liye
+    (d) Test cases ke liye
+
+Jawab: (b)
+
+Q2: README mein sabse pehle kya hona chahiye?
+    (a) License information
+    (b) Quick start instructions
+    (c) Project ka brief description aur purpose
+    (d) Contributing guide
+
+Jawab: (c)
+
+Q3: Runbook ka main purpose kya hai?
+    (a) New developers onboard karna
+    (b) On-call engineer ko incident resolve karne ke step-by-step guide dena
+    (c) Architecture explain karna
+    (d) API document karna
+
+Jawab: (b)
+
+Q4: Documentation mein "WHY" capture karna kyun zaroori hai?
+    (a) Code already HOW batata hai — WHY preserve karna future decisions ke liye
+    (b) Documentation requirement hai
+    (c) Legal requirements
+    (d) Performance optimization
+
+Jawab: (a)
+
+================================================================
+AGLA PART: Part 21 — AI-Assisted Software Engineering
+================================================================

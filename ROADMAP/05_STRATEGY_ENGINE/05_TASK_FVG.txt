@@ -1,0 +1,118 @@
+================================================================================
+TASK: 05-05 — FAIR VALUE GAP (FVG)
+================================================================================
+TASK ID:        05-05
+TASK NAME:      Fair Value Gap Detection
+PHASE:          05 — Strategy Engine
+OBJECTIVE:      Implement deterministic Fair Value Gap (FVG) detection
+                with exact algorithmic rules in app/strategy/fvg.py.
+
+CONTEXT:
+  A Fair Value Gap (Imbalance) forms when three consecutive candles
+  create a gap between candle 1's wick and candle 3's wick. This
+  represents an area of price imbalance that often acts as support/resistance.
+
+DEPENDENCIES:   Task 05-04 complete
+PREVIOUS TASKS: 05-04 ORDER BLOCKS
+
+FILES TO INSPECT:   app/strategy/market_structure.py
+FILES TO CREATE:
+  app/strategy/fvg.py
+  tests/unit/test_fvg.py
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: app/strategy/order_blocks.py
+
+================================================================================
+ALGORITHMIC DEFINITIONS — FAIR VALUE GAP
+================================================================================
+
+THREE-CANDLE RULE:
+  Given three consecutive candles: candle[i-2], candle[i-1], candle[i]
+  
+  BULLISH FVG (acts as support):
+    candle[i].low > candle[i-2].high
+    (Gap between candle i's low and candle i-2's high)
+    The FVG zone: low = candle[i-2].high, high = candle[i].low
+    
+  BEARISH FVG (acts as resistance):
+    candle[i].high < candle[i-2].low
+    (Gap between candle i's high and candle i-2's low)
+    The FVG zone: low = candle[i].high, high = candle[i-2].low
+
+MINIMUM SIZE RULE:
+  FVG must be at least MIN_FVG_SIZE_MULT * ATR in size.
+  MIN_FVG_SIZE_MULT = 0.1 (configurable)
+  Small gaps (noise) are ignored.
+
+FVG STATUS:
+  FRESH: Price has not entered the FVG zone
+  PARTIALLY_FILLED: Price entered but did not close on the other side
+  FILLED: Price closed through the entire FVG zone
+  INVALIDATED: Same as FILLED — the FVG no longer acts as support/resistance
+
+FVG VALIDITY:
+  Maximum age: 50 candles (configurable)
+  Must be fresh (not filled)
+  Should align with the bias direction:
+    Bullish FVG → used for BUY setups
+    Bearish FVG → used for SELL setups
+
+================================================================================
+DETAILED REQUIREMENTS
+================================================================================
+
+@dataclass
+class FairValueGap:
+    fvg_type: str       # "BULLISH" or "BEARISH"
+    high: float
+    low: float
+    mid: float          # (high + low) / 2 — entry target
+    formation_index: int
+    formation_time: datetime
+    fresh: bool
+    partially_filled: bool
+    filled: bool
+    age_candles: int
+
+def detect_fvgs(data: pd.DataFrame,
+                atr: float,
+                min_size_mult: float = 0.1,
+                max_age: int = 50) -> list[FairValueGap]:
+    """
+    Detects all FVGs in data.
+    Applies minimum size filter.
+    Updates fill status based on subsequent price action.
+    """
+
+def get_fresh_fvgs(fvgs: list[FairValueGap],
+                   fvg_type: str) -> list[FairValueGap]:
+    """Returns all fresh FVGs of the given type, most recent first."""
+
+def is_price_in_fvg(price: float, fvg: FairValueGap) -> bool:
+    """Returns True if price is within the FVG zone."""
+
+def update_fvg_status(fvgs: list[FairValueGap],
+                      data: pd.DataFrame) -> list[FairValueGap]:
+    """Updates fill status for all FVGs based on latest candles."""
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+python -m py_compile app/strategy/fvg.py
+pytest tests/unit/test_fvg.py -v
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ Bullish FVG detected when candle[i].low > candle[i-2].high
+□ Bearish FVG detected when candle[i].high < candle[i-2].low
+□ Minimum size filter works
+□ Fill status updated correctly
+□ All tests pass
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/05_STRATEGY_ENGINE/06_TASK_DISPLACEMENT.txt
+================================================================================

@@ -1,0 +1,68 @@
+================================================================================
+TASK ID:     18-05
+TASK NAME:   Windows Autostart
+PHASE:       18 — Windows Automation
+================================================================================
+
+OBJECTIVE:
+    Create enable_autostart.bat and disable_autostart.bat that configure the
+    bot to start automatically when Windows boots, using Windows Task Scheduler.
+
+CONTEXT:
+    Task Scheduler is the recommended Windows approach for auto-start.
+    It provides: start at logon, restart on failure, run whether logged in or not.
+
+    NOTE: "Run whether user is logged on or not" requires admin privileges.
+    Basic "run at logon" does not.
+    The script attempts full Task Scheduler setup and falls back to
+    Startup folder if Task Scheduler fails.
+
+FILES TO CREATE:
+    enable_autostart.bat
+    disable_autostart.bat
+    scripts/autostart.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+
+    enable_autostart.bat → calls scripts/autostart.py --enable
+    disable_autostart.bat → calls scripts/autostart.py --disable
+
+    autostart.py:
+        TASK NAME: "MT5TradingBot"
+
+        Task Scheduler settings:
+        - Trigger: At logon
+        - Action: start_bot.bat (full path)
+        - Run in: project directory
+        - Restart on failure: 3 times, every 1 minute
+        - Run with highest privileges: optional
+
+        IMPLEMENTATION:
+            Use schtasks command:
+            schtasks /Create /TN "MT5TradingBot" /TR "<path>\start_bot.bat"
+                     /SC ONLOGON /F
+
+        FALLBACK (if schtasks fails):
+            Copy start_bot.bat shortcut to:
+            %APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\
+
+        disable:
+            schtasks /Delete /TN "MT5TradingBot" /F
+            Remove startup shortcut if present
+
+ACCEPTANCE CRITERIA:
+    [ ] enable_autostart.bat registers Task Scheduler entry
+    [ ] disable_autostart.bat removes it
+    [ ] Fallback to Startup folder if Task Scheduler fails
+    [ ] Clear confirmation messages
+
+DEFINITION OF DONE:
+    [ ] enable_autostart.bat, disable_autostart.bat, autostart.py created
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 18-06 — TASK_UPDATE_SYSTEM.txt
+================================================================================

@@ -1,0 +1,114 @@
+================================================================================
+TASK ID:     07-06
+TASK NAME:   Correlation Filter
+PHASE:       07 — Risk Engine
+================================================================================
+
+OBJECTIVE:
+    Implement CorrelationFilter that blocks new trades when existing open
+    positions create excessive directional exposure across correlated pairs.
+
+CONTEXT:
+    EURUSD, GBPUSD, and USDJPY have known correlations:
+    - EURUSD and GBPUSD: highly correlated (often move together)
+    - EURUSD and USDJPY: inversely correlated (USD base/quote flip)
+
+    CORRELATION RULES:
+    - If EURUSD LONG is open, do NOT open GBPUSD LONG (same USD direction)
+    - If EURUSD LONG is open, USDJPY SHORT is also correlated exposure
+    - Maximum correlated concurrent positions: 1 (configurable)
+
+    Correlation map is defined in config — not hardcoded in logic.
+
+DEPENDENCIES:
+    - Phase 03 (MT5): open positions list
+    - Phase 02 (config): correlation map
+
+FILES TO CREATE:
+    app/risk/correlation.py
+    tests/test_risk/test_correlation.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/strategy/
+    app/confluence/
+    ROADMAP/
+
+
+================================================================================
+CORRELATION_THRESHOLDS — REQUIRED (CHG-015)
+================================================================================
+
+Without explicit thresholds, agents will pick arbitrary blocking logic.
+
+PAIR CORRELATION POLICY (configurable via CORRELATION_BLOCK_THRESHOLD = 0.80):
+
+  EURUSD + GBPUSD: HIGHLY CORRELATED (typical: 0.85+)
+    Rule: If EURUSD LONG is open → block GBPUSD LONG (same USD direction)
+          If EURUSD SHORT is open → block GBPUSD SHORT
+          Opposite directions are allowed (EURUSD LONG + GBPUSD SHORT)
+    This is a HARD RULE based on known structural correlation.
+    No dynamic correlation calculation needed for these two pairs.
+
+  EURUSD + USDJPY: INVERSELY CORRELATED
+    Rule: If EURUSD LONG is open → alert if USDJPY LONG is attempted
+          (USD is quoted in EURUSD and base in USDJPY — same USD direction)
+    Default: ALLOW concurrent positions unless user configures otherwise.
+    Config: BLOCK_USDJPY_WITH_EURUSD = false (default)
+
+  GBPUSD + USDJPY: ALLOW concurrent positions (default)
+    Config: BLOCK_USDJPY_WITH_GBPUSD = false (default)
+
+  SAME PAIR: ALWAYS block — no two positions in the same symbol.
+
+BLOCKING LOGIC:
+  For each open position in open_positions:
+    if (open.symbol, open.direction) is in correlation_map[proposed.symbol][proposed.direction]:
+      BLOCKED
+
+MAX_CORRELATED_POSITIONS = 1 (configurable)
+  If total correlated concurrent positions >= MAX_CORRELATED_POSITIONS: BLOCK
+
+.env.example ADDITIONS:
+  CORRELATION_BLOCK_THRESHOLD=0.80
+  BLOCK_USDJPY_WITH_EURUSD=false
+  BLOCK_USDJPY_WITH_GBPUSD=false
+  MAX_CORRELATED_POSITIONS=1
+
+================================================================================
+DETAILED REQUIREMENTS:
+    CORRELATION_MAP (in config):
+        EURUSD_BUY correlated with: GBPUSD_BUY, USDJPY_SELL
+        EURUSD_SELL correlated with: GBPUSD_SELL, USDJPY_BUY
+        GBPUSD_BUY correlated with: EURUSD_BUY
+        GBPUSD_SELL correlated with: EURUSD_SELL
+
+    class CorrelationFilter:
+        check(
+            proposed_signal: Signal,
+            open_positions: list[Position]
+        ) -> CorrelationCheckResult
+
+    Logic:
+        For each open position, check if it appears in the correlation map
+        entry for the proposed signal. If correlated positions exist and
+        total count >= MAX_CORRELATED_POSITIONS: BLOCKED.
+
+TEST REQUIREMENTS:
+    - test_no_open_positions_allowed()
+    - test_correlated_pair_blocked()
+    - test_uncorrelated_pair_allowed()
+    - test_opposite_direction_allowed()
+    - test_same_pair_already_open_blocked()
+
+ACCEPTANCE CRITERIA:
+    [ ] Correlated long positions blocked
+    [ ] Uncorrelated pairs allowed
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] correlation.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 07-07 — TASK_MARGIN_SAFETY.txt
+================================================================================

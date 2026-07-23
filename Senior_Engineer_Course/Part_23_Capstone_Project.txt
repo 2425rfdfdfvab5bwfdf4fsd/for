@@ -1,0 +1,427 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 23: BUILD A REAL PRODUCTION PROJECT (CAPSTONE)
+(SaaS E-Commerce Platform)
+================================================================
+
+SEEKHNE KE MAQASID:
+- Senior engineer workflow apply karna
+- End-to-end production project build karna
+- Har feature ke liye complete process follow karna
+
+================================================================
+SECTION 1: CAPSTONE PROJECT OVERVIEW
+================================================================
+
+PROJECT: ShopFlow — Multi-vendor E-Commerce SaaS Platform
+
+What we're building:
+  - Vendors products list kar sakte hain
+  - Customers browse, search, cart, checkout kar sakte hain
+  - Payments via Stripe
+  - Order management
+  - Email notifications
+  - Admin dashboard
+  - Analytics
+  - Monitoring
+
+Tech Stack:
+  Frontend: React 18 + TypeScript + Vite
+  Backend:  Node.js + Express + TypeScript
+  Database: PostgreSQL 16 + Prisma
+  Cache:    Redis 7
+  Queue:    BullMQ (Redis-backed)
+  Storage:  AWS S3
+  Email:    SendGrid
+  Payments: Stripe
+  Auth:     JWT (access + refresh tokens)
+  CI/CD:    GitHub Actions
+  Hosting:  AWS (ECS + RDS + ElastiCache)
+  Monitoring: Prometheus + Grafana
+
+================================================================
+SECTION 2: PROJECT STRUCTURE
+================================================================
+
+shopflow/
+├── apps/
+│   ├── api/                  ← Backend Express API
+│   │   ├── src/
+│   │   │   ├── modules/
+│   │   │   │   ├── auth/
+│   │   │   │   ├── users/
+│   │   │   │   ├── vendors/
+│   │   │   │   ├── products/
+│   │   │   │   ├── categories/
+│   │   │   │   ├── cart/
+│   │   │   │   ├── orders/
+│   │   │   │   ├── payments/
+│   │   │   │   ├── reviews/
+│   │   │   │   ├── notifications/
+│   │   │   │   ├── search/
+│   │   │   │   ├── analytics/
+│   │   │   │   └── admin/
+│   │   │   ├── shared/
+│   │   │   │   ├── middleware/
+│   │   │   │   ├── utils/
+│   │   │   │   ├── types/
+│   │   │   │   └── errors/
+│   │   │   ├── config/
+│   │   │   ├── jobs/         ← Background jobs
+│   │   │   └── app.ts
+│   │   ├── prisma/
+│   │   │   ├── schema.prisma
+│   │   │   └── migrations/
+│   │   └── __tests__/
+│   │
+│   └── web/                  ← React Frontend
+│       ├── src/
+│       │   ├── features/
+│       │   │   ├── auth/
+│       │   │   ├── products/
+│       │   │   ├── cart/
+│       │   │   ├── checkout/
+│       │   │   ├── orders/
+│       │   │   └── dashboard/
+│       │   ├── shared/
+│       │   └── app/
+│       └── ...
+│
+├── docs/
+│   ├── PROJECT_OVERVIEW.md
+│   ├── ARCHITECTURE.md
+│   ├── API.md
+│   ├── DATABASE.md
+│   ├── AI_RULES.md
+│   └── adr/
+│
+├── docker-compose.yml
+└── .github/workflows/
+
+================================================================
+SECTION 3: FEATURE 1 — AUTHENTICATION SYSTEM
+================================================================
+
+For every feature follow this process:
+
+1. REQUIREMENTS:
+   FR-001: User email/password se register kar sakta hai
+   FR-002: User login kar sakta hai, JWT tokens milte hain
+   FR-003: Access token refresh ho sakta hai
+   FR-004: User logout kar sakta hai (tokens invalidate)
+   FR-005: Password reset via email
+   
+   NFR-001: Passwords bcrypt (cost 12) se hashed
+   NFR-002: Access token: 15 min expiry
+   NFR-003: Refresh token: 7 days expiry, rotation on use
+   NFR-004: Rate limit: 5 login attempts per 15 min per email+IP
+   NFR-005: Password min 8 chars, 1 uppercase, 1 number
+
+2. QUESTIONS TO ASK:
+   - Social login needed? (out of scope v1)
+   - 2FA needed? (out of scope v1)
+   - Email verification required? (YES — spec it)
+   - Account lockout duration? (15 min after 10 failed attempts)
+   - Single session or multi-device? (multi-device)
+
+3. ARCHITECTURE:
+   POST /auth/register → RegisterController → AuthService → UserRepository → DB
+   POST /auth/login → LoginController → AuthService → TokenService → Redis (sessions)
+   
+   Token storage:
+     Access token: Client (httpOnly cookie or memory)
+     Refresh token: DB table + Redis (for fast invalidation)
+
+4. TRADE-OFFS:
+   JWT vs Sessions:
+     JWT: Stateless, scalable
+     Sessions: Stateful, instant revocation
+   Decision: JWT with refresh token stored in DB (best of both)
+
+5. DATABASE SPEC:
+   Table: users
+     id, email (unique), password_hash, name, role, email_verified_at,
+     failed_login_attempts, locked_until, created_at, updated_at, deleted_at
+   
+   Table: refresh_tokens
+     id, user_id (FK), token (unique, hashed), expires_at,
+     used_at, revoked_at, created_at
+
+6. AI AGENT PROMPT (Implementation):
+   "Implement the user registration endpoint for ShopFlow.
+   
+   Read first:
+   - docs/ARCHITECTURE.md
+   - docs/CODE_STANDARDS.md
+   - docs/AI_RULES.md
+   
+   Spec: [paste FR-001, NFR-001-005]
+   
+   Implement ONLY:
+   - src/modules/auth/auth.schema.ts (Zod validation)
+   - src/modules/auth/auth.service.ts (createUser method)
+   - src/modules/auth/auth.repository.ts (create, findByEmail)
+   - src/modules/auth/auth.controller.ts (register handler)
+   - src/modules/auth/auth.routes.ts
+   
+   Constraints (non-negotiable):
+   - bcrypt cost factor: 12
+   - AppError for errors
+   - Winston logger
+   - No new npm packages
+   - TypeScript strict, no 'any'
+   - Parameterized queries only"
+
+7. TESTING:
+   Unit: AuthService.createUser
+     - Happy path
+     - Duplicate email
+     - Weak password
+     - DB failure
+   
+   Integration: POST /auth/register
+     - 201 success
+     - 409 duplicate
+     - 400 validation
+     - 429 rate limited
+
+8. CODE REVIEW CHECKLIST:
+   □ SQL injection safe?
+   □ Password hashed?
+   □ Sensitive data in response? (password_hash exposed?)
+   □ Rate limiting in place?
+   □ Error messages non-revealing? (don't say "email exists")
+
+9. SECURITY REVIEW:
+   □ Timing attack on email lookup? (use constant time comparison)
+   □ User enumeration possible?
+   □ Brute force protected?
+
+10. MONITORING:
+    Track:
+    - Registration rate (registrations/hour)
+    - Login success/failure rate
+    - Token refresh rate
+
+================================================================
+SECTION 4: FEATURE 2 — PRODUCT CATALOG
+================================================================
+
+1. REQUIREMENTS:
+   - Vendors products create/update/delete kar sakte hain
+   - Products: name, description, price, images, category, inventory
+   - Customers products browse, filter, search kar sakte hain
+   - Pagination required
+   - Product images S3 pe store
+
+2. DATABASE:
+   Table: products
+     id, vendor_id, category_id, name, slug (unique), description,
+     price, compare_at_price, sku, inventory_count, is_active,
+     avg_rating, review_count, created_at, updated_at, deleted_at
+   
+   Table: product_images
+     id, product_id, url, order, alt_text, created_at
+   
+   Table: categories
+     id, name, slug, parent_id, image_url, created_at
+
+3. PERFORMANCE CONSIDERATIONS:
+   Indexes:
+     CREATE INDEX ON products(vendor_id);
+     CREATE INDEX ON products(category_id);
+     CREATE INDEX ON products(is_active, created_at DESC);
+     CREATE INDEX ON products(slug);
+     -- Full-text search:
+     CREATE INDEX ON products USING GIN (to_tsvector('english', name || ' ' || description));
+   
+   Caching:
+     - Product list: Redis 5 min TTL
+     - Individual products: Redis 1 hour TTL
+     - Invalidate on update
+
+4. SEARCH:
+   V1: PostgreSQL full-text search
+   V2 (when needed): Elasticsearch / OpenSearch
+
+5. IMAGE UPLOAD:
+   Flow:
+   1. Client requests presigned S3 URL
+   2. Client uploads directly to S3
+   3. Client sends S3 key to API
+   4. API saves key in DB
+   
+   Benefits: Server mein bandwidth nahi jaata
+
+================================================================
+SECTION 5: FEATURE 3 — CART & CHECKOUT
+================================================================
+
+1. CART DESIGN:
+   Guest cart → localStorage (client side)
+   Logged-in cart → DB + Redis (fast access)
+   Cart merge → When guest logs in
+   Cart expiry → 7 days inactive
+
+2. CHECKOUT FLOW:
+   1. Cart validate karo (items available, prices current?)
+   2. Shipping address collect karo
+   3. Stripe payment intent create karo
+   4. Client side: Card details collect, payment confirm karo
+   5. Stripe webhook: payment_intent.succeeded
+   6. Order create karo (SAGA pattern)
+   7. Inventory deduct karo
+   8. Confirmation email bhejo (queue)
+
+3. CRITICAL: PAYMENT HANDLING
+   
+   NEVER trust client for:
+   - Final price calculation
+   - Stock availability
+   - Discount validity
+   
+   ALWAYS server-side:
+   - Price recalculate from DB
+   - Inventory check + reserve
+   - Discount validate
+   
+   Idempotency:
+     Stripe payment intent mein idempotency key:
+     key = `order_${orderId}_${userId}`
+
+4. RACE CONDITION:
+   Problem: 2 users checkout same last item
+   
+   Solution:
+   BEGIN TRANSACTION;
+   SELECT inventory FROM products WHERE id = $1 FOR UPDATE;
+   -- Check if > 0
+   UPDATE products SET inventory = inventory - 1 WHERE id = $1;
+   COMMIT;
+
+5. ORDER SAGA:
+   1. Reserve inventory
+   2. Process payment
+   3. Create order (confirmed)
+   4. Send notifications
+   5. Update analytics
+   
+   Compensations:
+   Payment fail → Release inventory
+   Order fail → Refund payment + release inventory
+
+================================================================
+SECTION 6: FEATURE 4 — NOTIFICATIONS
+================================================================
+
+Types: Order confirmation, shipping update, payment receipt, vendor alerts
+
+Architecture:
+  Event → NotificationService → Queue (BullMQ) → Workers
+  
+  Workers:
+  - EmailWorker → SendGrid
+  - SMSWorker → Twilio (v2)
+  - PushWorker → FCM/APNS (v2)
+
+User Preferences:
+  Table: notification_preferences
+    user_id, type (order_update, promotion, etc.), channel (email/sms/push), enabled
+
+Template System:
+  Table: notification_templates
+    type, channel, subject, body (handlebars template)
+  
+  Render: Handlebars.compile(template)({ orderId, userName, ... })
+
+Retry:
+  BullMQ attempts: 3
+  Backoff: exponential 2s, 4s, 8s
+  Dead letter: Failed after 3 retries → alert
+
+================================================================
+SECTION 7: CAPSTONE CHECKLIST
+================================================================
+
+For each feature before shipping:
+
+Requirements:
+  □ All FRs implemented
+  □ All NFRs met
+  □ Edge cases handled
+  □ Out of scope respected
+
+Code:
+  □ Architecture followed
+  □ Code standards followed
+  □ Tests written (unit + integration)
+  □ Code reviewed
+  □ TypeScript compiles
+
+Security:
+  □ Auth/authz checks
+  □ Input validated
+  □ SQL injection safe
+  □ Rate limiting
+  □ No sensitive data exposed
+
+Performance:
+  □ DB indexes in place
+  □ N+1 queries checked
+  □ Load tested (basic)
+  □ Caching where needed
+
+Operations:
+  □ Logging added
+  □ Metrics added
+  □ Health check works
+  □ Deployment tested on staging
+
+================================================================
+SECTION 8: DEPLOYMENT PLAN
+================================================================
+
+Phase 1: Infrastructure
+  - AWS VPC setup
+  - RDS PostgreSQL
+  - ElastiCache Redis
+  - ECR (container registry)
+  - ALB (load balancer)
+  - CloudFront (CDN)
+  - S3 (storage)
+
+Phase 2: CI/CD
+  - GitHub Actions pipeline
+  - Docker build + push
+  - ECS deployment
+
+Phase 3: Monitoring
+  - Prometheus + Grafana
+  - Alerts configured
+  - Runbooks written
+
+Phase 4: Launch
+  - Staging testing
+  - Load testing
+  - Production deploy
+  - Monitor closely first 48 hours
+
+================================================================
+EXERCISE — PART 23
+================================================================
+
+TASK: Pick ONE feature from ShopFlow that we haven't covered in detail:
+  Options: Reviews System, Search, Analytics, Admin Dashboard, File Uploads
+
+For your chosen feature:
+  1. Requirements (FR + NFR) — minimum 5 each
+  2. Database schema design
+  3. API endpoints (minimum 3)
+  4. One trade-off decision + justification
+  5. Edge cases (minimum 4)
+  6. Testing strategy
+  7. Monitoring metrics
+
+================================================================
+AGLA PART: Part 24 — Senior Engineer Real-World Scenarios
+================================================================

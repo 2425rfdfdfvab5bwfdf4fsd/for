@@ -1,0 +1,71 @@
+================================================================================
+TASK ID:     17-02
+TASK NAME:   Segment Analysis
+PHASE:       17 — Self-Improvement Analytics
+================================================================================
+
+OBJECTIVE:
+    Implement SegmentAnalyzer that breaks performance down by meaningful
+    dimensions to identify which conditions produce the best and worst results.
+
+CONTEXT:
+    SEGMENTS TO ANALYZE:
+    1. By confluence score range: [8.0–8.4], [8.5–8.9], [9.0–9.4], [9.5–10.0]
+    2. By quality grade: A vs B
+    3. By symbol: EURUSD vs GBPUSD vs USDJPY
+    4. By session: London vs New York vs Overlap
+    5. By day of week: Mon/Tue/Wed/Thu/Fri
+    6. By market regime: trending vs ranging
+    7. By R:R at entry: [2.0–2.5], [2.5–3.0], [3.0+]
+
+    For each segment: win rate, profit factor, avg P&L, sample size.
+    Highlight segments with sample_size >= 15 (MINIMUM_SEGMENT_SAMPLE).
+    Flag segments with insufficient data.
+
+DEPENDENCIES:
+    - 17-01 PerformanceAnalytics
+
+FILES TO CREATE:
+    app/analytics/segment_analysis.py
+    tests/test_self_improvement/test_segment.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class SegmentAnalyzer:
+        analyze(trades: list[TradeJournalEntry]) -> SegmentReport
+
+    SegmentReport:
+        segments: dict[str, list[SegmentResult]]
+        best_segment: SegmentResult
+        worst_segment: SegmentResult
+        insufficient_data_warnings: list[str]
+
+    SegmentResult:
+        dimension: str
+        value: str
+        sample_size: int
+        win_rate: float
+        profit_factor: float
+        avg_pnl: float
+        sufficient_data: bool
+
+TEST REQUIREMENTS:
+    - test_score_range_segmentation()
+    - test_insufficient_sample_flagged()
+    - test_best_worst_identified()
+
+ACCEPTANCE CRITERIA:
+    [ ] All 7 dimensions analyzed
+    [ ] Insufficient data flagged
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] segment_analysis.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 17-03 — TASK_RECOMMENDATION_ENGINE.txt
+================================================================================

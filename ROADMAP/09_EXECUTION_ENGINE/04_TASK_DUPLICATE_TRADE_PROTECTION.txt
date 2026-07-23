@@ -1,0 +1,61 @@
+================================================================================
+TASK ID:     09-04
+TASK NAME:   Duplicate Trade Protection
+PHASE:       09 — Execution Engine
+================================================================================
+
+OBJECTIVE:
+    Implement DuplicateTradeProtection that prevents placing a new order if an
+    open position already exists for the same symbol in the same direction.
+
+CONTEXT:
+    Even with signal deduplication (Phase 06), the execution layer needs its own
+    guard. This is defence-in-depth. If EURUSD LONG is already open, do not
+    place another EURUSD LONG.
+
+    Protection levels:
+    1. Check database for open trades on symbol
+    2. Check MT5 positions_get() for live position on symbol
+    Both must be clear before proceeding.
+
+DEPENDENCIES:
+    - Phase 03 MT5: positions_get
+    - Phase 04 database
+
+FILES TO CREATE:
+    app/execution/duplicate_protection.py
+    tests/test_execution/test_duplicate_protection.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class DuplicateTradeProtection:
+        check(symbol: str, direction: str,
+              open_db_trades: list, mt5_positions: list) -> DuplicateCheckResult
+
+    Logic:
+        For same symbol + same direction: BLOCKED ("DUPLICATE_POSITION")
+        For same symbol + opposite direction: BLOCKED ("OPPOSITE_HEDGE_NOT_ALLOWED")
+        else: ALLOWED
+
+TEST REQUIREMENTS:
+    - test_no_existing_position_allowed()
+    - test_same_direction_blocked()
+    - test_opposite_direction_blocked()
+    - test_different_symbol_allowed()
+    - test_db_and_mt5_checked_independently()
+
+ACCEPTANCE CRITERIA:
+    [ ] Duplicate same-direction blocked
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] duplicate_protection.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 09-05 — TASK_ORPHAN_POSITION_RECOVERY.txt
+================================================================================

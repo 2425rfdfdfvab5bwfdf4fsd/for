@@ -1,0 +1,78 @@
+================================================================================
+TASK ID:     15-03
+TASK NAME:   Realistic Execution Simulator
+PHASE:       15 — Backtesting
+================================================================================
+
+OBJECTIVE:
+    Implement RealisticExecutionSimulator that models the cost and slippage
+    of execution in the backtest, preventing overly optimistic results.
+
+CONTEXT:
+    EXECUTION MODEL:
+    - Entry: open price of the next bar after signal (no fill at exact signal bar)
+    - Slippage: random uniform in [0, BACKTEST_SLIPPAGE_PIPS] added to entry
+                Direction: adds to buy entry price, subtracts from sell entry price
+    - Spread: applied to all entries (entry = mid + BACKTEST_SPREAD_PIPS/2 for direction)
+              Cost is on entry only — modeled as worsened fill price
+    - Commission: BACKTEST_COMMISSION_PER_LOT in account currency (default: $7.00/lot)
+                  Applied per trade at entry as negative cash adjustment
+                  Round-trip: commission applied ONCE at entry (not again at exit)
+    - Overnight swap: BACKTEST_OVERNIGHT_SWAP_LONG / BACKTEST_OVERNIGHT_SWAP_SHORT
+                  Applied once per calendar day the position is open past market close
+                  (Use broker's actual swap table for realistic backtest accuracy)
+    - Partial fill: not simulated (assume full fill — FOK behavior)
+
+    FORMULA:
+      gross_pnl = (exit_price - entry_price) * direction * lots * pip_value
+      commission_cost = lots * BACKTEST_COMMISSION_PER_LOT
+      swap_cost = hold_days * lots * swap_rate_per_lot
+      net_pnl = gross_pnl - commission_cost - swap_cost
+
+    These costs are subtracted from all trade P&L in backtest.
+
+    IMPORTANT: Using $7/lot commission without validating against your broker's
+    actual commission table will make backtest P&L unrealistic. Update this value
+    to match your broker before running production backtests.
+
+DEPENDENCIES:
+    - 15-02 BacktestEngine
+
+FILES TO CREATE:
+    backtesting/realistic_execution.py
+    tests/test_backtesting/test_realistic_execution.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class RealisticExecutionSimulator:
+        simulate_entry(signal, next_bar_open, spread_pips, symbol) -> SimulatedEntry
+        simulate_exit(position, exit_bar, exit_reason) -> SimulatedExit
+        apply_costs(pnl: float, lots: float, spread_pips: float) -> float
+
+    SimulatedEntry:
+        fill_price: float
+        slippage_pips: float
+        spread_cost: float
+        commission: float
+
+TEST REQUIREMENTS:
+    - test_spread_applied_to_entry()
+    - test_slippage_within_bounds()
+    - test_commission_deducted()
+    - test_costs_reduce_pnl()
+
+ACCEPTANCE CRITERIA:
+    [ ] Spread, slippage, and commission all applied
+    [ ] Net P&L always less than gross P&L for losing trades
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] realistic_execution.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 15-04 — TASK_METRICS.txt
+================================================================================

@@ -1,0 +1,85 @@
+================================================================================
+TASK ID:     11-01
+TASK NAME:   Main Bot Loop
+PHASE:       11 — Automation
+================================================================================
+
+OBJECTIVE:
+    Implement the main trading loop that orchestrates the complete pipeline
+    on each iteration: connect → filter → scan → confluence → risk → execute
+    → manage → sleep.
+
+CONTEXT:
+    The main loop runs every LOOP_INTERVAL_SECONDS (default: 60).
+    Each iteration:
+    1. Verify MT5 connection (reconnect if needed)
+    2. Update heartbeat
+    3. Get current time + session info
+    4. For each symbol: run FilterPipeline
+    5. For passing symbols: run StrategyEngine
+    6. For signals produced: run ConfluenceScorer
+    7. For accepted signals: run RiskManager
+    8. For approved trade params: run OrderExecutor (if not DRY_RUN)
+    9. Run PositionManager for all open positions
+    10. Log loop summary
+
+    DRY_RUN=true: full pipeline runs, steps 8 is skipped and logged instead.
+
+DEPENDENCIES:
+    - All phases 02–10 engines/managers
+    - Phase 03 MT5 connection
+
+FILES TO CREATE:
+    app/automation/main_loop.py
+    main.py
+    tests/test_automation/test_main_loop.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class MainLoop:
+        def __init__(self, config, mt5, strategy, confluence, risk, execution,
+                     position_mgr, filters, journal, notifier)
+        def run(self) -> None      # runs until SIGTERM or critical error
+        def _tick(self) -> None    # one iteration of the loop
+        def _handle_exception(self, e: Exception) -> None
+        def stop(self) -> None     # graceful shutdown
+
+    ERROR HANDLING IN LOOP:
+        - MT5 disconnection: attempt reconnect, skip tick if fails, continue
+        - Strategy exception: log ERROR, skip symbol, continue
+        - Execution exception: log CRITICAL, skip execution, continue
+        - Unhandled exception in tick: log CRITICAL, increment error counter
+        - If errors > MAX_CONSECUTIVE_ERRORS (default: 5): graceful shutdown
+
+    GRACEFUL SHUTDOWN:
+        - Handle SIGTERM and SIGINT
+        - Close MT5 connection
+        - Write final status
+        - Delete lock file
+
+TEST REQUIREMENTS:
+    - test_single_tick_completes_without_error()
+    - test_mt5_disconnect_skips_tick()
+    - test_dry_run_skips_execution()
+    - test_error_counter_triggers_shutdown()
+    - test_graceful_shutdown_on_sigterm()
+
+ACCEPTANCE CRITERIA:
+    [ ] Full pipeline runs in correct order
+    [ ] DRY_RUN respected
+    [ ] Errors don't crash loop (up to threshold)
+    [ ] Graceful shutdown works
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] main_loop.py and main.py created
+    [ ] Tests pass
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 11-02 — TASK_SINGLETON.txt
+================================================================================

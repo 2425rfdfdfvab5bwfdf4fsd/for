@@ -1,0 +1,719 @@
+================================================================================
+MASTER ROADMAP — MT5 AUTOMATED FOREX TRADING BOT
+================================================================================
+Generated: 2026-07-23
+Source Documents Analyzed:
+  - MASTER-BUILD-PROMPT (Fully Automated One-Click Windows MT5 Bot)
+  - MASTER-PROMPT (Production-Grade MT5 Automated Forex Trading Bot)
+  - MASTER-PROMPT (Analyze All Reference Files — Roadmap Builder)
+  - Senior Engineer Course: Part 21 (AI-Assisted Engineering)
+  - Senior Engineer Course: Part 22 (AI Agent Project Workflow)
+  - Senior Engineer Course: Part 28 (AI Coding Agent Mastery)
+
+================================================================================
+CRITICAL RULE — READ BEFORE DOING ANYTHING
+================================================================================
+
+DO NOT build the entire bot in one Replit Agent prompt.
+DO NOT skip phases.
+DO NOT move to the next phase if the current phase has critical failures.
+
+The correct workflow is:
+  One Phase → Small Task → Implement → Test → Review → Checkpoint → Next Task
+
+This prevents:
+  - Context-window overflow
+  - Scope creep
+  - Architecture drift
+  - Hidden bugs
+  - Unrelated file modifications
+  - Large unreviewable changes
+
+================================================================================
+PROJECT OBJECTIVE
+================================================================================
+
+Build a production-grade, fully automated MT5 Forex trading system that:
+  - Runs locally on Windows 10/11
+  - Connects directly to a locally installed MetaTrader 5 terminal
+  - Uses Python (no LLM APIs, no paid APIs)
+  - Executes 0–3 high-quality trades per day (never forced)
+  - Targets approximately 55–65% win rate (NOT guaranteed — performance target only)
+  - Prioritizes positive expectancy, controlled drawdown, profit factor, robustness
+  - Requires $0 software/API cost
+
+================================================================================
+FINAL SYSTEM DESCRIPTION
+================================================================================
+
+Platform:         MetaTrader 5 (local Windows installation)
+Language:         Python 3.11+
+OS:               Windows 10/11
+Market:           Forex
+Pairs:            EURUSD, GBPUSD, USDJPY
+Strategy:         Deterministic SMC/ICT-inspired price action
+Timeframes:       H4 → H1 → M15 → M5 (top-down analysis)
+Sessions:         London + New York only
+Risk/Trade:       0.5% of account equity
+Max Trades/Day:   3
+Min Trades/Day:   0 (never force a trade)
+Target:           1–2 high-quality setups/day when valid setups exist
+Min Confluence:   8/10
+Min R:R:          1:2
+Daily Loss Limit: 2%
+Consec. Losses:   Stop after 2 consecutive losses
+News Filter:      High-impact news avoidance
+Overnight:        Disabled by default
+Weekend:          No uncontrolled exposure
+Telegram:         Enabled (optional — bot works without it)
+Dashboard:        Local web dashboard (FastAPI + HTML/CSS/JS)
+Backtesting:      Required before live trading
+Walk-forward:     Required
+Demo testing:     Required before live trading
+Live trading:     Only after full validation
+
+================================================================================
+TECHNOLOGY STACK
+================================================================================
+
+Core:
+  - Python 3.11+
+  - MetaTrader5 (Python package — pip install MetaTrader5)
+  - pandas
+  - numpy
+  - python-dotenv
+
+Backend/Dashboard:
+  - FastAPI
+  - uvicorn
+  - HTML/CSS/JavaScript (lightweight, no heavy framework)
+
+Database:
+  - SQLite (via standard library sqlite3)
+
+Testing:
+  - pytest
+  - pytest-cov
+
+Notifications:
+  - python-telegram-bot (or requests for Telegram Bot API)
+
+Configuration:
+  - python-dotenv (.env file)
+
+Windows Automation:
+  - .bat batch files
+  - Windows Task Scheduler (for autostart)
+
+Optional:
+  - pystray (system tray — optional, low priority)
+  - matplotlib or plotly (charts in dashboard/reports)
+
+FORBIDDEN:
+  - OpenAI API
+  - Claude API
+  - Gemini API
+  - Any paid AI API
+  - Any paid market-data API
+  - Any LLM
+
+================================================================================
+COMPLETE FEATURE LIST
+================================================================================
+
+TRADING CORE:
+  [F01] Multi-timeframe SMC/ICT strategy (H4/H1/M15/M5)
+  [F02] Market structure detection (swing highs/lows)
+  [F03] Break of Structure (BOS) detection
+  [F04] Change of Character (CHoCH) detection
+  [F05] Liquidity sweep detection
+  [F06] Equal highs/lows detection
+  [F07] Order Block detection and validation
+  [F08] Fair Value Gap (FVG) detection
+  [F09] Displacement detection
+  [F10] EMA trend filter
+  [F11] ATR volatility filter
+  [F12] Market regime detection (trend/range/volatile/unclear)
+  [F13] Confluence scoring system (10-point, min 8/10)
+  [F14] Trade quality grading (A+, A, B, C, REJECTED)
+  [F15] Signal deduplication / cooldown system
+
+RISK MANAGEMENT:
+  [R01] Dynamic position sizing (0.5% equity risk)
+  [R02] Structure-based Stop Loss calculation
+  [R03] Structure/liquidity-based Take Profit
+  [R04] R:R validation (minimum 1:2)
+  [R05] Daily trade limit (max 3/day)
+  [R06] Daily loss limit (max 2%)
+  [R07] Consecutive loss protection (stop after 2)
+  [R08] Correlation protection (EURUSD/GBPUSD/USDJPY)
+  [R09] Margin safety checks
+  [R10] Maximum lot size safety cap
+
+POSITION MANAGEMENT:
+  [P01] Break-even management (at +1R)
+  [P02] Partial profit taking (optional, configurable)
+  [P03] Structure-based trailing stop
+  [P04] ATR-based trailing stop (alternative)
+  [P05] Trade expiration system
+  [P06] Overnight position management
+  [P07] Weekend position management
+
+FILTERS:
+  [FL01] Trading session filter (London/New York)
+  [FL02] Spread filter (per-pair limits)
+  [FL03] News filter (high-impact avoidance)
+  [FL04] Volatility filter (ATR-based)
+  [FL05] Friday/trading cutoff filter
+
+EXECUTION:
+  [E01] Pre-execution order validation
+  [E02] Market order execution
+  [E03] Post-execution verification
+  [E04] Duplicate trade prevention
+  [E05] Orphan position recovery
+  [E06] Smart MT5 auto-detection (symbol suffixes)
+
+AUTOMATION:
+  [A01] Main trading loop (efficient scan cycle)
+  [A02] Single instance protection (singleton/lock file)
+  [A03] Watchdog process
+  [A04] Heartbeat system
+  [A05] Automatic MT5 reconnection
+  [A06] Automatic state recovery
+  [A07] Graceful shutdown
+
+NOTIFICATIONS:
+  [N01] Telegram bot notifications
+  [N02] Daily performance report (auto-generated)
+  [N03] Weekly report
+  [N04] Monthly report
+
+JOURNALING:
+  [J01] Complete trade journal (SQLite)
+  [J02] Rejection journal (all rejected setups)
+  [J03] Optional chart screenshots
+  [J04] Missed-trade analysis
+
+DASHBOARD:
+  [D01] FastAPI backend API
+  [D02] Overview page (status, balance, P/L)
+  [D03] Market scanner page
+  [D04] Open positions page
+  [D05] Trade history + analytics
+  [D06] Log viewer
+  [D07] Health monitor
+  [D08] "Why no trade?" explanation panel
+
+BACKTESTING:
+  [B01] Historical data loader (via MT5)
+  [B02] Backtesting engine (shares live strategy logic)
+  [B03] Realistic execution simulation (spread/slippage)
+  [B04] Full performance metrics
+  [B05] HTML/CSV/JSON reports
+
+VALIDATION:
+  [V01] In-sample testing
+  [V02] Out-of-sample testing
+  [V03] Walk-forward validation
+  [V04] Overfitting detection
+  [V05] Robustness testing
+
+SELF-IMPROVEMENT:
+  [SI01] Performance analytics engine
+  [SI02] Segment analysis (pair/session/setup)
+  [SI03] Recommendation engine (evidence-gated)
+  [SI04] Evidence threshold enforcement (min 20 trades total, 8/segment)
+
+WINDOWS AUTOMATION:
+  [W01] setup.bat (one-click setup)
+  [W02] configure.bat (first-run wizard)
+  [W03] start_bot.bat
+  [W04] stop_bot.bat
+  [W05] restart_bot.bat
+  [W06] status.bat
+  [W07] run_dashboard.bat
+  [W08] run_backtest.bat
+  [W09] run_tests.bat
+  [W10] update.bat
+  [W11] enable_autostart.bat
+  [W12] disable_autostart.bat
+
+SECURITY:
+  [S01] .env secret management
+  [S02] .gitignore
+  [S03] No secrets in logs
+  [S04] Live trading guards (require explicit LIVE_TRADING=true)
+  [S05] Account verification before live mode
+
+TESTING:
+  [T01] Unit tests (pytest, mocked MT5)
+  [T02] Integration tests
+  [T03] Failure scenario tests
+  [T04] Recovery tests
+  [T05] End-to-end tests (demo mode)
+
+DOCUMENTATION:
+  [DOC01] README.md
+  [DOC02] User guide
+  [DOC03] Troubleshooting guide
+  [DOC04] Operations guide
+
+================================================================================
+ARCHITECTURE OVERVIEW
+================================================================================
+
+project/
+│
+├── app/
+│   ├── main.py                    ← Bot entry point + main loop
+│   ├── config.py                  ← Configuration loader (.env)
+│   ├── logger.py                  ← Structured logging setup
+│   │
+│   ├── mt5/
+│   │   ├── connection.py          ← MT5 connect/disconnect/reconnect
+│   │   ├── symbols.py             ← Symbol discovery + broker suffixes
+│   │   ├── market_data.py         ← OHLCV data fetching + caching
+│   │   ├── execution.py           ← Order placement + verification
+│   │   └── account.py             ← Account info + validation
+│   │
+│   ├── strategy/
+│   │   ├── market_structure.py    ← Swing highs/lows detection
+│   │   ├── bos_choch.py           ← BOS + CHoCH detection
+│   │   ├── liquidity.py           ← Liquidity sweeps + equal H/L
+│   │   ├── order_blocks.py        ← OB detection + validation
+│   │   ├── fvg.py                 ← FVG detection
+│   │   ├── displacement.py        ← Displacement measurement
+│   │   ├── indicators.py          ← EMA, ATR calculations
+│   │   ├── market_regime.py       ← Market regime classification
+│   │   └── signal_engine.py       ← Setup assembly + signal generation
+│   │
+│   ├── confluence/
+│   │   ├── scoring.py             ← 10-point confluence scorer
+│   │   ├── trade_quality.py       ← Quality grading (A+/A/B/C/REJECTED)
+│   │   └── deduplication.py       ← Signal dedup + cooldown
+│   │
+│   ├── risk/
+│   │   ├── position_sizing.py     ← Lot size calculator
+│   │   ├── sl_tp.py               ← SL/TP calculation
+│   │   ├── rr_validator.py        ← R:R validation
+│   │   ├── daily_limits.py        ← Daily loss + trade count limits
+│   │   ├── consecutive_loss.py    ← Consecutive loss tracker
+│   │   ├── correlation.py         ← Portfolio correlation protection
+│   │   ├── margin_safety.py       ← Margin level checks
+│   │   └── risk_manager.py        ← Risk manager facade
+│   │
+│   ├── filters/
+│   │   ├── session.py             ← London/NY session filter
+│   │   ├── spread.py              ← Spread filter
+│   │   ├── news.py                ← News filter
+│   │   ├── volatility.py          ← Volatility filter
+│   │   └── cutoffs.py             ← Overnight/weekend/Friday cutoffs
+│   │
+│   ├── execution/
+│   │   ├── order_validator.py     ← Pre-execution validation
+│   │   ├── order_executor.py      ← Order execution + retry logic
+│   │   ├── reconciliation.py      ← Position reconciliation
+│   │   └── duplicate_guard.py     ← Duplicate trade prevention
+│   │
+│   ├── management/
+│   │   ├── position_manager.py    ← Position tracking + management
+│   │   ├── break_even.py          ← Break-even logic
+│   │   ├── partial_profit.py      ← Partial TP logic
+│   │   ├── trailing_stop.py       ← Trailing stop logic
+│   │   └── expiration.py          ← Trade/setup expiration
+│   │
+│   ├── automation/
+│   │   ├── main_loop.py           ← Main bot loop + scan cycle
+│   │   ├── singleton.py           ← Single-instance lock
+│   │   ├── watchdog.py            ← Watchdog process
+│   │   ├── heartbeat.py           ← Heartbeat emitter
+│   │   └── recovery.py            ← Auto-recovery procedures
+│   │
+│   ├── notifications/
+│   │   ├── telegram.py            ← Telegram bot client
+│   │   └── reports.py             ← Daily/weekly/monthly reports
+│   │
+│   ├── journal/
+│   │   ├── trade_journal.py       ← Trade recording
+│   │   ├── rejection_journal.py   ← Rejected setup recording
+│   │   ├── screenshots.py         ← Optional chart screenshots
+│   │   └── missed_trades.py       ← Missed-trade analysis
+│   │
+│   ├── database/
+│   │   ├── models.py              ← Data models / table definitions
+│   │   ├── database.py            ← SQLite connection + init
+│   │   └── repositories.py       ← CRUD repositories
+│   │
+│   ├── analytics/
+│   │   ├── performance.py         ← Performance metrics engine
+│   │   ├── segment_analysis.py    ← Pair/session/setup analysis
+│   │   └── self_improver.py       ← Recommendation engine
+│   │
+│   └── dashboard/
+│       ├── api.py                 ← FastAPI routes
+│       ├── static/                ← HTML/CSS/JS
+│       │   ├── index.html
+│       │   ├── styles.css
+│       │   └── app.js
+│       └── models.py              ← Pydantic response models
+│
+├── backtesting/
+│   ├── data_loader.py             ← Historical data fetch/cache
+│   ├── engine.py                  ← Backtest runner
+│   ├── execution_sim.py           ← Realistic fill simulation
+│   ├── metrics.py                 ← Performance metric calculations
+│   └── report_generator.py        ← HTML/CSV/JSON report output
+│
+├── validation/
+│   ├── walk_forward.py            ← Walk-forward test runner
+│   ├── overfitting_check.py       ← Overfitting detection
+│   └── robustness.py              ← Robustness testing
+│
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   ├── failure/
+│   └── recovery/
+│
+├── data/
+│   ├── historical/                ← Cached OHLCV data
+│   ├── screenshots/               ← Trade screenshots
+│   └── reports/                   ← Backtest/daily reports
+│
+├── logs/
+│   ├── app.log
+│   ├── trading.log
+│   ├── errors.log
+│   └── strategy.log
+│
+├── scripts/
+│   └── (Python helper scripts)
+│
+├── .env.example
+├── .gitignore
+├── requirements.txt
+├── replit.md
+├── AI_RULES.md
+├── ARCHITECTURE.md
+├── CODE_STANDARDS.md
+├── TESTING.md
+├── SECURITY.md
+├── TRADING_RULES.md
+├── RISK_MANAGEMENT.md
+│
+├── setup.bat
+├── configure.bat
+├── start_bot.bat
+├── stop_bot.bat
+├── restart_bot.bat
+├── status.bat
+├── run_dashboard.bat
+├── run_backtest.bat
+├── run_tests.bat
+├── update.bat
+├── enable_autostart.bat
+└── disable_autostart.bat
+
+================================================================================
+COMPLETE PHASE LIST
+================================================================================
+
+PHASE 01 — PROJECT DISCOVERY
+  Objective:    Audit the workspace, understand existing state, create
+                requirements traceability matrix.
+  Complexity:   Low
+  Dependencies: None (always first)
+  Key Output:   Project audit report, requirements matrix
+
+PHASE 02 — PROJECT FOUNDATION
+  Objective:    Set up project structure, configuration system, logging,
+                and all context/documentation files.
+  Complexity:   Low-Medium
+  Dependencies: Phase 01
+  Key Output:   Skeleton project, .env, requirements.txt, context files
+
+PHASE 03 — MT5 INTEGRATION
+  Objective:    Establish reliable MT5 connection, symbol discovery,
+                market data fetching, connection recovery.
+  Complexity:   Medium
+  Dependencies: Phase 02
+  Key Output:   Working MT5 connection layer with tests
+
+PHASE 04 — DATA LAYER
+  Objective:    SQLite database, data models, repositories,
+                persistence across restarts.
+  Complexity:   Medium
+  Dependencies: Phase 02
+  Key Output:   Working database layer with all tables
+
+PHASE 05 — STRATEGY ENGINE
+  Objective:    Implement all SMC/ICT components with explicit
+                algorithmic definitions.
+  Complexity:   HIGH (most complex phase)
+  Dependencies: Phase 03, Phase 04
+  Key Output:   All strategy components with unit tests
+
+PHASE 06 — CONFLUENCE ENGINE
+  Objective:    10-point confluence scoring (total = 10.0), quality grading
+                (A+/A/B grades), signal deduplication.
+  Complexity:   Medium
+  Dependencies: Phase 02, Phase 03, Phase 04, Phase 05, Phase 08
+                (Phase 03 required for SPREAD_ACCEPTABLE factor;
+                 Phase 08 filter infrastructure must exist before Phase 06.
+                 CHG-017: original listed only Phase 05 — corrected.)
+  Key Output:   Complete confluence scoring system (max score = 10.0)
+
+PHASE 07 — RISK ENGINE
+  Objective:    Position sizing, SL/TP calculation, daily limits,
+                consecutive loss protection, correlation, margin safety.
+  Complexity:   HIGH (safety-critical)
+  Dependencies: Phase 03, Phase 04
+  Key Output:   Complete risk engine with extensive tests
+
+PHASE 08 — FILTERS
+  Objective:    Session filter, spread filter, news filter,
+                volatility filter, trading cutoffs.
+  Complexity:   Medium
+  Dependencies: Phase 03
+  Key Output:   All filter components with tests
+
+PHASE 09 — EXECUTION ENGINE
+  Objective:    Order validation, execution, reconciliation,
+                duplicate prevention, orphan recovery.
+  Complexity:   HIGH (safety-critical)
+  Dependencies: Phase 03, Phase 04, Phase 07
+  Key Output:   Safe execution engine with reconciliation
+
+PHASE 10 — POSITION MANAGEMENT
+  Objective:    Break-even, partial profit, trailing stop,
+                trade expiration, position tracking.
+  Complexity:   Medium-High
+  Dependencies: Phase 09
+  Key Output:   Complete position management system
+
+PHASE 11 — AUTOMATION
+  Objective:    Main loop, singleton protection, watchdog,
+                heartbeat, auto-recovery.
+  Complexity:   Medium-High
+  Dependencies: Phases 05–10
+  Key Output:   Running bot with safety automation
+
+PHASE 12 — NOTIFICATIONS
+  Objective:    Telegram integration, daily/weekly/monthly reports.
+  Complexity:   Low-Medium
+  Dependencies: Phase 04, Phase 11
+  Key Output:   Working Telegram notifications + reports
+
+PHASE 13 — TRADE JOURNAL
+  Objective:    Trade journal, rejection journal, screenshots,
+                missed-trade analysis.
+  Complexity:   Low-Medium
+  Dependencies: Phase 04, Phase 09
+  Key Output:   Complete journaling system
+
+PHASE 14 — DASHBOARD
+  Objective:    FastAPI backend, overview UI, market scanner,
+                open positions, analytics, log viewer, health monitor.
+  Complexity:   Medium
+  Dependencies: Phase 04, Phase 11
+  Key Output:   Working local web dashboard
+
+PHASE 15 — BACKTESTING
+  Objective:    Historical data loader, backtest engine (shares live
+                strategy logic), realistic execution, reports.
+  Complexity:   HIGH
+  Dependencies: Phase 05, Phase 07, Phase 08
+  Key Output:   Backtesting engine with performance reports
+
+PHASE 16 — VALIDATION
+  Objective:    In-sample, out-of-sample, walk-forward testing,
+                overfitting checks, robustness testing.
+  Complexity:   Medium-High
+  Dependencies: Phase 15
+  Key Output:   Validated strategy performance evidence
+
+PHASE 17 — SELF-IMPROVEMENT
+  Objective:    Performance analytics, segment analysis,
+                evidence-gated recommendation engine.
+  Complexity:   Medium
+  Dependencies: Phase 04, Phase 15
+  Key Output:   Analytics + recommendation system
+
+PHASE 18 — WINDOWS AUTOMATION
+  Objective:    All .bat files, configure wizard, autostart,
+                Task Scheduler integration, update system.
+  Complexity:   Low-Medium
+  Dependencies: Phase 11, Phase 14
+  Key Output:   One-click Windows automation scripts
+
+PHASE 19 — TESTING
+  Objective:    Comprehensive unit tests, integration tests,
+                failure tests, recovery tests, E2E tests.
+  Complexity:   Medium-High
+  Dependencies: All implementation phases
+  Key Output:   Full test suite with coverage report
+
+PHASE 20 — SECURITY
+  Objective:    Secret management audit, live trading guards,
+                security audit.
+  Complexity:   Medium
+  Dependencies: Phase 02, Phase 09
+  Key Output:   Security-hardened codebase
+
+PHASE 21 — FINAL VALIDATION
+  Objective:    Production readiness, demo readiness, live readiness,
+                final audit.
+  Complexity:   Medium
+  Dependencies: All phases
+  Key Output:   Go/no-go decision for demo → live trading
+
+PHASE 22 — DOCUMENTATION
+  Objective:    README, user guide, troubleshooting, operations guide.
+  Complexity:   Low
+  Dependencies: All phases
+  Key Output:   Complete documentation set
+
+================================================================================
+DEPENDENCY GRAPH
+================================================================================
+
+Phase 01 (Discovery)
+  ↓
+Phase 02 (Foundation)
+  ↓
+  ├── Phase 03 (MT5 Integration) ──────────────────┐
+  │     ↓                                           │
+  │   Phase 08 (Filters)                            │
+  │                                                  │
+  ├── Phase 04 (Data Layer) ───────────────────────┤
+  │                                                  │
+  └── [Phase 03 + Phase 04 complete] ──────────────┤
+              ↓                                      │
+        Phase 05 (Strategy Engine)                   │
+              ↓                                      │
+        Phase 06 (Confluence Engine)                 │
+              │                                      │
+              └──── [Phase 03 + 04 + 07 ready] ─────┤
+                            ↓                        │
+                      Phase 07 (Risk Engine)         │
+                            ↓                        │
+                      Phase 09 (Execution Engine) ───┤
+                            ↓                        │
+                      Phase 10 (Position Mgmt)       │
+                            ↓                        │
+                      Phase 11 (Automation)          │
+                      /      |      \                │
+                     /       |       \               │
+               Ph 12      Ph 13    Ph 14             │
+           (Notifs)   (Journal)  (Dashboard)         │
+                                                     │
+  [Phase 05 + 07 + 08 complete] ─────────────────────┘
+              ↓
+        Phase 15 (Backtesting)
+              ↓
+        Phase 16 (Validation)
+              ↓
+        Phase 17 (Self-Improvement)
+
+  Phase 18 (Windows Automation) — depends on Phase 11, 14
+  Phase 19 (Testing) — depends on all implementation phases
+  Phase 20 (Security) — depends on Phase 02, 09
+  Phase 21 (Final Validation) — depends on all phases
+  Phase 22 (Documentation) — depends on all phases
+
+STRICTLY SEQUENTIAL (must complete in order):
+  01 → 02 → 03 → 05 → 06
+  01 → 02 → 04
+  02 → 07
+  07 → 09 → 10 → 11
+  05 → 15 → 16 → 17
+  11 → 18
+  All → 19 → 20 → 21 → 22
+
+MAY BE PARALLELIZED (with different agents on non-overlapping files):
+  Phase 03 and Phase 04 (after Phase 02) — different file sets
+  Phase 06 and Phase 07 (after respective deps) — different file sets
+  Phase 08 and Phase 07 (after Phase 03) — different file sets
+  Phase 12, Phase 13, Phase 14 (after Phase 11) — different file sets
+  Phase 17 and Phase 18 (after respective deps) — different file sets
+
+WARNING: Never give two agents overlapping files simultaneously.
+
+================================================================================
+CONTEXT FILES — PURPOSE AND MAINTENANCE
+================================================================================
+
+FILE              | PURPOSE                              | CREATED     | UPDATED BY
+------------------|--------------------------------------|-------------|------------------
+replit.md         | Replit Agent primary context         | Phase 02    | Every major phase
+AI_RULES.md       | Agent constitution (ALWAYS/NEVER)    | Phase 02    | As rules evolve
+ARCHITECTURE.md   | System structure overview            | Phase 02    | When arch changes
+CODE_STANDARDS.md | Naming, patterns, conventions        | Phase 02    | As standards set
+TESTING.md        | Testing strategy + patterns          | Phase 02    | Phase 19
+SECURITY.md       | Security requirements                | Phase 02    | Phase 20
+TRADING_RULES.md  | All trading logic rules              | Phase 02    | Phase 05/07
+RISK_MANAGEMENT.md| Risk rules + parameters              | Phase 07    | Phase 07
+
+Every task in every phase depends on these files being current.
+An agent must read the relevant context files before starting any task.
+
+================================================================================
+SAFETY-FIRST DEVELOPMENT ORDER (MANDATORY)
+================================================================================
+
+1.  Project Discovery
+2.  Configuration + Logging
+3.  Data validation
+4.  MT5 connection (READ-ONLY first)
+5.  Risk engine (BEFORE execution)
+6.  Strategy engine
+7.  Execution engine (with validation)
+8.  Position management
+9.  Recovery systems
+10. Testing
+11. Backtesting + Validation
+12. Dashboard + notifications
+13. Windows automation
+14. Demo trading validation
+15. Live trading readiness
+
+DO NOT enable live trading at any point during development.
+The default config MUST be TRADING_MODE=DEMO, LIVE_TRADING=false.
+
+================================================================================
+PERFORMANCE TARGET DISCLAIMER
+================================================================================
+
+The 55–65% win rate is a PERFORMANCE TARGET ONLY.
+It is NOT guaranteed. It is NOT a promise.
+It must NEVER be "guaranteed" in code, comments, or documentation.
+It can only be evaluated through:
+  - Statistically meaningful backtesting (min 2–5 years historical data)
+  - Out-of-sample validation
+  - Walk-forward testing
+  - Demo account validation
+
+The system MUST prioritize:
+  1. Positive expectancy
+  2. Profit factor > 1.0
+  3. Controlled drawdown
+  4. Robustness across market conditions
+  5. Risk-adjusted returns
+  6. Consistency
+
+================================================================================
+RECOMMENDED FIRST TASK FOR REPLIT AGENT
+================================================================================
+
+Start here:
+  ROADMAP/01_PROJECT_DISCOVERY/01_TASK_PROJECT_AUDIT.txt
+
+This task is safe (read-only), self-contained, and establishes the baseline
+understanding needed before any code is written.
+
+After completing each task, update ROADMAP/00_PROJECT_STATUS.txt.
+
+================================================================================
+END OF MASTER ROADMAP
+================================================================================

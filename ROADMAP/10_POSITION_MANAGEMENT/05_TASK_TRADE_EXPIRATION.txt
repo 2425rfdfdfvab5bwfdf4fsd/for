@@ -1,0 +1,72 @@
+================================================================================
+TASK ID:     10-05
+TASK NAME:   Trade Expiration Manager
+PHASE:       10 — Position Management
+================================================================================
+
+OBJECTIVE:
+    Implement TradeExpirationManager that closes positions that have been open
+    too long, hit end-of-day cutoff, or approach weekend without closure.
+
+CONTEXT:
+    EXPIRATION RULES (all configurable, all default ON):
+
+    1. MAX_TRADE_DURATION_HOURS (default: 48)
+       If trade has been open longer than this: close at market
+
+    2. EOD_CLOSE_ENABLED (default: True)
+       If OVERNIGHT_TRADING_ENABLED=false and time > EOD_CLOSE_UTC: close
+
+    3. FRIDAY_CLOSE_ENABLED (default: True)
+       Close all positions before FRIDAY_CLOSE_UTC
+
+    All closures are market orders. Log reason for closure.
+
+DEPENDENCIES:
+    - 10-01 PositionManager
+    - Phase 03 MT5: order_send (close position)
+    - Phase 02 config (cutoff times)
+
+FILES TO CREATE:
+    app/management/trade_expiration.py
+    tests/test_position_management/test_expiration.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class TradeExpirationManager:
+        check_and_apply(
+            position: Position,
+            trade_record: TradeRecord,
+            current_utc: datetime
+        ) -> ExpirationAction | None
+
+    ExpirationAction:
+        should_close: bool
+        reason: str    # "MAX_DURATION", "EOD_CUTOFF", "FRIDAY_CLOSE"
+        executed: bool
+
+TEST REQUIREMENTS:
+    - test_max_duration_triggers_close()
+    - test_eod_triggers_close()
+    - test_friday_triggers_close()
+    - test_no_expiration_normal_conditions()
+
+ACCEPTANCE CRITERIA:
+    [ ] Max duration closes old positions
+    [ ] EOD/Friday cutoffs respected
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] trade_expiration.py created and tested
+    [ ] Phase 10 acceptance criteria met
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated: Phase 10 COMPLETE
+
+NEXT TASK:
+    Begin Phase 11 — Automation
+    Start with: ROADMAP/11_AUTOMATION/01_PHASE_OVERVIEW.txt
+================================================================================

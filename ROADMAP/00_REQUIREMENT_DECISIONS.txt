@@ -1,0 +1,434 @@
+================================================================================
+REQUIREMENT DECISIONS — CONFLICT RESOLUTION LOG
+================================================================================
+Project: MT5 Automated Forex Trading Bot
+Analyzed: 2026-07-23
+Documents:
+  [A] = MASTER-BUILD-PROMPT (Fully Automated One-Click Windows MT5 Bot)
+  [B] = MASTER-PROMPT (Production-Grade MT5 Automated Forex Trading Bot)
+  [C] = MASTER-PROMPT (Analyze All Reference Files — Roadmap Builder)
+
+================================================================================
+DECISION-001
+================================================================================
+CONFLICT:     System tray vs. bat files as primary Windows interface
+SOURCE A:     [A] Section 9 — "Create a lightweight system tray application"
+              with status, Start/Stop/Restart/Dashboard/Logs/Config/Exit menu
+SOURCE B:     [B] Section 31 — "Create easy Windows scripts: start_bot.bat,
+              stop_bot.bat, restart_bot.bat, run_dashboard.bat, run_backtest.bat,
+              run_tests.bat"
+FINAL:        Both are implemented, but .bat files are PRIMARY and mandatory.
+              System tray is OPTIONAL and low priority (Phase 18+).
+REASON:       Document [A] itself states "If a system tray implementation adds
+              unnecessary complexity, prioritize the local dashboard and .bat files."
+              .bat files are simpler, more reliable, and universally supported.
+              System tray requires pystray which adds dependency complexity.
+IMPACT:       .bat files must be complete and polished. System tray is a Phase 18+
+              optional enhancement and is NOT in the critical path.
+
+================================================================================
+DECISION-002
+================================================================================
+CONFLICT:     Trade frequency minimum
+SOURCE A:     [A] Section 1 — "Minimum Trades: 0"
+SOURCE B:     [B] Section 10 — "Minimum trades: 0 — Never force a trade"
+SOURCE C:     [C] Section 6 — "The original specification explicitly recommends
+              0–3 trades/day with no forced minimum"
+FINAL:        Minimum trades = 0. Absolutely no forced minimum. The bot must
+              prefer NO TRADE over a low-quality trade.
+REASON:       All three documents agree. This is a core philosophy of the system.
+              The principle is "Quality over quantity."
+IMPACT:       No code anywhere should trigger a trade merely to meet a daily minimum.
+              The signal engine must return no signal rather than a weak signal.
+
+================================================================================
+DECISION-003
+================================================================================
+CONFLICT:     Win rate as a target vs. guarantee
+SOURCE A:     [A] — Does not explicitly mention 55–65%
+SOURCE B:     [B] Section 1 — "Has a target of achieving approximately 55–65%
+              win rate, but NEVER assumes or guarantees that result"
+SOURCE C:     [C] Section 5 — "The bot is intended to target approximately
+              55–65% win rate, but this is NOT guaranteed"
+FINAL:        55–65% win rate is a PERFORMANCE TARGET ONLY. Never a guarantee.
+              Never claim this in code, comments, or documentation.
+REASON:       All documents agree. Past performance does not guarantee future results.
+              This must be validated through statistically meaningful backtesting
+              and out-of-sample testing.
+IMPACT:       All documentation, code comments, and dashboard text must clearly
+              label this as a target. The system must prioritize positive expectancy,
+              profit factor, and drawdown control over raw win rate.
+
+================================================================================
+DECISION-004
+================================================================================
+CONFLICT:     News filter implementation — free API vs manual blackout
+SOURCE A:     [A] Section 12 — "Avoid high-impact news. Prefer a free and
+              reliable data source where practical."
+SOURCE B:     [B] Section 18 — "If a reliable free source is unavailable,
+              support configurable manual news blackout windows."
+FINAL:        Implement a dual approach:
+              (1) Attempt to use ForexFactory or investing.com free data (scraped/
+                  RSS feed if available and legal)
+              (2) Always provide manual blackout window configuration as fallback
+              (3) If external source fails, use manual blackout (do not crash)
+              (4) ENABLE_NEWS_FILTER=true/false in .env
+REASON:       No reliable free news API exists with guaranteed uptime. Manual
+              blackout windows provide a robust fallback that always works.
+IMPACT:       news.py must have two modes: automatic (external source) and manual
+              (configured blackout windows). The bot must never fail completely
+              if the news source is unavailable.
+
+================================================================================
+DECISION-005
+================================================================================
+CONFLICT:     Break-even timing
+SOURCE A:     [A] Section 21 — "At +1R: move SL to break-even or slightly positive"
+SOURCE B:     [B] Section 16 — "At approximately +1R: Move SL to break-even or
+              slightly positive after accounting for spread/fees where possible"
+FINAL:        Break-even at approximately +1R. Use ATR buffer to avoid being stopped
+              out by spread/noise. Make the +1R threshold configurable.
+REASON:       Both documents agree on +1R. The ATR buffer addresses the spread
+              concern mentioned in [B].
+IMPACT:       BREAK_EVEN_R_MULTIPLE=1.0 (configurable in .env).
+              BREAK_EVEN_BUFFER_PIPS=configurable per pair.
+
+================================================================================
+DECISION-006
+================================================================================
+CONFLICT:     Partial profit — default on or off?
+SOURCE A:     [A] Section 20 — "Recommended default: At +1R: optional 30–50%
+              partial close"
+SOURCE B:     [B] Section 20 — "Implement optional partial profit taking"
+              "Make it configurable. Do not assume partial profits improve
+              profitability."
+FINAL:        Partial profit is implemented but DISABLED by default.
+              ENABLE_PARTIAL_PROFIT=false in .env.
+              Requires backtesting validation before enabling.
+REASON:       Both documents agree it is optional. [B] explicitly warns against
+              assuming it improves profitability. Conservative default is safer.
+IMPACT:       partial_profit.py is built but gated by config flag.
+              Backtesting must test both enabled and disabled scenarios.
+
+================================================================================
+DECISION-007
+================================================================================
+CONFLICT:     Dashboard controls — allow manual trade controls or not?
+SOURCE A:     [A] Section 38 — "The dashboard should NOT have dangerous one-click
+              live trading controls by default"
+SOURCE B:     [B] Section 29 — Dashboard should display info only, no explicit
+              mention of manual controls
+FINAL:        Dashboard is READ-ONLY by default. No manual trade buttons.
+              No accidental market orders. No live mode toggle from UI.
+REASON:       Both documents lean toward read-only. A trading bot dashboard should
+              show information, not be a control panel for manual overrides.
+              Manual controls would undermine the automation purpose.
+IMPACT:       dashboard/api.py only exposes GET endpoints for data.
+              POST/PUT/DELETE endpoints for trade actions are NOT implemented
+              unless explicitly requested as a future enhancement.
+
+================================================================================
+DECISION-008
+================================================================================
+CONFLICT:     Overnight position handling — hard close vs configurable
+SOURCE A:     [A] Section 22 — "Do not blindly close profitable trades merely
+              because a timer expired"
+SOURCE B:     [B] Section 19 — "Do not hold trades overnight by default"
+FINAL:        No NEW entries after configured overnight cutoff.
+              Existing profitable positions: configurable (default = close before end of day).
+              Configurable via OVERNIGHT_POSITION_POLICY=close|hold.
+REASON:       [A] specifically warns against blindly closing profitable trades.
+              [B] says no overnight by default. The compromise is: stop entries,
+              but make the handling of existing positions configurable.
+IMPACT:       cutoffs.py must handle both new-entry blocking AND optional
+              position closing separately. Default policy = close.
+
+================================================================================
+DECISION-009
+================================================================================
+CONFLICT:     Magic number — hardcoded vs configurable
+SOURCE A:     [A] — Uses magic number for position identification (implied)
+SOURCE B:     [B] Section 22 — "Every bot trade must have a Magic number"
+FINAL:        Magic number is configurable via .env (MAGIC_NUMBER=default integer).
+              Default: 20260001 (year-based to avoid conflicts).
+REASON:       Different brokers and users may have other EAs running with their
+              own magic numbers. Configurable avoids conflicts.
+IMPACT:       All MT5 orders must include the magic number.
+              Position reconciliation must filter by magic number.
+
+================================================================================
+DECISION-010
+================================================================================
+CONFLICT:     Python version — 3.11+ vs compatibility
+SOURCE A:     [A] — "Python 3.11+"
+SOURCE B:     [B] — "Python 3.11+ where compatible"
+FINAL:        Target Python 3.11. Test on 3.11 and 3.12.
+              Do not use features that break on 3.10 or below without clear comments.
+REASON:       Both documents specify 3.11+. MetaTrader5 package requires Windows
+              and has version-specific behavior. 3.11 is the safe target.
+IMPACT:       requirements.txt and setup.bat must check for Python 3.11+.
+              setup.bat must warn (not silently fail) if Python version is wrong.
+
+================================================================================
+DECISION-011
+================================================================================
+CONFLICT:     ATR vs. fixed pip Stop Loss
+SOURCE A:     [A] Section 14 — "Use ATR-based configurable buffer where appropriate"
+SOURCE B:     [B] Section 14 — Same approach
+FINAL:        Primary SL = structure-based (below swing low / OB for BUY,
+              above swing high / OB for SELL).
+              Secondary: add ATR-based buffer (configurable fraction of ATR).
+              Never use a single fixed pip SL for all pairs.
+REASON:       Structure-based SL is more technically sound. ATR buffer accounts
+              for varying volatility. Both documents agree on this approach.
+IMPACT:       sl_tp.py must implement structure_based_sl() that accepts
+              structure_level + atr_buffer_multiplier parameter.
+
+================================================================================
+DECISION-012
+================================================================================
+CONFLICT:     Walk-forward testing — frequency and depth
+SOURCE A:     [A] Section 41 — "Support in-sample, validation, out-of-sample,
+              walk-forward"
+SOURCE B:     [B] Section 34 — "Do not optimize and test on the same data"
+SOURCE C:     [C] Section 19 — "Requires at least 2–5 years of historical data"
+FINAL:        Minimum data: 2 years (5 years preferred).
+              Data split: 70% in-sample, 15% validation, 15% out-of-sample.
+              Walk-forward: rolling windows with 6-month steps minimum.
+              Final performance must be reported on out-of-sample data only.
+REASON:       All three documents agree on the need for proper separation.
+              The 70/15/15 split is a common industry standard.
+IMPACT:       validation/ modules must enforce data boundary separation.
+              Reports must clearly label which data period results come from.
+
+================================================================================
+DECISION-013
+================================================================================
+CONFLICT:     Self-improvement — automated parameter changes vs recommendations only
+SOURCE A:     [A] Section 42 — "It must NEVER automatically rewrite the strategy
+              or change parameters in live mode"
+SOURCE B:     [B] Section 36 — "Do NOT automatically modify live trading strategy
+              parameters based on a small sample"
+FINAL:        Self-improvement system generates RECOMMENDATIONS ONLY.
+              No automatic parameter changes.
+              Minimum evidence gates: 20 total trades, 8 trades per segment.
+              All recommendations require human review and explicit config change.
+REASON:       Both documents explicitly prohibit automatic live strategy changes.
+              This is a safety requirement, not a preference.
+IMPACT:       self_improver.py generates a recommendations.json / recommendations.txt
+              for human review. It never writes to .env or any config file directly.
+
+================================================================================
+DECISION-014
+================================================================================
+CONFLICT:     Telegram — required or optional?
+SOURCE A:     [A] Section 28 — Telegram notifications throughout
+SOURCE B:     [B] Section 28 — "Telegram must not be required for the bot to trade.
+              If Telegram fails, trading system should continue safely."
+FINAL:        Telegram is OPTIONAL. The bot trades without it.
+              If Telegram fails: log the failure, continue trading.
+              TELEGRAM_ENABLED=true/false in .env.
+REASON:       [B] is explicit: Telegram failure must not stop trading.
+              This is a safety requirement.
+IMPACT:       telegram.py must be wrapped in try/except everywhere.
+              Trading loop must never block waiting for Telegram.
+
+================================================================================
+DECISION-015
+================================================================================
+CONFLICT:     Screenshots — required or optional?
+SOURCE A:     [A] Section 27 — "Add an optional automated chart screenshot system"
+              "If screenshot generation is technically complex, make it optional."
+SOURCE B:     [B] — Not explicitly mentioned
+FINAL:        Screenshots are OPTIONAL (ENABLE_SCREENSHOTS=false by default).
+              Implementation uses matplotlib to generate chart images from OHLCV data.
+              MT5 screenshot capture is NOT used (requires GUI automation).
+REASON:       MT5 GUI screenshots require pyautogui or similar, which is fragile.
+              matplotlib-based chart generation is more reliable.
+IMPACT:       screenshots.py uses matplotlib + OHLCV data. No GUI automation.
+              ENABLE_SCREENSHOTS=false default. Can be enabled after core system works.
+
+================================================================================
+DECISION-016
+================================================================================
+CONFLICT:     Confluence scoring math error — weights summed to 10.5 not 10.0
+IDENTIFIED:   Audit 2026-07-23 (CHG-002)
+SOURCE:       ORDER_BLOCK_PRESENT (1.0) + ORDER_BLOCK_FRESH (0.5) = 1.5 for OB,
+              causing total of 10 factors to equal 10.5, not 10.0
+FINAL:        Merge ORDER_BLOCK_PRESENT and ORDER_BLOCK_FRESH into a single
+              ORDER_BLOCK factor worth 1.0. Freshness is a required sub-condition
+              of the ORDER_BLOCK factor, not a separate scoreable item.
+REASON:       A scoring system that exceeds its own stated maximum is broken.
+              10.5 maximum breaks all downstream percentage calculations and
+              grade boundary logic. Option A (merge) is simplest, least disruptive.
+IMPACT:       factors.py enum loses ORDER_BLOCK_FRESH entry. scorer.py
+              _check_order_block() must return 0 if OB is stale/missing, 1.0 if
+              OB is present AND fresh. All tests must verify max score = 10.0.
+
+================================================================================
+DECISION-017
+================================================================================
+CONFLICT:     Swing point confirmation lookback N was undefined
+IDENTIFIED:   Audit 2026-07-23 (CHG-004)
+SOURCE:       Task 05-01 described swing highs/lows but did not specify N (number
+              of candles required on each side to confirm the swing)
+FINAL:        N = SWING_LOOKBACK_CANDLES = 2 (default). Only CLOSED candles used.
+              This is a 2-candle lag — intentional trade-off to prevent look-ahead.
+              The same N MUST be used in both live trading and backtesting.
+REASON:       Without a defined N, every agent implementation would choose a
+              different value, making backtesting non-reproducible and strategy
+              behavior non-deterministic across phases.
+IMPACT:       app/config.py gains SWING_LOOKBACK_CANDLES = 2. The existing
+              SWING_LOOKBACK=20 (scan window) is a separate parameter.
+              All swing detection code uses SWING_LOOKBACK_CANDLES for confirmation.
+
+================================================================================
+DECISION-018
+================================================================================
+CONFLICT:     SESSION_ALIGNMENT factor double-counts session gate in confluence scorer
+IDENTIFIED:   Audit 2026-07-23 (CHG-007)
+SOURCE:       Phase 08 SessionFilter already GATES all signals to London/NY session.
+              Factor 7 (SESSION_ALIGNMENT) then SCORES the same session condition
+              again — awarding a free point to every signal that reaches the scorer.
+FINAL:        Replace SESSION_ALIGNMENT with HTF_OB_CONFLUENCE. This factor scores
+              whether an H1 or H4 Order Block exists at the current price level
+              (multi-timeframe agreement), which is a genuine quality differentiator.
+REASON:       A factor that is always true for every scored signal provides zero
+              discriminating power. It inflates every score by 1.0, masking the
+              real quality signal.
+IMPACT:       factors.py: SESSION_ALIGNMENT → HTF_OB_CONFLUENCE. scorer.py:
+              _check_session() → _check_htf_ob_confluence(). All existing tests
+              referencing SESSION_ALIGNMENT must be updated.
+
+================================================================================
+DECISION-019
+================================================================================
+CONFLICT:     Equal levels ATR tolerance was specified in task text but not in config
+IDENTIFIED:   Audit 2026-07-23 (CHG-010)
+SOURCE:       Task 05-03 defined EQUAL_LEVEL_TOLERANCE = 0.1 inline as a comment
+              but did not reference a named config parameter, making it hardcoded.
+FINAL:        Config parameter: EQUAL_LEVEL_ATR_MULTIPLIER = 0.1 (default)
+              Range: 0.05 (tight) to 0.25 (loose). Configurable in app/config.py.
+REASON:       Hardcoded values violate the project's no-hardcoding principle.
+              Brokers and timeframes may require different tolerance levels.
+IMPACT:       app/config.py gains EQUAL_LEVEL_ATR_MULTIPLIER = 0.1. All equal
+              level detection code references this config value, not a literal.
+
+================================================================================
+DECISION-020
+================================================================================
+CONFLICT:     Displacement candle definition was ambiguous — "close near high/low"
+              was not numerically defined
+IDENTIFIED:   Audit 2026-07-23 (CHG-011)
+SOURCE:       Task 05-06 described displacement criteria without exact threshold
+              for what "close near high/low" means
+FINAL:        Close must be in the upper/lower 25% of the candle's range.
+              Bullish: close >= low + (range * 0.75)
+              Bearish: close <= low + (range * 0.25)
+              Config: DISPLACEMENT_CLOSE_RATIO = 0.75
+              ALL FOUR criteria must be met simultaneously (no partial credit).
+REASON:       A "spinning top" with large range and body could pass criteria 1+2
+              but is not displacement. Criteria 3 eliminates this false positive.
+IMPACT:       app/config.py gains DISPLACEMENT_CLOSE_RATIO = 0.75. The displacement
+              detector checks all 4 criteria. Tests must include a spinning top case
+              that fails criteria 3 but would pass criteria 1 and 2.
+
+================================================================================
+DECISION-021
+================================================================================
+CONFLICT:     Market regime classification thresholds were not numerically defined
+IDENTIFIED:   Audit 2026-07-23 (CHG-014)
+SOURCE:       Task 05-08 described regime labels (TRENDING, RANGING, HIGH_VOL, etc.)
+              but did not provide the exact EMA slope percentage or ATR ratio thresholds
+FINAL:        Exact thresholds (all configurable in app/config.py):
+              REGIME_VOLATILITY_HIGH_MULT = 2.5  (ATR > 2.5x 50-period average = HIGH_VOL)
+              REGIME_VOLATILITY_LOW_MULT = 0.4   (ATR < 0.4x 50-period average = LOW_VOL)
+              REGIME_TREND_SLOPE_THRESHOLD = 0.05  (EMA slope > 0.05%/bar = TRENDING)
+              REGIME_RANGE_SLOPE_THRESHOLD = 0.01  (EMA slope < 0.01%/bar = RANGING)
+              REGIME_ATR_AVERAGE_PERIOD = 50
+REASON:       Without exact numbers, every implementation of the regime classifier
+              would use different thresholds, making it impossible to verify behavior
+              or reproduce results from documentation alone.
+IMPACT:       app/config.py gains 5 new REGIME_ parameters. All regime detection
+              code uses these config values. Tests must verify that the documented
+              thresholds produce the documented classification outputs.
+
+================================================================================
+END OF REQUIREMENT DECISIONS
+================================================================================
+
+================================================================================
+DECISIONS ADDED IN POST-AUDIT REVIEW (2026-07-23)
+================================================================================
+
+DECISION-016 through DECISION-021 were added during the ROADMAP audit to resolve
+ambiguities, bugs, and gaps in the original requirement decisions.
+
+These decisions do NOT conflict with the original 15 decisions — they supplement
+them with explicit numeric thresholds and algorithmic specifications that were
+absent from the original roadmap.
+
+================================================================================
+NO MISSING REQUIREMENTS IDENTIFIED (post-audit)
+================================================================================
+
+All requirements from the three source documents have been captured and mapped
+to phases in the roadmap. The audit identified and resolved 28 gaps/issues.
+
+The following are DEFERRED to future enhancement (not in current roadmap):
+  - System tray application (Decision-001)
+  - GUI-based MT5 screenshots (Decision-015)
+  - Additional currency pairs beyond EURUSD/GBPUSD/USDJPY
+  - Multi-broker support beyond basic symbol suffix handling
+  - Cloud deployment / remote access to dashboard
+  - Mobile app for notifications (Telegram covers this)
+
+================================================================================
+END OF REQUIREMENT DECISIONS
+================================================================================
+
+================================================================================
+DECISION-022
+================================================================================
+CONFLICT:     M5 Entry Confirmation (Confluence Factor 10, weight 1.0) used
+              the phrase "e.g. bullish engulf / M5 BOS" — an example, not a spec.
+IDENTIFIED:   Audit 2026-07-23 (CRITICAL-2 / CHG-A02)
+SOURCE:       Task 05-09 SIGNAL_ENGINE required m5_confirmation bool/type fields
+              but no task file defined the EXACT algorithm for what constitutes
+              M5 entry confirmation.
+FINAL:        m5_confirmation = True if ANY ONE of three conditions is met:
+              (A) M5 BOS: most recent closed M5 candle's close breaks above
+                  (BUY) or below (SELL) the previous M5 swing high/low.
+                  Uses same close-confirmation rule as Phase 05-02.
+                  Lookback: M5_CONFIRMATION_LOOKBACK_CANDLES = 5 (config).
+              (B) M5 Displacement: most recent closed M5 candle satisfies
+                  all 4 displacement criteria from Phase 05-06 in signal direction.
+              (C) M5 CHoCH: CHoCH in signal direction on M5 within last
+                  M5_CONFIRMATION_LOOKBACK_CANDLES candles.
+              Priority if multiple met: BOS > DISPLACEMENT > CHoCH.
+              m5_confirmation_type: "BOS" | "DISPLACEMENT" | "CHoCH" | "NONE"
+REASON:       Factor 10 is worth 1.0 point — at threshold 8/10 it is often the
+              deciding factor. Without an exact definition two agents will
+              implement differently, making backtest results non-reproducible.
+IMPACT:       app/config.py gains M5_CONFIRMATION_LOOKBACK_CANDLES = 5.
+              Task 05-09 (already updated) contains the exact definition.
+              All tests verifying m5_confirmation must use one of the three
+              defined conditions — no other interpretations are permitted.
+
+================================================================================
+DECISION-023
+================================================================================
+CONFLICT:     TP target selection was described as "next significant liquidity
+              level" without defining which level takes priority.
+IDENTIFIED:   Audit 2026-07-23 (MEDIUM-2 / CHG-C02)
+SOURCE:       Task 07-02 SL/TP left TP target selection open to agent interpretation.
+FINAL:        Priority: (1) nearest unswept equal highs/lows, then (2) nearest
+              swing high/low, then (3) reject with "NO_TP_TARGET_IDENTIFIED".
+              TP must always pass 1:2 R:R validation regardless of method.
+REASON:       Without explicit priority the same market condition could produce
+              different TP levels depending on which agent implemented 07-02,
+              making backtest and live results non-comparable.
+IMPACT:       Task 07-02 (already updated) contains the exact priority spec.
+              Config: TP_PREFER_EQUAL_LEVELS=True, TP_FALLBACK_TO_SWING=True.
+
+================================================================================

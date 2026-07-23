@@ -1,0 +1,637 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 17: DEVOPS & CLOUD
+(Production Deployment aur Infrastructure)
+================================================================
+
+SEEKHNE KE MAQASID:
+- Linux basics
+- Git advanced workflow
+- CI/CD pipelines
+- Docker aur containers
+- AWS core services
+- Infrastructure as Code
+
+================================================================
+SECTION 1: LINUX BASICS (DEVELOPER KE LIYE)
+================================================================
+
+Essential commands:
+
+FILE SYSTEM:
+  ls -la              # List files with details
+  cd /path/to/dir     # Change directory
+  pwd                 # Current directory
+  mkdir -p src/utils  # Create nested dirs
+  rm -rf folder       # Delete recursively (CAREFUL!)
+  cp -r src dest      # Copy
+  mv old new          # Move/rename
+  find . -name "*.js" # Find files
+  cat file.txt        # Show file content
+  less file.txt       # Paginated view
+  tail -f app.log     # Follow log file
+  head -n 20 file     # First 20 lines
+
+PROCESSES:
+  ps aux              # All processes
+  kill -9 PID         # Force kill process
+  top / htop          # Resource monitor
+  netstat -tulpn      # Open ports
+  lsof -i :3000       # Who is using port 3000
+
+NETWORKING:
+  curl -X POST \
+    -H "Content-Type: application/json" \
+    -d '{"key":"value"}' \
+    http://localhost:3000/api/test
+  
+  wget url            # Download file
+  ssh user@server     # SSH connect
+  scp file user@server:/path  # Copy to server
+
+PERMISSIONS:
+  chmod 755 script.sh # rwxr-xr-x
+  chown user:group file
+
+ENVIRONMENT:
+  export KEY=value    # Set env var
+  echo $KEY           # Print env var
+  env                 # All env vars
+  which node          # Find binary location
+  which npm
+
+DISK:
+  df -h               # Disk usage
+  du -sh folder       # Folder size
+
+================================================================
+SECTION 2: GIT ADVANCED WORKFLOW
+================================================================
+
+--- BRANCHING STRATEGY ---
+
+Git Flow (traditional):
+  main → Production code
+  develop → Integration branch
+  feature/xxx → Feature development
+  release/x.x → Release preparation
+  hotfix/xxx → Production bug fix
+
+GitHub Flow (simpler, better for CI/CD):
+  main → Always deployable
+  feature/xxx → Short-lived feature branches
+  PR → Code review → Merge → Deploy
+
+--- IMPORTANT GIT COMMANDS ---
+
+  git log --oneline --graph --decorate  # Visual branch history
+  git stash                              # Save uncommitted changes
+  git stash pop                          # Restore stashed changes
+  git cherry-pick <commit>              # Apply specific commit
+  git rebase -i HEAD~5                  # Interactive rebase (squash commits)
+  git bisect start/good/bad             # Binary search for bug
+  git blame file.ts                     # Who wrote each line
+  git reflog                            # Recovery history
+
+--- COMMIT MESSAGES ---
+
+Format:
+  type(scope): short description
+  
+  [Optional body]
+  
+  [Optional footer]
+
+Types: feat, fix, docs, refactor, test, chore, perf
+  
+Good examples:
+  feat(auth): add JWT refresh token rotation
+  fix(cart): prevent duplicate items when double clicking
+  perf(db): add index on orders.user_id column
+  
+Bad:
+  "fixed stuff"
+  "WIP"
+  "changes"
+
+--- PULL REQUEST BEST PRACTICES ---
+
+Good PR:
+  - Small (< 400 lines changed)
+  - Single purpose
+  - Good description
+  - Screenshots for UI changes
+  - Tests included
+  - Self-reviewed before asking others
+
+PR Description template:
+  ## What
+  [What changed]
+  
+  ## Why
+  [Why this change was needed]
+  
+  ## How
+  [How was it implemented]
+  
+  ## Testing
+  [How to test]
+  
+  ## Screenshots (if UI change)
+
+================================================================
+SECTION 3: DOCKER
+================================================================
+
+Docker = Application ko container mein package karna
+       = "Works on my machine" problem solve karta hai
+
+Core Concepts:
+  Image: Blueprint (read-only)
+  Container: Running instance of image
+  Dockerfile: Image banane ki recipe
+  Registry: Image store (Docker Hub, ECR)
+
+--- DOCKERFILE ---
+
+  # Node.js application Dockerfile
+  
+  # Base image
+  FROM node:20-alpine
+  
+  # Working directory
+  WORKDIR /app
+  
+  # Dependencies first (layer caching for builds)
+  COPY package*.json ./
+  RUN npm ci --only=production
+  
+  # Application code
+  COPY . .
+  
+  # Build TypeScript
+  RUN npm run build
+  
+  # Non-root user (security)
+  RUN addgroup -g 1001 -S nodejs
+  RUN adduser -S nodejs -u 1001
+  USER nodejs
+  
+  # Port expose
+  EXPOSE 3000
+  
+  # Health check
+  HEALTHCHECK --interval=30s --timeout=3s \
+    CMD curl -f http://localhost:3000/health || exit 1
+  
+  # Start command
+  CMD ["node", "dist/app.js"]
+
+Multi-stage build (smaller production image):
+  
+  # Stage 1: Build
+  FROM node:20-alpine AS builder
+  WORKDIR /app
+  COPY package*.json ./
+  RUN npm ci
+  COPY . .
+  RUN npm run build
+  
+  # Stage 2: Production (only built files)
+  FROM node:20-alpine AS production
+  WORKDIR /app
+  COPY package*.json ./
+  RUN npm ci --only=production
+  COPY --from=builder /app/dist ./dist
+  USER node
+  CMD ["node", "dist/app.js"]
+  
+  # Result: Much smaller image (no dev deps, no source)
+
+--- DOCKER COMPOSE ---
+
+Local development ke liye:
+
+  # docker-compose.yml
+  version: '3.8'
+  
+  services:
+    app:
+      build: .
+      ports:
+        - "3000:3000"
+      environment:
+        - DATABASE_URL=postgresql://postgres:password@db:5432/myapp
+        - REDIS_URL=redis://redis:6379
+      depends_on:
+        - db
+        - redis
+      volumes:
+        - .:/app  # Hot reload
+    
+    db:
+      image: postgres:16-alpine
+      environment:
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: password
+        POSTGRES_DB: myapp
+      ports:
+        - "5432:5432"
+      volumes:
+        - postgres_data:/var/lib/postgresql/data
+    
+    redis:
+      image: redis:7-alpine
+      ports:
+        - "6379:6379"
+  
+  volumes:
+    postgres_data:
+
+Commands:
+  docker compose up -d       # Start (detached)
+  docker compose down        # Stop
+  docker compose logs -f app # Logs
+  docker compose exec app sh # Shell in container
+  docker compose ps          # Status
+
+================================================================
+SECTION 4: CI/CD
+================================================================
+
+CI (Continuous Integration):
+  Har code push pe automatically:
+  - Build karo
+  - Tests run karo
+  - Lint karo
+  - Type check karo
+
+CD (Continuous Delivery/Deployment):
+  Tests pass hone ke baad:
+  - Staging pe deploy karo
+  - Production pe deploy karo (CD) ya manual approve (CDelivery)
+
+--- GITHUB ACTIONS ---
+
+  # .github/workflows/ci-cd.yml
+  name: CI/CD
+  
+  on:
+    push:
+      branches: [main]
+    pull_request:
+      branches: [main]
+  
+  jobs:
+    # ─── CI Job ───────────────────────────
+    ci:
+      runs-on: ubuntu-latest
+      
+      services:
+        postgres:
+          image: postgres:16
+          env:
+            POSTGRES_DB: testdb
+            POSTGRES_USER: test
+            POSTGRES_PASSWORD: test
+          options: >-
+            --health-cmd pg_isready
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
+        
+        redis:
+          image: redis:7
+          options: >-
+            --health-cmd "redis-cli ping"
+      
+      steps:
+        - uses: actions/checkout@v4
+        
+        - uses: actions/setup-node@v4
+          with:
+            node-version: '20'
+            cache: 'npm'
+        
+        - name: Install dependencies
+          run: npm ci
+        
+        - name: Type check
+          run: npm run type-check
+        
+        - name: Lint
+          run: npm run lint
+        
+        - name: Unit tests
+          run: npm run test:unit
+        
+        - name: Integration tests
+          run: npm run test:integration
+          env:
+            DATABASE_URL: postgresql://test:test@localhost:5432/testdb
+            REDIS_URL: redis://localhost:6379
+        
+        - name: Build
+          run: npm run build
+    
+    # ─── Deploy Job ───────────────────────
+    deploy:
+      needs: ci  # Only after CI passes
+      if: github.ref == 'refs/heads/main'
+      runs-on: ubuntu-latest
+      
+      steps:
+        - uses: actions/checkout@v4
+        
+        - name: Build and push Docker image
+          env:
+            ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+          run: |
+            aws ecr get-login-password | docker login --username AWS ...
+            docker build -t $ECR_REGISTRY/myapp:${{ github.sha }} .
+            docker push $ECR_REGISTRY/myapp:${{ github.sha }}
+        
+        - name: Deploy to ECS
+          run: |
+            aws ecs update-service \
+              --cluster production \
+              --service myapp \
+              --force-new-deployment
+
+================================================================
+SECTION 5: AWS CORE SERVICES
+================================================================
+
+--- COMPUTE ---
+
+EC2 (Elastic Compute Cloud):
+  - Virtual machines
+  - Full control over OS
+  - When: Custom setup, specific OS needed
+  
+ECS (Elastic Container Service):
+  - Run Docker containers
+  - Fargate: Serverless containers (no server management)
+  - When: Containerized apps
+  
+Lambda:
+  - Serverless functions
+  - Pay per execution
+  - When: Event-driven, short tasks, background jobs
+
+--- STORAGE ---
+
+S3 (Simple Storage Service):
+  - Object storage (files, images, videos)
+  - Unlimited, cheap
+  - Globally distributed
+  - Static website hosting
+  
+EBS (Elastic Block Store):
+  - Block storage attached to EC2
+  - Like a hard drive for your VM
+
+--- DATABASES ---
+
+RDS (Relational Database Service):
+  - Managed PostgreSQL, MySQL, etc.
+  - Automated backups
+  - Multi-AZ for high availability
+  - Read replicas
+  
+ElastiCache:
+  - Managed Redis / Memcached
+  
+DynamoDB:
+  - Managed NoSQL
+  - Automatic scaling
+
+--- NETWORKING ---
+
+VPC (Virtual Private Cloud):
+  - Isolated network in AWS
+  - Public subnets (internet access)
+  - Private subnets (internal only)
+
+Route 53:
+  - DNS management
+  - Health checks
+  - Failover routing
+
+ALB (Application Load Balancer):
+  - HTTP/HTTPS load balancing
+  - Path-based routing
+  - SSL termination
+
+CloudFront:
+  - CDN
+  - Global edge locations
+  - Static assets cache
+
+--- SECURITY ---
+
+IAM (Identity and Access Management):
+  - Who can do what in AWS
+  - Roles, policies, users
+
+Secrets Manager:
+  - Secrets securely store karo
+  - Auto-rotation
+
+Certificate Manager:
+  - Free SSL/TLS certificates
+
+================================================================
+SECTION 6: INFRASTRUCTURE AS CODE
+================================================================
+
+IaC = Infrastructure ko code ki tarah define karna
+
+Tools:
+  - Terraform (multi-cloud, popular)
+  - AWS CDK (AWS-specific, TypeScript/Python)
+  - Pulumi (modern, TypeScript)
+
+Terraform Example:
+
+  # main.tf
+  terraform {
+    required_providers {
+      aws = { source = "hashicorp/aws", version = "~> 5.0" }
+    }
+    backend "s3" {
+      bucket = "my-terraform-state"
+      key    = "prod/terraform.tfstate"
+      region = "us-east-1"
+    }
+  }
+  
+  provider "aws" {
+    region = "us-east-1"
+  }
+  
+  # RDS PostgreSQL
+  resource "aws_db_instance" "main" {
+    identifier        = "myapp-prod"
+    engine            = "postgres"
+    engine_version    = "16"
+    instance_class    = "db.t3.medium"
+    allocated_storage = 100
+    
+    db_name  = "myapp"
+    username = "postgres"
+    password = var.db_password
+    
+    backup_retention_period = 7
+    multi_az               = true
+    skip_final_snapshot    = false
+    
+    tags = { Environment = "production" }
+  }
+  
+  # Redis
+  resource "aws_elasticache_cluster" "main" {
+    cluster_id           = "myapp-prod"
+    engine               = "redis"
+    node_type            = "cache.t3.micro"
+    num_cache_nodes      = 1
+    parameter_group_name = "default.redis7"
+    port                 = 6379
+  }
+
+Benefits of IaC:
+  - Version controlled infrastructure
+  - Reproducible environments
+  - Disaster recovery (recreate everything from code)
+  - Audit trail (who changed what)
+  - Multiple environments (dev, staging, prod) easily
+
+================================================================
+SECTION 7: DEPLOYMENT STRATEGIES
+================================================================
+
+--- BLUE-GREEN DEPLOYMENT ---
+
+  Blue: Current production (v1)
+  Green: New version (v2) — deploy karein
+  
+  Test green → Switch traffic → Blue now standby → Rollback instant!
+  
+  Pros: Zero downtime, instant rollback
+  Cons: 2x infrastructure cost temporarily
+
+--- ROLLING DEPLOYMENT ---
+
+  Servers one-by-one update karo
+  
+  [v1, v1, v1, v1] → [v2, v1, v1, v1] → [v2, v2, v1, v1] → [v2, v2, v2, v2]
+  
+  Pros: Less infrastructure
+  Cons: Mixed versions running simultaneously
+
+--- CANARY DEPLOYMENT ---
+
+  5% traffic → New version (canary)
+  95% traffic → Old version
+  
+  Monitor → Issues? → Rollback (5% affected)
+  All good? → Gradually increase traffic
+  
+  Pros: Risk minimal
+  Cons: Complex routing
+
+--- FEATURE FLAGS ---
+
+  Code mein feature on/off karo bina deployment ke:
+  
+  if (featureFlags.isEnabled('new-checkout', userId)) {
+    return <NewCheckout />;
+  }
+  return <OldCheckout />;
+  
+  Tools: LaunchDarkly, Split.io, or simple DB table
+
+================================================================
+SECTION 8: ENVIRONMENT MANAGEMENT
+================================================================
+
+Environments:
+  Development → Local developer machine
+  Staging → Production-like, for testing
+  Production → Real users
+
+Rules:
+  - Each environment separate config
+  - Staging should mirror production as closely as possible
+  - NEVER test in production (except canary)
+  - Secrets different per environment
+
+Config Management:
+  .env.development
+  .env.staging
+  .env.production
+  
+  # Never commit these to Git!
+  # Add to .gitignore
+  
+  # Use: dotenv, AWS Secrets Manager, Vault
+
+================================================================
+EXERCISE — PART 17
+================================================================
+
+TASK 1: Dockerfile banana hai ek Node.js app ke liye.
+Requirements:
+  - Production-ready (small size)
+  - Security (non-root user)
+  - Health check
+  - Multi-stage build
+
+TASK 2: GitHub Actions CI pipeline design karo:
+  - Har PR pe tests run hon
+  - Sirf main branch pe deploy ho
+  - Docker image ECR pe push ho
+
+TASK 3: 3 deployment strategies compare karo:
+  Use case: E-commerce site, zero downtime required
+  Which strategy would you choose and why?
+
+================================================================
+QUIZ — PART 17
+================================================================
+
+Q1: Multi-stage Docker build ka faida kya hai?
+    (a) Build fast hoti hai
+    (b) Production image chhoti hoti hai — sirf runtime files, no dev deps
+    (c) Security improve hoti hai
+    (d) Memory kam hoti hai
+
+Jawab: (b)
+
+Q2: Canary deployment mein kya hota hai?
+    (a) Poora traffic naye version pe
+    (b) Thoda traffic (e.g., 5%) naye version pe — monitor karo → gradually increase
+    (c) Blue aur green servers switch karo
+    (d) Manual deployment
+
+Jawab: (b)
+
+Q3: Infrastructure as Code (IaC) ka main benefit kya hai?
+    (a) Infrastructure faster hai
+    (b) Infrastructure version controlled, reproducible, aur documented hai
+    (c) Cost kam hoti hai
+    (d) Developers ko server access nahi hota
+
+Jawab: (b)
+
+Q4: CI aur CD mein farq?
+    (a) CI = Deploy, CD = Test
+    (b) CI = Auto test on every push; CD = Auto deploy after tests pass
+    (c) CI = Cloud, CD = Docker
+    (d) Koi farq nahi
+
+Jawab: (b)
+
+================================================================
+AGLA PART: Part 18 — Observability & Production Operations
+================================================================

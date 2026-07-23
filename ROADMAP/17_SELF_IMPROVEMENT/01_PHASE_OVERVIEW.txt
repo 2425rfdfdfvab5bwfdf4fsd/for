@@ -1,0 +1,70 @@
+================================================================================
+PHASE 17 — SELF-IMPROVEMENT ANALYTICS
+================================================================================
+
+PHASE NAME:         Self-Improvement Analytics
+PHASE OBJECTIVE:    Build analytics tools that identify patterns in the bot's
+                    performance data and generate evidence-based recommendations
+                    for parameter adjustment.
+
+WHY THIS PHASE EXISTS:
+    A trading bot that cannot learn from its own results is static. This phase
+    implements analytics that highlight what is working and what is not, so
+    the user can make informed adjustments. All recommendations are based on
+    statistical evidence, not opinion.
+
+    CRITICAL RULE: The bot NEVER adjusts its own parameters automatically.
+    Recommendations are suggestions for human review only. Parameter changes
+    require human approval and a new validation cycle.
+
+DEPENDENCIES:
+    - Phase 04 (Data Layer): trade history, rejection history, daily stats
+    - Phase 13 (Trade Journal): complete trade records
+    - Phase 15/16 (Backtesting/Validation): historical performance baseline
+
+INPUTS:
+    - Trade journal (from Phase 13)
+    - Rejection journal (from Phase 13)
+    - Missed trade analysis (from Phase 13)
+    - Backtesting results (from Phase 15/16)
+
+OUTPUTS:
+    - Performance segmentation report
+    - Parameter recommendation report
+    - Evidence-gated improvement suggestions
+
+FILES EXPECTED TO BE CREATED:
+    app/analytics/performance_analytics.py
+    app/analytics/segment_analysis.py
+    app/analytics/recommendation_engine.py
+    app/analytics/evidence_gates.py
+    app/analytics/__init__.py
+    tests/test_self_improvement/test_analytics.py
+    tests/test_self_improvement/test_evidence_gates.py
+
+FILES THAT MUST NOT BE MODIFIED:
+    app/mt5/
+    app/strategy/
+    app/risk/
+    app/execution/
+    ROADMAP/
+
+TASK ORDER:
+    1. 01_TASK_PERFORMANCE_ANALYTICS.txt
+    2. 02_TASK_SEGMENT_ANALYSIS.txt
+    3. 03_TASK_RECOMMENDATION_ENGINE.txt
+    4. 04_TASK_EVIDENCE_GATES.txt
+
+ACCEPTANCE CRITERIA:
+    [ ] Performance analytics generates weekly/monthly reports
+    [ ] Segment analysis identifies best/worst performing conditions
+    [ ] Recommendation engine produces actionable suggestions with evidence
+    [ ] Evidence gates prevent recommendations with insufficient data
+    [ ] No automatic parameter changes — human approval always required
+
+HANDOFF REQUIREMENTS:
+    Before Phase 18 (Windows Automation):
+    - All 4 analytics modules functional
+    - Reports generated from real or mock data
+    - Evidence gates tested
+================================================================================

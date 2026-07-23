@@ -1,0 +1,409 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 19: CODE REVIEW & ENGINEERING STANDARDS
+(Senior Engineer Ki Tarah Review Karna)
+================================================================
+
+SEEKHNE KE MAQASID:
+- Code review framework
+- Constructive feedback dena
+- Architecture aur security review
+- Engineering standards enforce karna
+
+================================================================
+SECTION 1: CODE REVIEW KYA ACHIEVE KARNA CHAHIYE
+================================================================
+
+Goals:
+  1. Correctness verify karna (kya sahi kaam karta hai?)
+  2. Knowledge sharing (reviewer bhi seekhta hai)
+  3. Consistency maintain karna
+  4. Architecture protect karna
+  5. Security holes catch karna
+  6. Better solutions suggest karna
+
+NOT goals:
+  ❌ Style wars (linting tools ke liye chhodo)
+  ❌ Power show karna
+  ❌ Bikeshedding (trivial cheezein pe zyada time)
+  ❌ Rubber stamping (bina padhe LGTM)
+
+The Golden Rule:
+  "Review the code, not the person."
+
+================================================================
+SECTION 2: CODE REVIEW FRAMEWORK
+================================================================
+
+Senior engineer in checklist se review karta hai:
+
+--- 1. CORRECTNESS ---
+  □ Kya code requirements meet karta hai?
+  □ Logic sahi hai?
+  □ Edge cases handle hain?
+  □ Error cases handle hain?
+  □ Null/undefined properly handled?
+  □ Data types correct hain?
+  □ Calculations sahi hain?
+
+--- 2. SECURITY ---
+  □ User input validate ho raha hai?
+  □ SQL injection safe? (parameterized queries)
+  □ Authentication required?
+  □ Authorization check (ownership)?
+  □ Sensitive data logs mein nahi?
+  □ Secrets hardcoded toh nahi?
+  □ XSS vulnerable toh nahi?
+  □ CSRF protection?
+  □ Rate limiting?
+
+--- 3. PERFORMANCE ---
+  □ N+1 queries toh nahi?
+  □ Missing indexes?
+  □ Unnecessary data fetching (SELECT *)?
+  □ Heavy computation blocking event loop?
+  □ Caching opportunity?
+  □ Database transactions properly used?
+
+--- 4. MAINTAINABILITY ---
+  □ Code readable hai?
+  □ Naming meaningful hai?
+  □ Functions too long? (> 30 lines?)
+  □ Complexity too high? (nested ifs, deep loops)
+  □ DRY principle? (duplicate code?)
+  □ Comments meaningful hain (WHY, not WHAT)?
+  □ Magic numbers → named constants?
+
+--- 5. ARCHITECTURE ---
+  □ Existing patterns follow?
+  □ Module boundaries respected?
+  □ Separation of concerns?
+  □ Dependency direction correct?
+  □ Layered architecture violations?
+  □ Business logic in correct layer (service, not controller)?
+
+--- 6. TESTING ---
+  □ Tests exist?
+  □ Tests meaningful hain?
+  □ Edge cases covered?
+  □ Mocks appropriate?
+  □ Test names descriptive?
+  □ Coverage acceptable?
+
+--- 7. ERROR HANDLING ---
+  □ All errors caught?
+  □ Errors properly logged?
+  □ User-facing errors appropriate (no internal details)?
+  □ Correct HTTP status codes?
+  □ Recovery possible?
+
+--- 8. OBSERVABILITY ---
+  □ Important events logged?
+  □ Metrics added?
+  □ Distributed tracing context propagated?
+
+--- 9. DOCUMENTATION ---
+  □ README updated?
+  □ API docs updated?
+  □ Complex logic commented?
+  □ Breaking changes documented?
+
+================================================================
+SECTION 3: CODE REVIEW COMMENT TYPES
+================================================================
+
+Not all comments equal hote hain. Categorize karo:
+
+BLOCKING (must fix before merge):
+  "BLOCKING: SQL injection vulnerability here — use parameterized query"
+  "BLOCKING: Missing authorization check — any user can delete any order"
+  "BLOCKING: Test fails — see CI output"
+
+SUGGESTION (non-blocking, consider):
+  "SUGGESTION: This could be simplified with Array.reduce"
+  "SUGGESTION: Consider adding a cache here for performance"
+
+NITPICK (style, minor, optional):
+  "NITPICK: Variable name 'd' → 'duration' for clarity"
+  "NIT: Extra blank line"
+
+QUESTION (need understanding):
+  "QUESTION: Why is the timeout set to 5s here? Is 30s too long?"
+
+PRAISE (acknowledge good work):
+  "Nice refactoring! The new structure is much cleaner."
+  "Good catch on the edge case!"
+
+================================================================
+SECTION 4: CONSTRUCTIVE FEEDBACK EXAMPLES
+================================================================
+
+BAD feedback:
+  "This is wrong."
+  "Why did you do it this way?"
+  "This code is terrible."
+  "You should know better."
+
+GOOD feedback (explain + suggest):
+  BAD: "This is wrong."
+  GOOD: "BLOCKING: This creates an N+1 query problem — for 100 users,
+         this runs 101 DB queries. Consider using an includes/join:
+         
+         // Current:
+         const users = await User.findAll();
+         for (const user of users) {
+           const orders = await Order.findAll({ where: { userId: user.id } });
+         }
+         
+         // Better:
+         const users = await User.findAll({ include: Order });
+         
+         This reduces 101 queries to 1."
+
+Format: Problem explain → Impact explain → Solution suggest
+
+================================================================
+SECTION 5: REVIEWING DIFFERENT CODE TYPES
+================================================================
+
+--- REVIEWING NEW FEATURE ---
+
+Focus:
+  - Requirements met?
+  - Architecture fits?
+  - Edge cases?
+  - Security?
+  - Tests complete?
+
+Start from high-level:
+  "Before diving in — is the approach right?
+   Could this be done simpler?"
+
+--- REVIEWING BUG FIX ---
+
+Focus:
+  - Does it actually fix the bug?
+  - Is it fixing root cause (not just symptom)?
+  - Are there related bugs?
+  - Regression test added?
+  - Could fix break something else?
+
+--- REVIEWING REFACTORING ---
+
+Focus:
+  - Tests still pass?
+  - Behavior unchanged?
+  - Actually simpler?
+  - No accidental functionality changes?
+
+--- REVIEWING DATABASE MIGRATION ---
+
+EXTRA CAREFUL:
+  - Migration reversible hai?
+  - Large table pe running without lock?
+  - Backward compatible? (code deploy ke dauraan old code bhi kaam kare)
+  - Tested on staging first?
+  - Rollback plan?
+
+Common gotcha:
+  Column rename → Deploy crash if old code uses old column name.
+  Safe approach: Add new column → Migrate data → Update code → Remove old column.
+
+================================================================
+SECTION 6: SELF-REVIEW BEFORE SUBMITTING PR
+================================================================
+
+Before PR raise karo:
+  □ Apna diff poori tarah padho
+  □ Tests likho aur run karo
+  □ Lint run karo
+  □ Type check run karo
+  □ Build run karo
+  □ Security issues dhundho
+  □ Debug logs hata do (console.log, debugger)
+  □ TODOs addressed ya tracked?
+  □ PR description complete?
+
+======================================
+SENIOR MINDSET in Code Review:
+======================================
+
+Junior reviewer: "LGTM" (without reading carefully)
+Mid reviewer: Comments on obvious bugs
+Senior reviewer: Thinks about:
+  - Business impact
+  - Long-term maintainability
+  - Architecture consistency
+  - Future developers reading this
+  - Production behavior
+
+================================================================
+SECTION 7: AI-GENERATED CODE REVIEW
+================================================================
+
+2026 mein AI code review special attention deta hai:
+
+AI code mein common issues:
+  - Plausible but wrong business logic
+  - Missing edge cases
+  - Incorrect error handling
+  - Hallucinated API methods
+  - Inconsistent patterns (different style than codebase)
+  - Hidden security vulnerabilities
+  - Over-engineered solutions
+  - Missing tests
+
+Extra checks for AI-generated code:
+  □ Kya AI codebase ka existing pattern follow kiya?
+  □ Kya AI ne unrelated files change kiye?
+  □ Kya API methods actually exist karte hain?
+  □ Kya business logic correct hai (manually verify)?
+  □ Kya duplicate functionality create hui?
+  □ Tests meaningful hain ya just coverage numbers ke liye?
+
+================================================================
+SECTION 8: ENGINEERING STANDARDS ENFORCE KARNA
+================================================================
+
+Linting (automated style):
+  ESLint + Prettier → Enforce code style automatically
+  Pre-commit hooks → Commit karne se pehle run karo
+  
+  .eslintrc:
+  {
+    "extends": ["eslint:recommended", "@typescript-eslint/recommended"],
+    "rules": {
+      "no-console": "warn",
+      "@typescript-eslint/no-explicit-any": "error",
+      "no-unused-vars": "error"
+    }
+  }
+
+Pre-commit hooks (husky):
+  // package.json
+  {
+    "husky": {
+      "hooks": {
+        "pre-commit": "lint-staged",
+        "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+      }
+    },
+    "lint-staged": {
+      "*.ts": ["eslint --fix", "prettier --write"]
+    }
+  }
+
+Branch protection rules (GitHub):
+  - Required reviews: 1-2 reviewers
+  - Required status checks: CI must pass
+  - No direct push to main
+  - Linear history required
+
+================================================================
+SECTION 9: CODE REVIEW EXERCISE
+================================================================
+
+REVIEW THIS CODE:
+
+  // Order controller
+  app.post('/orders', async (req, res) => {
+    const { userId, items, discountCode } = req.body;
+    
+    let discount = 0;
+    const d = await db.query(
+      `SELECT * FROM discounts WHERE code = '${discountCode}'`
+    );
+    
+    if (d.rows.length > 0) {
+      discount = d.rows[0].amount;
+    }
+    
+    let total = 0;
+    for (const item of items) {
+      const p = await db.query('SELECT price FROM products WHERE id = ' + item.id);
+      total += p.rows[0].price * item.quantity;
+    }
+    
+    total = total - discount;
+    
+    const order = await db.query(
+      'INSERT INTO orders (user_id, total, status) VALUES ($1, $2, $3) RETURNING *',
+      [userId, total, 'pending']
+    );
+    
+    console.log('Order created: ' + order.rows[0].id);
+    res.json(order.rows[0]);
+  });
+
+Find:
+  1. Security issues (minimum 2)
+  2. Performance issues
+  3. Error handling issues
+  4. Architecture issues
+  5. Write review comments (blocking, suggestion, etc.)
+
+SAMPLE ANSWER:
+  
+  BLOCKING: SQL Injection vulnerability!
+    Line: WHERE code = '${discountCode}' — use parameterized query
+    
+  BLOCKING: SQL Injection again!
+    Line: WHERE id = ' + item.id — use parameterized query
+  
+  BLOCKING: No authentication! Anyone can create order for any userId.
+    Add auth middleware and use req.user.id instead.
+  
+  BLOCKING: N+1 query problem!
+    Each item has separate DB query. Fetch all products at once:
+    SELECT price FROM products WHERE id = ANY($1)
+  
+  BLOCKING: Discount not validated — expired discounts? Usage limit?
+    Add: WHERE code = $1 AND expires_at > NOW() AND uses_remaining > 0
+  
+  BLOCKING: No input validation — items could be empty array!
+    
+  SUGGESTION: console.log → structured logger
+  
+  SUGGESTION: Business logic (total calculation) should be in service layer, not controller
+  
+  SUGGESTION: No error handling — DB errors will crash the server
+
+================================================================
+QUIZ — PART 19
+================================================================
+
+Q1: "BLOCKING" comment kab use karte hain?
+    (a) Har comment pe
+    (b) Sirf jab PR merge se pehle fix zaroori ho (security, correctness)
+    (c) Styling issues pe
+    (d) Personal preference pe
+
+Jawab: (b)
+
+Q2: Self-review mein sabse pehle kya karna chahiye?
+    (a) Screenshot lena
+    (b) Apna poora diff khud padhna
+    (c) PM ko inform karna
+    (d) Deploy karna
+
+Jawab: (b)
+
+Q3: AI-generated code review mein extra kya check karna chahiye?
+    (a) Code ka font
+    (b) API methods exist karte hain? Existing patterns follow? Unrelated files modified?
+    (c) Comments style
+    (d) File names
+
+Jawab: (b)
+
+Q4: Good code review comment mein kya hona chahiye?
+    (a) Sirf problem
+    (b) Problem + impact + suggested solution
+    (c) Sirf solution
+    (d) Personal opinion
+
+Jawab: (b)
+
+================================================================
+AGLA PART: Part 20 — Technical Documentation
+================================================================

@@ -1,0 +1,539 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 16: PERFORMANCE ENGINEERING
+(Measure, Optimize, Verify)
+================================================================
+
+SEEKHNE KE MAQASID:
+- Performance measure karna (measure first!)
+- Frontend, backend, database performance
+- Caching strategies
+- Profiling tools
+
+================================================================
+SECTION 1: PERFORMANCE ENGINEERING MINDSET
+================================================================
+
+RULE #1: "Measure before you optimize"
+
+Common mistake:
+  Developer thinks: "Array sort slow hoga, linked list better"
+  Spends 2 days refactoring
+  Result: No measurable improvement (was never the bottleneck)
+
+Senior approach:
+  1. Measure current performance
+  2. Identify bottleneck (profiling)
+  3. Optimize the bottleneck
+  4. Measure again
+  5. Repeat only if needed
+
+Remember: "Premature optimization is the root of all evil" - Knuth
+
+================================================================
+SECTION 2: PERFORMANCE METRICS
+================================================================
+
+KEY METRICS:
+
+Latency:
+  - Average: Misleading (hides outliers)
+  - p50: Median (50% requests this time ya kam)
+  - p95: 95% requests this time ya kam
+  - p99: 99% requests this time ya kam
+  - p99.9: 99.9% requests this time ya kam (99.9th percentile)
+  
+  WHY PERCENTILES: Average 50ms ho sakti hai
+                   lekin p99 = 5000ms → 1% users bahut slow!
+
+Throughput:
+  - RPS (Requests Per Second)
+  - TPS (Transactions Per Second)
+
+Error Rate:
+  - Errors per minute
+  - Error percentage
+
+Resource Utilization:
+  - CPU %
+  - Memory %
+  - Disk I/O
+  - Network bandwidth
+
+================================================================
+SECTION 3: BACKEND PERFORMANCE
+================================================================
+
+--- PROFILING ---
+
+Node.js profiling:
+
+  // Using clinic.js:
+  npx clinic doctor -- node app.js
+  npx clinic flame -- node app.js   # Flame graph
+  
+  // Built-in profiler:
+  node --prof app.js
+  node --prof-process isolate-xxx.log > profile.txt
+
+  // Simple timing:
+  const { performance } = require('perf_hooks');
+  
+  app.use((req, res, next) => {
+    const start = performance.now();
+    res.on('finish', () => {
+      const duration = performance.now() - start;
+      logger.info('request completed', {
+        method: req.method,
+        path: req.path,
+        statusCode: res.statusCode,
+        durationMs: Math.round(duration)
+      });
+    });
+    next();
+  });
+
+--- COMMON BACKEND BOTTLENECKS ---
+
+1. Database queries (most common!):
+   - Missing indexes
+   - N+1 queries
+   - Large result sets without pagination
+   - Complex joins
+   
+   Fix: EXPLAIN ANALYZE, add indexes, paginate
+
+2. Synchronous blocking code:
+   // BAD in Node.js:
+   const data = fs.readFileSync(largefile); // Blocks event loop!
+   
+   // GOOD:
+   const data = await fs.promises.readFile(largefile);
+
+3. Serial vs Parallel async:
+   // BAD (serial - 3 requests one after another):
+   const user = await fetchUser(userId);     // 100ms
+   const orders = await fetchOrders(userId); // 100ms
+   const prefs = await fetchPrefs(userId);   // 100ms
+   // Total: 300ms
+   
+   // GOOD (parallel):
+   const [user, orders, prefs] = await Promise.all([
+     fetchUser(userId),    // 100ms
+     fetchOrders(userId),  // concurrent
+     fetchPrefs(userId)    // concurrent
+   ]);
+   // Total: ~100ms
+
+4. Heavy computation blocking event loop:
+   // BAD: CPU-intensive in main thread
+   function heavyCalculation(data) {
+     // Complex algorithm, 2 seconds...
+   }
+   
+   // GOOD: Worker threads
+   const { Worker } = require('worker_threads');
+   // Run in separate thread
+
+--- RESPONSE COMPRESSION ---
+
+  import compression from 'compression';
+  app.use(compression()); // gzip responses
+  
+  // Typically 5-10x size reduction for JSON/HTML
+
+--- HTTP KEEP-ALIVE ---
+
+  // HTTPS connections reuse (default in HTTP/1.1+)
+  // Reduces connection overhead
+
+================================================================
+SECTION 4: DATABASE PERFORMANCE
+================================================================
+
+--- QUERY OPTIMIZATION ---
+
+Step 1: Identify slow queries
+  PostgreSQL:
+  // Enable slow query log
+  ALTER SYSTEM SET log_min_duration_statement = 100; -- Log queries > 100ms
+  SELECT RELOAD();
+  
+  // Or: pg_stat_statements extension
+  CREATE EXTENSION pg_stat_statements;
+  SELECT query, mean_exec_time, calls
+  FROM pg_stat_statements
+  ORDER BY mean_exec_time DESC LIMIT 10;
+
+Step 2: EXPLAIN ANALYZE
+  EXPLAIN (ANALYZE, BUFFERS)
+  SELECT * FROM orders
+  WHERE user_id = 1 AND status = 'pending'
+  ORDER BY created_at DESC;
+  
+  Reading output:
+  Seq Scan → BAD (full table scan)
+  Index Scan → GOOD
+  Index Only Scan → BETTER
+  Bitmap Heap Scan → OK for range queries
+
+Step 3: Add Index
+  CREATE INDEX CONCURRENTLY idx_orders_user_status
+  ON orders(user_id, status);
+  -- CONCURRENTLY = No table lock during creation!
+
+--- PAGINATION PERFORMANCE ---
+
+OFFSET based (slow for large offsets):
+  SELECT * FROM orders ORDER BY created_at DESC LIMIT 20 OFFSET 10000;
+  -- Database reads 10020 rows, discards 10000!
+
+Cursor based (fast):
+  -- First page:
+  SELECT * FROM orders ORDER BY id DESC LIMIT 20;
+  -- Last id returned: 500
+  
+  -- Next page:
+  SELECT * FROM orders WHERE id < 500 ORDER BY id DESC LIMIT 20;
+  -- Uses index! O(log n) instead of O(n)
+
+--- DATABASE CONNECTION POOL ---
+
+  // PG Pool config
+  const pool = new Pool({
+    max: 20,        // Max connections
+    min: 5,         // Min connections
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000
+  });
+
+--- READ REPLICAS ---
+
+  // Route reads to replica, writes to primary
+  const primaryDb = new Pool({ host: 'primary.db.local' });
+  const replicaDb = new Pool({ host: 'replica.db.local' });
+  
+  // Use replica for reads
+  const users = await replicaDb.query('SELECT * FROM users');
+  
+  // Use primary for writes
+  await primaryDb.query('INSERT INTO users ...');
+
+================================================================
+SECTION 5: CACHING STRATEGIES
+================================================================
+
+--- WHEN TO CACHE ---
+
+Cache karo jab:
+  ✅ Data frequently read, rarely write ho
+  ✅ Data compute karna expensive ho
+  ✅ Same data multiple users dekhte hon
+  ✅ External API calls
+
+Cache MAT karo jab:
+  ❌ Data hamesha fresh chahiye (bank balance)
+  ❌ Data frequently changes
+  ❌ Cache invalidation complex ho
+
+--- CACHE LEVELS ---
+
+L1: In-memory cache (per process):
+  const cache = new Map();
+  
+  // Simple in-memory:
+  function memoize(fn) {
+    const cache = new Map();
+    return (...args) => {
+      const key = JSON.stringify(args);
+      if (cache.has(key)) return cache.get(key);
+      const result = fn(...args);
+      cache.set(key, result);
+      return result;
+    };
+  }
+  
+  Problem: Multiple instances → each has own cache
+
+L2: Distributed cache (Redis):
+  async function getProduct(productId) {
+    // Check cache
+    const cached = await redis.get(`product:${productId}`);
+    if (cached) return JSON.parse(cached);
+    
+    // Cache miss
+    const product = await db.products.findById(productId);
+    
+    // Store with TTL
+    await redis.setEx(
+      `product:${productId}`,
+      3600, // 1 hour
+      JSON.stringify(product)
+    );
+    
+    return product;
+  }
+  
+  // Invalidate on update:
+  async function updateProduct(productId, data) {
+    await db.products.update(data, { id: productId });
+    await redis.del(`product:${productId}`); // Invalidate cache
+  }
+
+--- CACHE HIT RATE ---
+
+  // Monitor cache effectiveness
+  let hits = 0, misses = 0;
+  
+  async function getFromCache(key) {
+    const value = await redis.get(key);
+    if (value) { hits++; return JSON.parse(value); }
+    misses++;
+    return null;
+  }
+  
+  // Hit rate = hits / (hits + misses)
+  // Target: >80% hit rate
+
+================================================================
+SECTION 6: FRONTEND PERFORMANCE
+================================================================
+
+--- CORE WEB VITALS ---
+
+Google's page experience metrics:
+
+LCP (Largest Contentful Paint): < 2.5 seconds
+  → Largest element (hero image, main text) load time
+
+FID/INP (Interaction to Next Paint): < 200ms
+  → How fast UI responds to interaction
+
+CLS (Cumulative Layout Shift): < 0.1
+  → Visual stability (content jumping around)
+
+--- BUNDLE SIZE OPTIMIZATION ---
+
+  // Analyze bundle:
+  npm run build -- --stats
+  npx webpack-bundle-analyzer stats.json
+  
+  Techniques:
+  
+  1. Code Splitting:
+     const Dashboard = lazy(() => import('./Dashboard')); // Split here
+  
+  2. Tree Shaking (dead code elimination):
+     // BAD: Import whole library
+     import _ from 'lodash'; // 70KB
+     
+     // GOOD: Import only what you need
+     import { debounce } from 'lodash-es'; // ~2KB
+  
+  3. Dynamic Imports:
+     const module = await import('./heavy-library');
+
+--- IMAGE OPTIMIZATION ---
+
+  Format priority:
+  WebP/AVIF > JPEG > PNG (for photos)
+  SVG (for icons, illustrations)
+  
+  Techniques:
+  - Lazy loading: <img loading="lazy" />
+  - Responsive images: <img srcset="..." sizes="..." />
+  - Proper dimensions (no CSS resize)
+  - CDN with image transformation
+
+--- RENDERING PERFORMANCE ---
+
+  // Avoid layout thrashing (forced reflows)
+  
+  BAD (reads and writes mixed):
+  for (const item of items) {
+    const width = item.offsetWidth; // Read (forces layout)
+    item.style.width = width * 2 + 'px'; // Write (invalidates layout)
+    const height = item.offsetHeight; // Read again (forces layout!)
+  }
+  
+  GOOD (batch reads, then writes):
+  const widths = items.map(item => item.offsetWidth); // All reads
+  items.forEach((item, i) => {
+    item.style.width = widths[i] * 2 + 'px'; // All writes
+  });
+
+--- DEBOUNCE & THROTTLE ---
+
+  // Debounce: Wait N ms after last call
+  // Use: Search input, resize handler
+  const debouncedSearch = debounce((query) => {
+    fetchResults(query);
+  }, 300); // Wait 300ms after user stops typing
+  
+  // Throttle: Call at most once per N ms
+  // Use: Scroll events, mousemove
+  const throttledScroll = throttle(() => {
+    updateScrollPosition();
+  }, 100); // Max 10 times per second
+
+================================================================
+SECTION 7: LOAD TESTING
+================================================================
+
+Load testing = System pe artificial load dalna
+
+Tools:
+  - k6 (modern, JavaScript)
+  - Apache JMeter
+  - Artillery
+
+k6 Example:
+
+  // load-test.js
+  import http from 'k6/http';
+  import { check, sleep } from 'k6';
+  
+  export const options = {
+    stages: [
+      { duration: '2m', target: 100 }, // Ramp up to 100 users
+      { duration: '5m', target: 100 }, // Stay at 100 users
+      { duration: '2m', target: 200 }, // Ramp up to 200
+      { duration: '5m', target: 200 }, // Stay at 200
+      { duration: '2m', target: 0 },   // Ramp down
+    ],
+    thresholds: {
+      http_req_duration: ['p(95)<500'], // 95% requests < 500ms
+      http_req_failed: ['rate<0.01'],   // Error rate < 1%
+    },
+  };
+  
+  export default function () {
+    const response = http.get('https://api.example.com/products');
+    
+    check(response, {
+      'status 200': (r) => r.status === 200,
+      'response < 500ms': (r) => r.timings.duration < 500,
+    });
+    
+    sleep(1); // Think time
+  }
+  
+  // Run: k6 run load-test.js
+
+Load Test Scenarios:
+  - Normal load: Typical daily traffic
+  - Peak load: Highest expected traffic
+  - Stress test: Break point dhundhna
+  - Soak test: Long duration normal load (memory leaks)
+  - Spike test: Sudden 10x traffic
+
+================================================================
+SECTION 8: PERFORMANCE MONITORING
+================================================================
+
+Real-time monitoring dashboards:
+
+Metrics to monitor:
+  - API response time (p50, p95, p99)
+  - Error rate
+  - Throughput (RPS)
+  - CPU, Memory
+  - DB query time
+  - Cache hit rate
+  - Queue depth
+
+Tools:
+  - Datadog
+  - Grafana + Prometheus
+  - New Relic
+  - CloudWatch (AWS)
+
+Alert Rules:
+  - p99 latency > 1s → Alert
+  - Error rate > 1% → Alert
+  - CPU > 80% for 5 min → Alert
+  - Memory > 90% → Alert
+  - Queue depth > 1000 → Alert
+
+================================================================
+EXERCISE — PART 16
+================================================================
+
+SCENARIO: Your product listings API is slow.
+Current: p99 = 3.5 seconds
+Target: p99 < 500ms
+
+Products table: 500,000 rows
+
+Current query:
+  SELECT p.*, c.name as category_name, AVG(r.rating) as avg_rating
+  FROM products p
+  LEFT JOIN categories c ON p.category_id = c.id
+  LEFT JOIN reviews r ON r.product_id = p.id
+  WHERE p.is_active = true
+    AND p.category_id = $1
+  GROUP BY p.id, c.name
+  ORDER BY p.created_at DESC
+  LIMIT 20 OFFSET $2;
+
+TASKS:
+  1. Kya potential issues hain is query mein?
+  2. EXPLAIN ANALYZE kaise use karoge?
+  3. Kaunse indexes banao ge?
+  4. Pagination improve karo
+  5. Avg rating cache kaise karoge?
+  6. Load test kaise karoge verify karne ke liye?
+
+SAMPLE ANSWERS:
+  Issues:
+  - Missing indexes on category_id, is_active
+  - AVG(rating) computed har baar — cache karo
+  - OFFSET pagination slow hai
+  
+  Indexes:
+  CREATE INDEX idx_products_category_active ON products(category_id, is_active);
+  CREATE INDEX idx_products_created ON products(created_at DESC);
+  
+  Cache rating:
+  - Materialized view ya separate column avg_rating
+  - Update on new review
+
+================================================================
+QUIZ — PART 16
+================================================================
+
+Q1: P99 latency kya represent karta hai?
+    (a) Average latency
+    (b) 99% requests is time ya kam mein complete hote hain
+    (c) Maximum latency
+    (d) 99% uptime
+
+Jawab: (b)
+
+Q2: "Measure before optimize" kyun zaroori hai?
+    (a) Resources waste rokna — actual bottleneck dhundho pehle
+    (b) Tests likhne ke liye
+    (c) Code clean karne ke liye
+    (d) Budget estimate karne ke liye
+
+Jawab: (a)
+
+Q3: Debounce kab use karo?
+    (a) Database queries ke liye
+    (b) User input ke saath frequent events ko delay karne ke liye (search input)
+    (c) Image loading ke liye
+    (d) API pagination ke liye
+
+Jawab: (b)
+
+Q4: Load testing ka main purpose kya hai?
+    (a) Code bugs dhundhna
+    (b) System ka behaviour under load understand karna — bottleneck aur breaking point
+    (c) UI test karna
+    (d) Security test karna
+
+Jawab: (b)
+
+================================================================
+AGLA PART: Part 17 — DevOps & Cloud
+================================================================

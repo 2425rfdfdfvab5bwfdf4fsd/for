@@ -1,0 +1,548 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 6: SOFTWARE DESIGN PRINCIPLES
+(SOLID, DRY, KISS, YAGNI aur aur bhi)
+================================================================
+
+SEEKHNE KE MAQASID:
+- SOLID principles deeply samajhna
+- DRY, KISS, YAGNI ko practically apply karna
+- Har principle ke real production examples
+- Kab principle follow karna hai aur kab nahi
+
+================================================================
+SECTION 1: SOLID PRINCIPLES
+================================================================
+
+SOLID = 5 principles jo object-oriented design ko behtar banate hain
+
+S — Single Responsibility Principle
+O — Open/Closed Principle
+L — Liskov Substitution Principle
+I — Interface Segregation Principle
+D — Dependency Inversion Principle
+
+--- S: SINGLE RESPONSIBILITY PRINCIPLE ---
+
+Simple: "Ek class ka sirf ek kaam hona chahiye"
+
+Senior explanation:
+  "Ek class ko change karne ki sirf ek reason honi chahiye."
+
+BAD EXAMPLE:
+  class UserManager {
+    createUser(data) { ... }       // User creation
+    sendWelcomeEmail(user) { ... } // Email sending
+    generateReport(userId) { ... } // Reporting
+    logActivity(action) { ... }    // Logging
+  }
+  
+  Problem: 4 alag reasons se change ho sakti hai yeh class
+
+GOOD EXAMPLE:
+  class UserService {
+    createUser(data) { ... }
+  }
+  
+  class EmailService {
+    sendWelcomeEmail(user) { ... }
+  }
+  
+  class ReportingService {
+    generateReport(userId) { ... }
+  }
+  
+  class ActivityLogger {
+    logActivity(action) { ... }
+  }
+
+Real Production Scenario:
+  Ek e-commerce app mein OrderProcessor class thi jo:
+  - Order validate karti thi
+  - Payment charge karti thi
+  - Inventory update karti thi
+  - Email bhejti thi
+  - Order DB mein save karti thi
+  
+  Jab payment provider change hua → poori class risk mein thi
+  Fix: Alag karo → OrderValidator, PaymentProcessor, InventoryService, NotificationService
+
+Kab NOT use karo:
+  Very simple scripts mein over-engineering mat karo.
+  Ek 20-line utility function ko 5 classes mein todna zaroori nahi.
+
+--- O: OPEN/CLOSED PRINCIPLE ---
+
+Simple: "Code extensions ke liye khula hona chahiye, modifications ke liye band"
+
+Matlab: Naya behavior add karo bina existing code todey.
+
+BAD EXAMPLE:
+  function calculateDiscount(user, price) {
+    if (user.type === 'student') return price * 0.2;
+    if (user.type === 'senior') return price * 0.3;
+    if (user.type === 'employee') return price * 0.4;
+    // Har baar naya type → function modify karo
+  }
+
+GOOD EXAMPLE:
+  interface DiscountStrategy {
+    calculate(price: number): number;
+  }
+  
+  class StudentDiscount implements DiscountStrategy {
+    calculate(price) { return price * 0.2; }
+  }
+  
+  class SeniorDiscount implements DiscountStrategy {
+    calculate(price) { return price * 0.3; }
+  }
+  
+  // Naya discount add karna → bas naya class banao
+  class VIPDiscount implements DiscountStrategy {
+    calculate(price) { return price * 0.5; }
+  }
+
+Real Scenario:
+  Notification system mein sirf email tha.
+  SMS add karna tha — bina email code todey.
+  Strategy pattern use karke: sirf naya class banaya.
+
+--- L: LISKOV SUBSTITUTION PRINCIPLE ---
+
+Simple: "Child class ko parent class ki jagah use karna safe hona chahiye"
+
+BAD EXAMPLE:
+  class Bird {
+    fly() { ... }
+  }
+  
+  class Penguin extends Bird {
+    fly() {
+      throw new Error("Penguins can't fly!"); // LSP violation!
+    }
+  }
+  
+  // Agar koi function Bird expect kare aur Penguin aaye → crash
+
+GOOD EXAMPLE:
+  class Bird {
+    eat() { ... }
+    move() { ... }
+  }
+  
+  class FlyingBird extends Bird {
+    fly() { ... }
+  }
+  
+  class Penguin extends Bird {
+    swim() { ... }  // Separate hierarchy
+  }
+
+Real Scenario:
+  ReadOnlyRepository extends Repository
+  Agar Repository mein write methods hain aur ReadOnly throws error → LSP violation
+  Fix: Separate interfaces: ReadRepository, WriteRepository
+
+--- I: INTERFACE SEGREGATION PRINCIPLE ---
+
+Simple: "Chhote, specific interfaces banao — ek bada sab-kuch interface mat banao"
+
+BAD EXAMPLE:
+  interface Animal {
+    eat(): void;
+    fly(): void;    // Cats can't fly!
+    swim(): void;   // All animals don't swim
+    bark(): void;   // Only dogs
+  }
+  
+  class Cat implements Animal {
+    fly() { throw new Error(); } // Forced to implement
+    swim() { throw new Error(); } // Forced to implement
+    bark() { throw new Error(); } // Forced to implement
+  }
+
+GOOD EXAMPLE:
+  interface Eater { eat(): void; }
+  interface Flyer { fly(): void; }
+  interface Swimmer { swim(): void; }
+  
+  class Cat implements Eater { eat() { ... } }
+  class Duck implements Eater, Flyer, Swimmer { ... }
+
+Real Production Scenario:
+  Worker interface:
+    work(), eat(), sleep()
+  
+  Robot class forced to implement sleep() → ISP violation
+  
+  Fix:
+    interface Workable { work(): void; }
+    interface Biological { eat(): void; sleep(): void; }
+    
+    class Human implements Workable, Biological { ... }
+    class Robot implements Workable { ... }
+
+--- D: DEPENDENCY INVERSION PRINCIPLE ---
+
+Simple: "High-level modules low-level modules pe directly depend na karein.
+        Dono abstractions pe depend karein."
+
+BAD EXAMPLE:
+  class OrderService {
+    private emailSender = new GmailSender(); // Direct dependency!
+    
+    processOrder(order) {
+      // ... process ...
+      this.emailSender.send(...); // Tightly coupled to Gmail
+    }
+  }
+  
+  // Kal SendGrid pe migrate karna ho → OrderService change karni padegi
+
+GOOD EXAMPLE:
+  interface EmailService {
+    send(to: string, subject: string, body: string): Promise<void>;
+  }
+  
+  class OrderService {
+    constructor(private emailService: EmailService) {} // Inject!
+    
+    processOrder(order) {
+      // ... process ...
+      this.emailService.send(...); // Works with any implementation
+    }
+  }
+  
+  // GmailService, SendGridService, MockEmailService — sab kaam karein
+  class GmailService implements EmailService { ... }
+  class SendGridService implements EmailService { ... }
+  class MockEmailService implements EmailService { ... } // For testing!
+
+================================================================
+SECTION 2: DRY — DON'T REPEAT YOURSELF
+================================================================
+
+Simple: "Har piece of knowledge ka system mein ek hi, authoritative representation hona chahiye"
+
+BAD EXAMPLE:
+  // User validation in controller:
+  if (!email.includes('@')) throw new Error('Invalid email');
+  
+  // User validation in service:
+  if (!email.includes('@')) throw new Error('Invalid email');
+  
+  // User validation in middleware:
+  if (!email.includes('@')) throw new Error('Invalid email');
+  
+  Problem: Email validation rule 3 jagah hai.
+  Kal rule change ho → teen jagah update karna padega, koi ek bhool gaya → bug
+
+GOOD EXAMPLE:
+  // shared/validators.ts
+  function validateEmail(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+  
+  // Use everywhere
+  validateEmail(email); // Single source of truth
+
+CAUTION — DRY Ki Overuse:
+  DRY ka matlab yeh nahi ke similar-looking code hamesha extract karo.
+  
+  Bad DRY:
+    User validation aur Product validation dono mein "name required" check hai.
+    Developer ne "validateRequired" function banaya aur dono mein use kiya.
+    Kal User name 100 chars max, Product name 50 chars max — alag rules chahiye.
+    → Abstract nahi karna chahiye tha kyunki coincidentally similar thay, logically different hain.
+
+================================================================
+SECTION 3: KISS — KEEP IT SIMPLE, STUPID
+================================================================
+
+Simple: "Sabse simple solution prefer karo jo kaam karta ho"
+
+BAD EXAMPLE (over-engineered):
+  class AbstractSingletonProxyFactoryBean {
+    private static instance: AbstractSingletonProxyFactoryBean;
+    private handlerRegistry: Map<string, AbstractHandler>;
+    
+    private constructor() {
+      this.handlerRegistry = new Map();
+    }
+    
+    static getInstance() { ... }
+    registerHandler(type: string, handler: AbstractHandler) { ... }
+    handle(event: Event) { ... }
+  }
+  
+  // ... 500 lines ... jab simple if-else kafi tha
+
+GOOD EXAMPLE (KISS):
+  function handlePayment(type: string, amount: number) {
+    if (type === 'card') return processCard(amount);
+    if (type === 'wallet') return processWallet(amount);
+    throw new Error(`Unknown payment type: ${type}`);
+  }
+
+Real Story:
+  Ek team ne event system ke liye observer pattern implement kiya,
+  factory pattern, command pattern — sab ek saath.
+  2 weeks wasted.
+  Real need tha: ek function jo 3 cheezein kare order place hone pe.
+  3 direct function calls sufficient thi.
+
+KISS apply karne ka tarika:
+  1. Simple likho
+  2. Kaam kare toh ship karo
+  3. Sirf tab complex banao jab real need ho
+
+================================================================
+SECTION 4: YAGNI — YOU AIN'T GONNA NEED IT
+================================================================
+
+Simple: "Jo abhi zaroori nahi, woh mat banao — chahey future mein kaam aaye"
+
+BAD EXAMPLE:
+  // PM ne kaha: "Users login kar sakein"
+  Developer ne banaya:
+  - Plugin system for future auth providers
+  - Abstract auth factory
+  - 15 configuration options
+  - Multi-tenant support (no multi-tenant requirement)
+  - Audit logging for every auth event
+  - Complete OAuth framework
+  
+  Result: 3 weeks mein simple login bana
+  Aur 80% code kabhi use nahi hua
+
+GOOD EXAMPLE (YAGNI):
+  // Simple email + password login
+  // JWT token return karo
+  // Done. Ship it.
+  // Multi-tenant jab zaroori ho tab banao.
+
+YAGNI aur Technical Debt ka Balance:
+  YAGNI ye nahi kehta ke bad code likho.
+  Yeh kehta hai: future features mat add karo.
+  Clean, extensible code YAGNI ke against nahi.
+
+================================================================
+SECTION 5: SEPARATION OF CONCERNS
+================================================================
+
+Pehle Part 4 mein padha — yahan deeper jaate hain.
+
+Concerns:
+  - What data to display (UI)
+  - How to display it (Styling)
+  - Where data comes from (Data fetching)
+  - Business rules (Services)
+  - Data storage (Database)
+  - Authentication (Middleware)
+  - Logging (Cross-cutting concern)
+
+Example — React + Node:
+  
+  Frontend:
+    components/ → HOW to display
+    hooks/      → WHERE data comes from (API calls)
+    stores/     → State management
+  
+  Backend:
+    routes/      → URL mapping
+    controllers/ → Request/response handling
+    services/    → Business logic
+    repositories/→ Data access
+    middleware/  → Cross-cutting (auth, logging, validation)
+
+================================================================
+SECTION 6: COMPOSITION OVER INHERITANCE
+================================================================
+
+Simple: "Classes inherit karne ki bajaye compose karo"
+
+Problem with inheritance:
+  Deep inheritance hierarchies banana mushkil, brittle code
+
+BAD (deep inheritance):
+  Animal → Pet → Dog → PoliceDog → SpecialForceDog
+  
+  Agar "Flying" add karna ho → poori hierarchy affect
+
+GOOD (composition):
+  class Dog {
+    constructor(
+      private canFly: boolean = false,
+      private isPolice: boolean = false,
+      private canSwim: boolean = true
+    ) {}
+  }
+  
+  // Ya better — behavior objects inject karo
+  class Dog {
+    constructor(private behaviors: DogBehavior[]) {}
+  }
+
+Real Example:
+  React mein HOC (Higher Order Components) vs Hooks
+  
+  HOC (inheritance-like):
+    withAuth(withLogging(withErrorBoundary(MyComponent)))
+    → Hard to debug, wrapper hell
+  
+  Hooks (composition):
+    function MyComponent() {
+      const user = useAuth();
+      const logger = useLogger();
+      // Compose behaviors directly
+    }
+
+================================================================
+SECTION 7: IMMUTABILITY
+================================================================
+
+Simple: "Data change mat karo — naya data create karo"
+
+Mutable (bad in many cases):
+  const user = { name: 'Ali', role: 'user' };
+  user.role = 'admin'; // Mutation! Original changed
+  
+  Problem: Functions mein pass karo → unexpected changes
+
+Immutable (better):
+  const user = { name: 'Ali', role: 'user' };
+  const adminUser = { ...user, role: 'admin' }; // New object
+  // Original user unchanged
+
+Benefits:
+  - Predictable code
+  - No unexpected side effects
+  - Easier to debug
+  - Thread-safe (distributed systems mein important)
+
+================================================================
+SECTION 8: IDEMPOTENCY
+================================================================
+
+Simple: "Same operation multiple times karo → same result milta hai"
+
+Kab zaroori hai:
+  - Network failures ke baad retry
+  - Payment processing
+  - API calls
+  - Background jobs
+
+BAD (not idempotent):
+  POST /api/orders
+  → Har baar call karo → naya order create hota hai
+  
+  Problem: Network error → user retry karta hai → duplicate order!
+
+GOOD (idempotent):
+  POST /api/orders
+  Header: Idempotency-Key: unique-client-key-123
+  
+  → Server pehle check karta hai: key already processed?
+  → Agar haan: same response return karo
+  → Agar nahi: process karo, key save karo
+
+Real Example (Stripe):
+  Stripe ke saath payment:
+  stripeClient.charges.create({
+    amount: 1000,
+    idempotencyKey: orderId + '-' + userId
+  })
+  → Network fail, retry → same charge, double charge nahi
+
+================================================================
+SECTION 9: EXERCISE
+================================================================
+
+TASK: Neeche diye gaye bad code ko improve karo using principles
+
+BAD CODE:
+  class Application {
+    handleUserRegistration(req, res) {
+      // Validation
+      if (!req.body.email.includes('@')) {
+        res.status(400).json({error: 'invalid email'});
+        return;
+      }
+      if (!req.body.password || req.body.password.length < 8) {
+        res.status(400).json({error: 'password too short'});
+        return;
+      }
+      
+      // Hash password
+      const hash = bcrypt.hashSync(req.body.password, 10);
+      
+      // Save to DB
+      const user = db.query(
+        'INSERT INTO users (email, password) VALUES (?, ?) RETURNING *',
+        [req.body.email, hash]
+      );
+      
+      // Send email
+      nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        auth: { user: 'myemail@gmail.com', pass: 'password123' }
+      }).sendMail({
+        to: req.body.email,
+        subject: 'Welcome!',
+        html: '<h1>Welcome!</h1>'
+      });
+      
+      // Log
+      console.log('User created: ' + req.body.email);
+      
+      res.json({success: true, user});
+    }
+  }
+
+Identify karo:
+1. SRP violation kahan hai?
+2. DRY violation kahan hai? (agar multiple similar functions hoti)
+3. Security issues kya hain?
+4. Dependency issues kya hain?
+5. Refactor karo
+
+================================================================
+QUIZ — PART 6
+================================================================
+
+Q1: SOLID mein "D" kya represent karta hai?
+    (a) Data Management
+    (b) Dependency Inversion Principle
+    (c) Dry Principle
+    (d) Distribution Pattern
+
+Jawab: (b)
+
+Q2: YAGNI ka full form aur matlab?
+    (a) You Always Get New Ideas — naya features hamesha add karo
+    (b) You Ain't Gonna Need It — jo abhi zaroori nahi woh mat banao
+    (c) Your Application Generates New Insights — analytics zaroori hai
+    (d) Yet Another Great Node Implementation
+
+Jawab: (b)
+
+Q3: Idempotency kyun zaroori hai?
+    (a) Code fast hota hai
+    (b) Duplicate operations prevent karne ke liye, especially retries mein
+    (c) Code clean hota hai
+    (d) Tests easy hote hain
+
+Jawab: (b)
+
+Q4: "Composition over inheritance" ka matlab:
+    (a) Parent class se always inherit karo
+    (b) Behavior inject karo instead of inheriting
+    (c) Functions compose karo
+    (d) Database compose karo
+
+Jawab: (b)
+
+================================================================
+AGLA PART: Part 7 — Data Structures & Algorithms
+================================================================

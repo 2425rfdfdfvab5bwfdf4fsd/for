@@ -1,0 +1,89 @@
+================================================================================
+PHASE 08 — FILTERS
+================================================================================
+
+PHASE NAME:         Filters
+PHASE OBJECTIVE:    Implement pre-scan filters that prevent the strategy engine
+                    from even analysing a market when conditions are unsuitable.
+                    Filters are applied BEFORE confluence scoring and risk checks.
+
+WHY THIS PHASE EXISTS:
+    Analysing signals during wrong sessions, wide spreads, or high-impact news
+    wastes processing and risks bad fills. Filters short-circuit the scan loop
+    early, improving efficiency and reducing false signals.
+
+DEPENDENCIES:
+    - Phase 02 (Foundation): config, logging, time utilities
+    - Phase 03 (MT5 Integration): live spread, symbol tick info
+
+INPUTS:
+    - Current UTC time
+    - Live symbol spread (from MT5 tick)
+    - News event schedule (from ForexFactory RSS or local cache)
+    - Current ATR value (from strategy engine)
+    - Trading session configuration
+
+OUTPUTS:
+    - FilterResult: PASS or BLOCK with reason
+
+FILES EXPECTED TO BE CREATED:
+    app/filters/session_filter.py
+    app/filters/spread_filter.py
+    app/filters/news_filter.py
+    app/filters/volatility_filter.py
+    app/filters/trading_cutoffs.py
+    app/filters/filter_pipeline.py
+    app/filters/__init__.py
+    tests/test_filters/test_session.py
+    tests/test_filters/test_spread.py
+    tests/test_filters/test_news.py
+    tests/test_filters/test_volatility.py
+    tests/test_filters/test_pipeline.py
+
+FILES EXPECTED TO BE MODIFIED:
+    app/database/models.py    (add FilterResult)
+
+FILES THAT MUST NOT BE MODIFIED:
+    app/mt5/
+    app/strategy/
+    app/risk/
+    app/confluence/
+    ROADMAP/
+
+TASK ORDER:
+    1. 01_TASK_SESSION_FILTER.txt
+    2. 02_TASK_SPREAD_FILTER.txt
+    3. 03_TASK_NEWS_FILTER.txt
+    4. 04_TASK_VOLATILITY_FILTER.txt
+    5. 05_TASK_TRADING_CUTOFFS.txt
+
+TESTING REQUIREMENTS:
+    - Session filter tested with UTC times inside and outside London/NY windows
+    - Spread filter tested with mock tick data
+    - News filter tested with mock news schedule (no live API in tests)
+    - All filters combined in pipeline test
+
+ACCEPTANCE CRITERIA:
+    [ ] Correct session window detection for London and New York
+    [ ] Spread above threshold blocks scanning
+    [ ] High-impact news within ±30 minutes blocks scanning
+    [ ] End-of-day and weekend cutoffs enforced
+    [ ] All unit tests pass
+
+KNOWN RISKS:
+    - ForexFactory RSS may be unreliable or rate-limited; cache aggressively
+    - News filter must FAIL SAFE (if news data unavailable, log WARNING and
+      optionally block or allow per config NEWS_FILTER_FAIL_SAFE setting)
+    - UTC vs broker timezone; always work in UTC internally
+
+ROLLBACK STRATEGY:
+    Each filter can be individually disabled via config:
+    ENABLE_SESSION_FILTER, ENABLE_SPREAD_FILTER, ENABLE_NEWS_FILTER, etc.
+    Disable only for debugging, never in production.
+
+HANDOFF REQUIREMENTS:
+    Before Phase 09 (Execution Engine):
+    - FilterPipeline.run(symbol, time, tick) fully operational
+    - All 5 filters individually tested
+    - Pipeline integration test passing
+================================================================================

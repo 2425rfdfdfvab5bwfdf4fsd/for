@@ -1,0 +1,289 @@
+================================================================================
+TASK ID:     06-01
+TASK NAME:   Confluence Scoring System
+PHASE:       06 — Confluence Engine
+================================================================================
+
+OBJECTIVE:
+    Implement the ConfluenceScorer class that evaluates a raw signal against a
+    defined set of weighted factors and returns a ScoredSignal with a numeric
+    score (0–10) and a per-factor breakdown.
+
+CONTEXT:
+    Every trade candidate produced by the Strategy Engine must pass through this
+    scorer. The score is calculated deterministically from measurable conditions.
+    No vague criteria. Every factor has a binary (present/absent) or graded value
+    that contributes a fixed weight to the total.
+
+    Minimum passing score: 8/10 (configurable via MIN_CONFLUENCE_SCORE).
+
+    The 55–65% win-rate target is NOT guaranteed. The scorer maximises setup
+    quality, not trade frequency.
+
+DEPENDENCIES:
+    - Phase 02: config.py, logging
+    - Phase 04: data models (Signal, ScoredSignal)
+    - Phase 05: signal_engine.py producing Signal objects
+    - Phase 08: app/filters/spread.py MUST exist before Phase 06 begins.
+                The SPREAD_ACCEPTABLE factor (weight 0.5) calls the spread
+                filter infrastructure. Phase 08 must be COMPLETE first.
+                (CHG-017 correction — original listed Phase 05 only)
+
+PREVIOUS TASKS:
+    - 05-09 TASK_SIGNAL_ENGINE must be complete
+    - 08-02 TASK_SPREAD_FILTER must be complete (required for SPREAD_ACCEPTABLE factor)
+
+FILES TO INSPECT:
+    app/strategy/signal_engine.py
+    app/database/models.py
+    app/config.py
+
+FILES TO CREATE:
+    app/confluence/factors.py
+    app/confluence/scorer.py
+    app/confluence/__init__.py
+    tests/test_confluence/test_scorer.py
+
+FILES TO MODIFY:
+    app/database/models.py    — add ScoredSignal dataclass
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/strategy/market_structure.py
+    app/strategy/order_blocks.py
+    app/strategy/fvg.py
+    ROADMAP/
+
+--------------------------------------------------------------------------------
+DETAILED REQUIREMENTS:
+--------------------------------------------------------------------------------
+
+SCORING FACTORS (10 factors, total weight = 10.0):
+
+    1. H4 TREND ALIGNMENT
+       Condition: Signal direction aligns with H4 trend (EMA trend filter)
+       Weight: 1.0
+
+    2. H1 STRUCTURE CONFIRMATION
+       Condition: H1 shows BOS or CHoCH in signal direction
+       Weight: 1.0
+
+    3. ORDER BLOCK (combined: present AND fresh)
+       Condition: Valid, unmitigated Order Block exists at entry zone on M15/H1.
+                  Freshness (price has not re-entered OB zone) is a required
+                  sub-condition — not a separate score entry.
+       Weight: 1.0  (binary: OB present AND fresh = 1.0; absent or stale = 0.0)
+
+    4. FAIR VALUE GAP (FVG)
+       Condition: An unmitigated FVG overlaps the entry zone
+       Weight: 1.0
+
+    5. LIQUIDITY SWEEP
+       Condition: A recent liquidity sweep (equal highs/lows swept) precedes the setup
+       Weight: 1.0
+
+    6. DISPLACEMENT CANDLE
+       Condition: A displacement candle (strong impulsive move) created the setup
+       Weight: 1.0
+
+    7. HTF ORDER BLOCK CONFLUENCE
+       Condition: An unmitigated H1 or H4 Order Block exists at the current price
+                  level — tests whether multiple timeframes agree on the OB zone.
+                  REPLACES Session Alignment (session is already enforced as a
+                  mandatory filter gate; scoring it gives a redundant free point).
+       Weight: 1.0
+
+    8. ATR VOLATILITY ACCEPTABLE
+       Condition: Current ATR is within configured min/max volatility bounds
+       Weight: 0.5
+
+    9. SPREAD ACCEPTABLE
+       Condition: Current spread is below MAX_SPREAD_PIPS for the symbol
+       Weight: 0.5
+
+   10. M5 ENTRY CONFIRMATION
+       Condition: M5 shows micro-structure alignment (e.g. bullish engulf / M5 BOS)
+       Weight: 1.0
+
+   TOTAL POSSIBLE: 10.0  (1+1+1+1+1+1+1+0.5+0.5+1 = 10.0 — verified correct)
+
+   NOTE: Weights are stored in app/config.py so they can be audited and
+   adjusted without modifying scorer.py logic.
+
+   CHANGES FROM ORIGINAL DESIGN:
+     DECISION-016: ORDER_BLOCK_PRESENT(1.0)+ORDER_BLOCK_FRESH(0.5) merged into
+                   single ORDER_BLOCK(1.0). Total was 10.5 — now correctly 10.0.
+     DECISION-018: SESSION_ALIGNMENT replaced by HTF_OB_CONFLUENCE. Session is
+                   a mandatory filter gate, not a quality differentiator.
+
+--------------------------------------------------------------------------------
+IMPLEMENTATION STEPS:
+--------------------------------------------------------------------------------
+
+STEP 1 — Read project context files:
+    ROADMAP/00_MASTER_ROADMAP.txt
+    ROADMAP/00_AGENT_WORKFLOW.txt
+    ROADMAP/06_CONFLUENCE_ENGINE/01_PHASE_OVERVIEW.txt
+
+STEP 2 — Read phase overview (already referenced above).
+
+STEP 3 — Read this task fully.
+
+STEP 4 — Inspect existing files:
+    app/database/models.py       (understand Signal structure)
+    app/strategy/signal_engine.py
+    app/config.py
+
+STEP 5 — Plan implementation:
+    1. Define ConcreteFactors enum in factors.py
+    2. Implement ConfluenceScorer.score(signal, market_context) → ScoredSignal
+    3. Each factor evaluation is a private method returning float score
+    4. Add ScoredSignal dataclass to models.py
+
+STEP 6 — Identify exact files to create/modify (listed above).
+
+STEP 7 — Do not modify any file outside the listed scope.
+
+STEP 8 — Implement:
+
+    # app/confluence/factors.py
+    from enum import Enum
+    class ConfluenceFactor(Enum):
+        H4_TREND_ALIGNMENT = "h4_trend_alignment"
+        H1_STRUCTURE_CONFIRMATION = "h1_structure_confirmation"
+        ORDER_BLOCK = "order_block"                      # present AND fresh combined
+        FVG_PRESENT = "fvg_present"
+        LIQUIDITY_SWEEP = "liquidity_sweep"
+        DISPLACEMENT_CANDLE = "displacement_candle"
+        HTF_OB_CONFLUENCE = "htf_ob_confluence"          # replaced session_alignment
+        ATR_ACCEPTABLE = "atr_acceptable"
+        SPREAD_ACCEPTABLE = "spread_acceptable"
+        M5_ENTRY_CONFIRMATION = "m5_entry_confirmation"
+
+    # app/confluence/scorer.py
+    class ConfluenceScorer:
+        def score(self, signal: Signal, context: MarketContext) -> ScoredSignal
+        def _check_h4_trend(self, signal, context) -> float
+        def _check_h1_structure(self, signal, context) -> float
+        def _check_order_block(self, signal, context) -> float      # OB present AND fresh
+        def _check_fvg(self, signal, context) -> float
+        def _check_liquidity_sweep(self, signal, context) -> float
+        def _check_displacement(self, signal, context) -> float
+        def _check_htf_ob_confluence(self, signal, context) -> float # H1/H4 OB at level
+        def _check_atr(self, signal, context) -> float
+        def _check_spread(self, signal, context) -> float
+        def _check_m5_confirmation(self, signal, context) -> float
+        def _compute_total(self, factor_scores: dict) -> float
+
+STEP 9 — Run tests:
+    pytest tests/test_confluence/test_scorer.py -v
+
+STEP 10 — Validate:
+    python -c "from app.confluence.scorer import ConfluenceScorer; print('OK')"
+
+STEP 11 — Review diff (only confluence and models files changed).
+
+STEP 12 — Fix any issues.
+
+STEP 13 — Run tests again.
+
+STEP 14 — Report completion.
+
+STEP 15 — Update ROADMAP/00_PROJECT_STATUS.txt: mark task 06-01 complete.
+
+--------------------------------------------------------------------------------
+EXPECTED BEHAVIOR:
+--------------------------------------------------------------------------------
+    - scorer.score() always returns a ScoredSignal — never raises unhandled exception
+    - If any factor check fails due to missing data, that factor scores 0 and
+      a WARNING is logged — it never raises an exception that stops the loop
+    - Total score is float rounded to 1 decimal place
+    - factor_scores dict key = ConfluenceFactor.value string, value = float
+
+--------------------------------------------------------------------------------
+EDGE CASES:
+--------------------------------------------------------------------------------
+    - Signal with no market context data → all contextual factors score 0
+    - Score exactly equal to threshold (e.g. 8.0) → ACCEPTED
+    - Score 7.9 → REJECTED
+    - All weights sum correctly to 10.0
+
+--------------------------------------------------------------------------------
+ERROR HANDLING:
+--------------------------------------------------------------------------------
+    - Wrap each factor check in try/except; log exception, return 0.0 for that factor
+    - If total score cannot be computed, return ScoredSignal with score=0, REJECTED
+
+--------------------------------------------------------------------------------
+SECURITY REQUIREMENTS:
+--------------------------------------------------------------------------------
+    - No external API calls
+    - No file I/O except through the data layer
+    - Factor weights must come from config, not hardcoded magic numbers
+
+--------------------------------------------------------------------------------
+TEST REQUIREMENTS:
+--------------------------------------------------------------------------------
+    tests/test_confluence/test_scorer.py:
+    - test_perfect_score_returns_10()
+    - test_zero_score_returns_rejected()
+    - test_score_below_threshold_rejected()
+    - test_score_at_threshold_accepted()
+    - test_factor_breakdown_keys_correct()
+    - test_missing_context_does_not_raise()
+    - test_factor_weights_sum_to_10()
+
+--------------------------------------------------------------------------------
+VALIDATION COMMANDS:
+--------------------------------------------------------------------------------
+    python -c "from app.confluence.scorer import ConfluenceScorer; print('Import OK')"
+    pytest tests/test_confluence/test_scorer.py -v
+    python -m py_compile app/confluence/scorer.py app/confluence/factors.py
+
+--------------------------------------------------------------------------------
+ACCEPTANCE CRITERIA:
+--------------------------------------------------------------------------------
+    [ ] ConfluenceScorer importable without errors
+    [ ] score() returns ScoredSignal with numeric score and factor dict
+    [ ] Scores < 8 produce status=REJECTED
+    [ ] Scores >= 8 produce status=ACCEPTED
+    [ ] All 7 unit tests pass
+    [ ] No unrelated files modified
+
+--------------------------------------------------------------------------------
+DEFINITION OF DONE:
+--------------------------------------------------------------------------------
+    [ ] app/confluence/scorer.py created and syntactically valid
+    [ ] app/confluence/factors.py created and syntactically valid
+    [ ] ScoredSignal added to app/database/models.py
+    [ ] All unit tests pass
+    [ ] No critical linting errors
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+--------------------------------------------------------------------------------
+EXPECTED OUTPUT:
+--------------------------------------------------------------------------------
+    ScoredSignal(
+        signal=<Signal>,
+        total_score=8.5,
+        factor_scores={
+            "h4_trend_alignment": 1.0,
+            "h1_structure_confirmation": 1.0,
+            "order_block": 1.0,           # Combined: OB present + fresh
+            "fvg_present": 1.0,
+            "liquidity_sweep": 1.0,
+            "displacement_candle": 1.0,
+            "htf_ob_confluence": 1.0,     # H1/H4 OB agrees on zone
+            "atr_acceptable": 0.5,
+            "spread_acceptable": 0.5,
+            "m5_entry_confirmation": 0.0
+        },
+        status="ACCEPTED",
+        quality_grade="A"
+    )
+    # Note: factor_scores sums to 8.5 in this example (all factors present
+    # except m5_confirmation). Maximum possible = 10.0.
+
+NEXT TASK:
+    06-02 — TASK_TRADE_QUALITY.txt
+================================================================================

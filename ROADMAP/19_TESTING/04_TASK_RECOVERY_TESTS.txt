@@ -1,0 +1,78 @@
+================================================================================
+TASK ID:     19-04
+TASK NAME:   Recovery Tests
+PHASE:       19 — Testing
+================================================================================
+
+OBJECTIVE:
+    Implement tests that verify the bot recovers correctly after simulated
+    crashes, reconnections, and unexpected process terminations.
+
+DEPENDENCIES:
+    - 19-01 fixtures
+    - 19-03 failure tests complete
+
+FILES TO CREATE:
+    tests/recovery/test_crash_recovery.py
+    tests/recovery/test_connection_recovery.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/
+    ROADMAP/
+
+RECOVERY SCENARIOS:
+
+    test_crash_recovery.py:
+        test_orphan_positions_adopted_on_startup():
+            Simulate: bot crashed with position open in MT5, no DB record.
+            On startup: OrphanPositionRecovery detects and adopts position.
+            Verify: position now in database with correct parameters.
+
+        test_daily_stats_preserved_across_restart():
+            Simulate: 2 trades completed, bot crashed, restarted.
+            Verify: daily trade count correctly loaded from database (not reset).
+
+        test_singleton_stale_lock_cleaned():
+            Simulate: lock file exists with dead PID.
+            Verify: new instance detects stale lock, removes it, starts normally.
+
+        test_partial_execution_detected():
+            Simulate: order_send succeeds but DB write fails (crash between).
+            Verify: reconciler detects position without DB record on startup.
+
+    test_connection_recovery.py:
+        test_mt5_reconnects_after_disconnect():
+            Simulate: MT5 connected → disconnect after 3 iterations → reconnect.
+            Verify: main loop continues without losing trade tracking.
+
+        test_heartbeat_resumed_after_reconnect():
+            After reconnect: heartbeat resumes with correct status.
+
+ADDITIONAL RECOVERY SCENARIOS (CHG-024):
+
+    test_crash_recovery.py (add these):
+      TC-005-EXT: test_trades_count_correct_after_restart()
+        Simulate: 2 trades in DB for today → restart → new trade blocked at count=3
+        → verify MAX_DAILY_TRADES enforced correctly using recovered count
+
+      TC-006-EXT: test_correlation_block_survives_restart()
+        Simulate: EURUSD LONG open in MT5 and DB → restart → attempt GBPUSD LONG
+        → verify correlation check still blocks second position
+
+    test_connection_recovery.py (add these):
+      TC-007-EXT: test_open_position_heartbeat_after_reconnect()
+        After MT5 reconnect: verify open position still managed (SL/TP monitoring
+        continues) and is NOT duplicated in DB
+
+ACCEPTANCE CRITERIA:
+    [ ] All recovery scenarios pass
+    [ ] No data loss in any recovery scenario
+    [ ] Orphan adoption verified end-to-end
+    [ ] Extended TCs (TC-005-EXT, TC-006-EXT, TC-007-EXT) pass
+
+DEFINITION OF DONE:
+    [ ] All recovery test files created and passing
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 19-05 — TASK_END_TO_END_TESTS.txt
+================================================================================

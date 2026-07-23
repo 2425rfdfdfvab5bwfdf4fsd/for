@@ -1,0 +1,54 @@
+================================================================================
+PHASE 22 — DOCUMENTATION
+================================================================================
+
+PHASE NAME:         Documentation
+PHASE OBJECTIVE:    Create comprehensive user-facing documentation covering
+                    installation, configuration, operation, troubleshooting,
+                    and maintenance of the complete trading bot system.
+
+WHY THIS PHASE EXISTS:
+    A system without documentation cannot be operated by anyone other than
+    its builder. Good documentation enables:
+    - The user to set up the system independently
+    - Troubleshooting common issues without developer help
+    - Safe operation over the long term
+    - Future modifications by the user or developer
+
+DEPENDENCIES:
+    - All phases 02–21 complete (documentation written after system is built)
+
+FILES EXPECTED TO BE CREATED:
+    README.md
+    docs/USER_GUIDE.md
+    docs/TROUBLESHOOTING.md
+    docs/OPERATIONS_GUIDE.md
+    docs/ARCHITECTURE.md         (also serves as AI_RULES context file)
+    AI_RULES.md
+    CODE_STANDARDS.md
+    TRADING_RULES.md
+    RISK_MANAGEMENT.md
+
+FILES THAT MUST NOT BE MODIFIED:
+    app/
+    ROADMAP/
+
+TASK ORDER:
+    1. 01_TASK_README.txt
+    2. 02_TASK_USER_GUIDE.txt
+    3. 03_TASK_TROUBLESHOOTING.txt
+    4. 04_TASK_OPERATIONS_GUIDE.txt
+
+ACCEPTANCE CRITERIA:
+    [ ] README.md covers: what it is, requirements, quick start, features
+    [ ] User guide covers full setup and configuration
+    [ ] Troubleshooting covers top 20 common issues
+    [ ] Operations guide covers daily/weekly/monthly operations
+    [ ] AI_RULES.md created (for future agent sessions)
+    [ ] All links in docs are valid
+
+HANDOFF REQUIREMENTS:
+    When Phase 22 is complete, the entire roadmap is complete.
+    The system is ready for demo trading.
+    The only remaining step is the 4+ week demo period (Phase 21-02).
+================================================================================

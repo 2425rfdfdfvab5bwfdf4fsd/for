@@ -1,0 +1,556 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 18: OBSERVABILITY & PRODUCTION OPERATIONS
+(Logs, Metrics, Traces, Incidents)
+================================================================
+
+SEEKHNE KE MAQASID:
+- Observability ke teen pillars
+- SLO/SLI/SLA samajhna
+- Incident response process
+- Postmortem likhna
+
+================================================================
+SECTION 1: OBSERVABILITY KYA HAI?
+================================================================
+
+Observability = System ke andar kya ho raha hai woh external outputs
+               (logs, metrics, traces) se samajhna ki ability
+
+Monitoring vs Observability:
+  Monitoring: "Kya system theek hai?" (predefined checks)
+  Observability: "System mein kya ho raha hai aur kyun?" (any question)
+
+THE THREE PILLARS:
+
+  1. LOGS    → Events ka record (kya hua?)
+  2. METRICS → Numeric measurements (kitna?)
+  3. TRACES  → Request ka journey across services (kahan gaya?)
+
+================================================================
+SECTION 2: LOGS
+================================================================
+
+Effective logging = Production mein problems solve karne ki ability
+
+--- STRUCTURED LOGGING ---
+
+  import winston from 'winston';
+  
+  const logger = winston.createLogger({
+    level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+    format: winston.format.combine(
+      winston.format.timestamp(),
+      winston.format.json()
+    ),
+    transports: [
+      new winston.transports.Console(),
+      new winston.transports.File({ filename: 'error.log', level: 'error' }),
+    ],
+  });
+  
+  // GOOD — Structured, searchable:
+  logger.info('Order created', {
+    event: 'order.created',
+    orderId: order.id,
+    userId: user.id,
+    amount: order.total,
+    itemCount: order.items.length,
+    requestId: req.id,
+    duration: Date.now() - startTime
+  });
+  
+  // BAD — Plain text, hard to search:
+  console.log('Order ' + orderId + ' created for user ' + userId);
+
+--- LOG LEVELS ---
+
+  ERROR: Immediate attention needed
+    logger.error('Payment processing failed', { error, orderId, userId });
+  
+  WARN: Unusual but not breaking
+    logger.warn('Login rate limit approaching', { userId, attempts });
+  
+  INFO: Normal business events
+    logger.info('User registered', { userId, email });
+  
+  DEBUG: Detailed debugging (development only)
+    logger.debug('Cache miss, fetching from DB', { key });
+
+--- REQUEST LOGGING MIDDLEWARE ---
+
+  app.use((req, res, next) => {
+    const requestId = req.headers['x-request-id'] || crypto.randomUUID();
+    req.id = requestId;
+    req.startTime = Date.now();
+    
+    res.on('finish', () => {
+      logger.info('HTTP request', {
+        requestId,
+        method: req.method,
+        path: req.path,
+        query: req.query,
+        statusCode: res.statusCode,
+        durationMs: Date.now() - req.startTime,
+        userAgent: req.headers['user-agent'],
+        ip: req.ip,
+        userId: req.user?.id
+      });
+    });
+    
+    next();
+  });
+
+--- LOG AGGREGATION ---
+
+Multiple servers ke logs centrally collect karo:
+  - AWS CloudWatch
+  - Datadog
+  - ELK Stack (Elasticsearch + Logstash + Kibana)
+  - Loki + Grafana
+
+Useful log queries:
+  // Datadog / ELK:
+  event:payment.failed AND amount:>1000
+  statusCode:500 AND path:/api/checkout
+  userId:123 AND requestId:abc-xyz
+
+================================================================
+SECTION 3: METRICS
+================================================================
+
+Metrics = Numeric measurements jo time ke saath track hote hain
+
+--- TYPES OF METRICS ---
+
+Counter: Sirf badhta hai (total requests, total errors)
+Gauge: Up down jaata hai (memory usage, active connections)
+Histogram: Distribution (request latency in buckets)
+Summary: Percentiles (p50, p95, p99)
+
+--- PROMETHEUS + GRAFANA ---
+
+  // Express Prometheus metrics
+  import client from 'prom-client';
+  
+  // Auto-collect default metrics (CPU, memory, etc.)
+  client.collectDefaultMetrics();
+  
+  // Custom metrics
+  const httpRequestDuration = new client.Histogram({
+    name: 'http_request_duration_ms',
+    help: 'Duration of HTTP requests in ms',
+    labelNames: ['method', 'route', 'status_code'],
+    buckets: [5, 10, 25, 50, 100, 250, 500, 1000]
+  });
+  
+  const ordersCreated = new client.Counter({
+    name: 'orders_created_total',
+    help: 'Total number of orders created'
+  });
+  
+  // Middleware
+  app.use((req, res, next) => {
+    const end = httpRequestDuration.startTimer();
+    res.on('finish', () => {
+      end({
+        method: req.method,
+        route: req.route?.path || 'unknown',
+        status_code: res.statusCode
+      });
+    });
+    next();
+  });
+  
+  // Metrics endpoint
+  app.get('/metrics', async (req, res) => {
+    res.set('Content-Type', client.register.contentType);
+    res.send(await client.register.metrics());
+  });
+
+--- KEY METRICS TO TRACK ---
+
+Business Metrics:
+  - Orders per minute
+  - Revenue per hour
+  - Active users
+  - Conversion rate
+  - Cart abandonment
+
+Technical Metrics:
+  - Request rate (RPS)
+  - Error rate (%)
+  - Latency (p50, p95, p99)
+  - Availability (%)
+  - DB query time
+  - Cache hit rate
+  - Queue depth
+  - Worker throughput
+
+Infrastructure:
+  - CPU usage (%)
+  - Memory usage (%)
+  - Disk I/O
+  - Network bandwidth
+
+================================================================
+SECTION 4: DISTRIBUTED TRACING
+================================================================
+
+Trace = Ek request ka poora journey across multiple services
+
+Problem without tracing:
+  User complaint: "Checkout slow hai"
+  Multiple services involved:
+    API Gateway → Auth Service → Cart Service → Payment Service → Order Service
+  
+  Logs separate hain — kahan slow tha?
+
+Solution: OpenTelemetry + Jaeger/Zipkin
+
+  // OpenTelemetry setup (Node.js)
+  import { NodeSDK } from '@opentelemetry/sdk-node';
+  import { JaegerExporter } from '@opentelemetry/exporter-jaeger';
+  import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+  
+  const sdk = new NodeSDK({
+    traceExporter: new JaegerExporter({ endpoint: 'http://jaeger:14268/api/traces' }),
+    instrumentations: [getNodeAutoInstrumentations()], // Auto-instruments Express, HTTP, DB
+  });
+  
+  sdk.start();
+
+Trace shows:
+  checkout request (total: 850ms)
+  ├── auth service (50ms)
+  ├── cart service (100ms)
+  ├── payment service (600ms) ← BOTTLENECK!
+  │   ├── stripe API call (550ms) ← Slow!
+  │   └── DB save (50ms)
+  └── order service (100ms)
+
+================================================================
+SECTION 5: SLO, SLI, SLA
+================================================================
+
+--- SLI (Service Level Indicator) ---
+
+Kya measure kar rahe hain?
+
+Examples:
+  - Request success rate: (successful requests) / (total requests)
+  - Latency: p99 < 500ms
+  - Availability: Uptime %
+
+--- SLO (Service Level Objective) ---
+
+Target kya hai?
+
+Examples:
+  - 99.9% requests successful in 30 days
+  - p99 latency < 500ms
+  - 99.95% availability
+
+--- SLA (Service Level Agreement) ---
+
+Customer se commitment (legal/contractual)
+
+Example:
+  "We guarantee 99.9% uptime. If we fail, you get credit."
+  
+  SLA < SLO (SLO internal target, SLA external commitment)
+  
+  SLO: 99.95% (internal)
+  SLA: 99.9%  (external commitment)
+
+--- ERROR BUDGET ---
+
+Error budget = 100% - SLO target
+
+Example:
+  SLO: 99.9% availability in 30 days
+  Error budget: 0.1% = 43.8 minutes downtime allowed
+  
+  If budget spent → No more risky changes till next period
+  If budget healthy → Can take more risks
+
+================================================================
+SECTION 6: ALERTING
+================================================================
+
+Good alerts = Actionable, timely, not noisy
+
+Alert Rules:
+
+  // Prometheus alerting rules
+  groups:
+    - name: api_alerts
+      rules:
+        - alert: HighErrorRate
+          expr: rate(http_requests_total{status_code=~"5.."}[5m]) /
+                rate(http_requests_total[5m]) > 0.01
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Error rate above 1%"
+            description: "Error rate is {{ $value | humanizePercentage }}"
+        
+        - alert: HighLatency
+          expr: histogram_quantile(0.99, rate(http_request_duration_ms_bucket[5m])) > 1000
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "P99 latency above 1s"
+
+Alert Routing:
+  Critical → PagerDuty (immediate on-call)
+  Warning → Slack channel
+  Info → Dashboard only
+
+Alert Best Practices:
+  - Every alert = actionable (someone can do something)
+  - No alert = noise (fatigue → ignore important alerts)
+  - Symptoms, not causes (alert on "users affected" not "CPU high")
+  - Include runbook link
+  - Severity levels (critical, warning, info)
+
+================================================================
+SECTION 7: INCIDENT RESPONSE
+================================================================
+
+Incident = Production mein kuch galat ho gaya jo users affect kar raha hai
+
+--- INCIDENT SEVERITY ---
+
+SEV1 (Critical):
+  - Complete outage
+  - Data loss
+  - Security breach
+  - Immediate response needed (24/7)
+
+SEV2 (High):
+  - Partial outage
+  - Core functionality degraded
+  - Response within 30 min
+
+SEV3 (Medium):
+  - Minor functionality affected
+  - Workaround available
+  - Response within 4 hours
+
+SEV4 (Low):
+  - Cosmetic issues
+  - Minimal user impact
+  - Next business day
+
+--- INCIDENT RESPONSE PROCESS ---
+
+Step 1: DETECT
+  - Alert fires
+  - User reports
+  - Monitoring dashboard
+
+Step 2: TRIAGE
+  - Severity assess karo
+  - Scope identify karo (kitne users, kaunsi regions)
+  - Incident commander assign karo
+
+Step 3: COMMUNICATE
+  - Internal: Slack incident channel
+  - External: Status page update (statuspage.io)
+  - "We are aware of an issue with X. Investigating."
+
+Step 4: INVESTIGATE
+  - Logs check karo
+  - Metrics check karo
+  - Recent deployments?
+  - Hypothesis form karo
+
+Step 5: MITIGATE
+  - Rollback karo (if deploy-related)
+  - Feature disable karo (feature flag)
+  - Scale up resources
+  - Traffic route karo
+
+Step 6: RESOLVE
+  - Service restored
+  - Monitoring confirm karo (metrics normal)
+  - Status page update: "Resolved"
+
+Step 7: POST-MORTEM
+  - Root cause analysis
+  - What happened?
+  - How prevented in future?
+
+--- INCIDENT COMMUNICATION TEMPLATE ---
+
+Status page update:
+  [INVESTIGATING] We are experiencing issues with [service].
+  Users may [describe impact]. We are actively investigating.
+  Next update in 30 minutes.
+  
+  [IDENTIFIED] We have identified the root cause as [brief description].
+  We are implementing a fix.
+  
+  [MONITORING] We have implemented a fix and are monitoring.
+  
+  [RESOLVED] This incident has been resolved.
+  Duration: X hours Y minutes.
+  We will share a postmortem within 5 business days.
+
+================================================================
+SECTION 8: POSTMORTEM
+================================================================
+
+Postmortem = Incident ke baad ka analysis document
+
+Blameless postmortem culture:
+  - People ne intentionally galat nahi kiya
+  - System + process ne fail kiya
+  - Focus: How to improve, not who to blame
+
+--- POSTMORTEM TEMPLATE ---
+
+  # Postmortem: [Incident Title]
+  Date: [Date]
+  Authors: [Names]
+  Severity: SEV[1/2/3]
+  Duration: X hours Y minutes
+  
+  ## Summary
+  [2-3 sentences: kya hua, impact, resolution]
+  
+  ## Timeline
+  HH:MM - Alert fired / Issue discovered
+  HH:MM - Incident commander assigned
+  HH:MM - Root cause identified
+  HH:MM - Fix implemented
+  HH:MM - Service restored
+  HH:MM - Incident closed
+  
+  ## Root Cause
+  [Detailed technical explanation of what went wrong]
+  
+  ## Impact
+  - Users affected: [X users / X%]
+  - Revenue impact: [Estimate]
+  - Duration: [X hours]
+  - Data loss: [None / X records]
+  
+  ## What Went Well
+  - [Response was fast]
+  - [Rollback worked smoothly]
+  
+  ## What Went Badly
+  - [Detection took too long]
+  - [Communication unclear]
+  
+  ## Action Items
+  | Action | Owner | Due Date | Priority |
+  |--------|-------|----------|----------|
+  | Add monitoring for X | @ali | 2024-02-01 | P1 |
+  | Add circuit breaker to Y | @sara | 2024-02-07 | P2 |
+  | Improve runbook for Z | @team | 2024-02-14 | P3 |
+
+================================================================
+SECTION 9: HEALTH CHECKS
+================================================================
+
+Health check = Endpoint jo system ki health report kare
+
+  // Express health check
+  app.get('/health', async (req, res) => {
+    const checks = {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      version: process.env.APP_VERSION,
+      checks: {}
+    };
+    
+    // Database check
+    try {
+      await db.$queryRaw`SELECT 1`;
+      checks.checks.database = 'ok';
+    } catch {
+      checks.checks.database = 'error';
+      checks.status = 'error';
+    }
+    
+    // Redis check
+    try {
+      await redis.ping();
+      checks.checks.redis = 'ok';
+    } catch {
+      checks.checks.redis = 'error';
+      checks.status = 'degraded';
+    }
+    
+    const statusCode = checks.status === 'ok' ? 200 : 503;
+    res.status(statusCode).json(checks);
+  });
+
+Load balancer health check:
+  - /health endpoint check karta hai
+  - Unhealthy server → Traffic route nahi karta
+  - Healthy again → Traffic resume
+
+================================================================
+EXERCISE — PART 18
+================================================================
+
+SCENARIO: Aapki e-commerce site ka payment service down ho gaya hai.
+Orders place nahi ho rahi. Users error dekh rahe hain.
+
+TASK 1: Incident severity kya assign karoge aur kyun?
+
+TASK 2: First 5 actions kya hongi (in order)?
+
+TASK 3: Status page update likho (investigating phase)
+
+TASK 4: Root cause milne ke baad — payment service DB connection pool exhausted tha.
+        Action items list karo (minimum 4) future mein rokne ke liye.
+
+TASK 5: Postmortem ka summary section likho.
+
+================================================================
+QUIZ — PART 18
+================================================================
+
+Q1: Observability ke teen pillars kya hain?
+    (a) CPU, Memory, Disk
+    (b) Logs, Metrics, Traces
+    (c) Deploy, Monitor, Alert
+    (d) Frontend, Backend, Database
+
+Jawab: (b)
+
+Q2: Error budget kya hai?
+    (a) Bug fix karne ka budget
+    (b) SLO se allowed downtime/failures ka amount
+    (c) Incident response cost
+    (d) Testing budget
+
+Jawab: (b)
+
+Q3: Blameless postmortem ka concept kya hai?
+    (a) Kisi ko blame nahi karna
+    (b) System/process improvement pe focus, individuals ko blame nahi
+    (c) Anonymously likhna
+    (d) Postmortem skip karna
+
+Jawab: (b)
+
+Q4: SLO aur SLA mein farq?
+    (a) Koi farq nahi
+    (b) SLO internal target, SLA external customer commitment (usually lower than SLO)
+    (c) SLA internal, SLO external
+    (d) SLO financial, SLA technical
+
+Jawab: (b)
+
+================================================================
+AGLA PART: Part 19 — Code Review
+================================================================

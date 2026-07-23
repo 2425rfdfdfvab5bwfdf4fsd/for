@@ -1,0 +1,188 @@
+================================================================================
+TASK: 01-01 — PROJECT AUDIT
+================================================================================
+TASK ID:        01-01
+TASK NAME:      Project Audit
+PHASE:          01 — Project Discovery
+OBJECTIVE:      Perform a complete audit of the Replit workspace to catalog
+                all existing files and understand the current state before
+                any implementation begins.
+
+CONTEXT:
+  This is the FIRST task in the entire project. Nothing should be built yet.
+  The purpose of this task is understanding what exists. This is a READ-ONLY
+  task. Do not create, modify, or delete any files (except updating project status).
+
+DEPENDENCIES:   None
+PREVIOUS TASKS: None
+
+FILES TO INSPECT:
+  - Every file in the workspace (use find or ls -la recursively)
+  - Any existing .py files
+  - Any existing .bat files
+  - Any existing requirements.txt
+  - Any existing .env or .env.example
+  - Any existing configuration files
+
+FILES TO CREATE:  None
+FILES TO MODIFY:  ROADMAP/00_PROJECT_STATUS.txt (update status only)
+FILES FORBIDDEN TO MODIFY: ALL other files
+
+================================================================================
+AGENT EXECUTION INSTRUCTIONS
+================================================================================
+
+STEP 1 — Read these context files first:
+  - ROADMAP/00_MASTER_ROADMAP.txt
+  - ROADMAP/00_AGENT_WORKFLOW.txt
+  - ROADMAP/00_REQUIREMENT_DECISIONS.txt
+
+STEP 2 — Read the phase overview:
+  - ROADMAP/01_PROJECT_DISCOVERY/01_PHASE_OVERVIEW.txt
+
+STEP 3 — Read this task completely before doing anything.
+
+STEP 4 — Perform the workspace audit:
+  Run these commands and report the output:
+    find . -type f -not -path './.git/*' -not -path './.local/*' | sort
+    ls -la
+  
+  For each Python file found, report:
+    - File path
+    - Approximate size / line count
+    - Brief description of what it contains
+
+STEP 5 — Explain what you found:
+  Report in this format:
+  
+  WORKSPACE AUDIT REPORT
+  ----------------------
+  Total files found: [N]
+  
+  Python source files:
+    [path] — [description]
+  
+  Configuration files:
+    [path] — [description]
+  
+  Existing test files:
+    [path] — [description]
+  
+  Reference/documentation files:
+    [path] — [description]
+  
+  Other files:
+    [path] — [description]
+
+STEP 6 — Determine if any existing trading bot code exists.
+  If yes: List the files and briefly describe what they implement.
+  If no: Confirm the project is ready for fresh implementation.
+
+STEP 7 — Check for potential conflicts with the planned architecture:
+  - Does any existing code conflict with the architecture in MASTER_ROADMAP.txt?
+  - Are there any files that should NOT be overwritten?
+  - Are there any useful utilities that should be preserved?
+
+STEP 8 — Report completion.
+
+STEP 9 — Update ROADMAP/00_PROJECT_STATUS.txt:
+  Mark Phase 01, Task 01-01 as [✓] COMPLETE.
+  Add findings summary to the Phase 01 section.
+
+================================================================================
+EXPECTED BEHAVIOR
+================================================================================
+
+The agent should:
+  1. List every file in the workspace
+  2. Read any existing Python files to understand their purpose
+  3. Identify any existing trading logic
+  4. Report conflicts with planned architecture
+  5. NOT modify any existing files
+
+================================================================================
+EDGE CASES
+================================================================================
+
+If existing Python trading bot code exists:
+  - Do NOT rewrite it yet
+  - Document what it does
+  - Note what should be preserved vs. replaced
+  - Flag in the report for human review
+
+If no Python code exists:
+  - Confirm project is empty/fresh
+  - Proceed to Phase 02 immediately
+
+================================================================================
+ERROR HANDLING
+================================================================================
+
+If a file cannot be read: Note it in the report and continue.
+If the file list is very long (100+ files): Group by category.
+
+================================================================================
+SECURITY REQUIREMENTS
+================================================================================
+
+Do NOT:
+  - Read or display .env file contents (secrets may be present)
+  - Log or report any actual passwords, API keys, or tokens
+  - Modify any configuration files
+
+================================================================================
+TEST REQUIREMENTS
+================================================================================
+
+None — this is a read-only audit task.
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+After completing the audit:
+  python --version           (verify Python is installed)
+  pip --version              (verify pip is installed)
+  pip list                   (list installed packages)
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+
+□ Complete file inventory reported
+□ Any existing Python code described
+□ Potential architectural conflicts identified
+□ No files were modified (except project status)
+□ ROADMAP/00_PROJECT_STATUS.txt updated
+
+================================================================================
+DEFINITION OF DONE
+================================================================================
+
+This task is done when:
+  □ Workspace audit report is complete
+  □ Human has reviewed the report
+  □ Human has confirmed it's safe to proceed to Phase 02
+
+================================================================================
+EXPECTED OUTPUT
+================================================================================
+
+A workspace audit report containing:
+  - Complete file inventory
+  - Description of any existing code
+  - Conflict analysis with planned architecture
+  - Recommendation: Fresh start OR Migrate existing code
+
+================================================================================
+NEXT TASK
+================================================================================
+
+If existing code was found:
+  → ROADMAP/01_PROJECT_DISCOVERY/02_TASK_EXISTING_CODE_ANALYSIS.txt
+
+If project is empty/fresh:
+  → ROADMAP/01_PROJECT_DISCOVERY/03_TASK_REQUIREMENTS_TRACEABILITY.txt
+  → Then: ROADMAP/02_PROJECT_FOUNDATION/01_PHASE_OVERVIEW.txt
+
+================================================================================

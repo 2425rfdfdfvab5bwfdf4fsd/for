@@ -1,0 +1,83 @@
+================================================================================
+TASK ID:     19-01
+TASK NAME:   Unit Test Consolidation
+PHASE:       19 — Testing
+================================================================================
+
+OBJECTIVE:
+    Verify all individual phase unit tests pass and create a unified test
+    runner configuration. Fill any gaps in unit test coverage.
+
+CONTEXT:
+    Each phase created its own tests. This task:
+    1. Audits test coverage for all modules
+    2. Identifies gaps (< 80% coverage on core modules)
+    3. Creates conftest.py with shared fixtures
+    4. Creates MT5 mock
+    5. Ensures all tests pass with `pytest tests/ -v`
+
+DEPENDENCIES:
+    - All phases 02–18 unit tests exist
+
+FILES TO CREATE:
+    tests/conftest.py
+    tests/fixtures/mt5_mock.py
+    tests/fixtures/test_data.py
+    pytest.ini
+
+FILES TO MODIFY:
+    May modify any existing test file to use shared fixtures from conftest.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+
+    conftest.py must provide:
+        @pytest.fixture def config() → Settings
+        @pytest.fixture def mock_mt5() → MockMT5
+        @pytest.fixture def in_memory_db() → Database
+        @pytest.fixture def sample_signal() → Signal
+        @pytest.fixture def sample_scored_signal() → ScoredSignal
+        @pytest.fixture def sample_trade_params() → TradeParameters
+
+    mt5_mock.py must mock all MT5 functions used:
+        initialize(), shutdown(), account_info(), symbol_info(),
+        copy_rates_from_pos(), positions_get(), orders_get(),
+        order_send(), symbol_select()
+
+    pytest.ini:
+        [pytest]
+        testpaths = tests
+        python_files = test_*.py
+        python_classes = Test*
+        python_functions = test_*
+        addopts = --tb=short -q
+
+TEST REQUIREMENTS:
+    Run: pytest tests/ --co -q   (collect only, verify all tests discovered)
+    Run: pytest tests/ -v        (must all pass)
+    Run: pytest tests/ --cov=app --cov=backtesting --cov=validation --cov-report=html
+
+COVERAGE TARGETS:
+    app/risk/: >= 90%
+    app/execution/: >= 85%
+    app/strategy/: >= 80%
+    app/filters/: >= 90%
+    app/confluence/: >= 85%
+
+ACCEPTANCE CRITERIA:
+    [ ] All unit tests pass
+    [ ] Coverage targets met
+    [ ] conftest.py provides all shared fixtures
+    [ ] MT5 mock covers all functions
+
+DEFINITION OF DONE:
+    [ ] conftest.py and fixtures created
+    [ ] Coverage report generated
+    [ ] All tests pass
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 19-02 — TASK_INTEGRATION_TESTS.txt
+================================================================================

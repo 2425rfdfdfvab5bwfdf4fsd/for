@@ -1,0 +1,550 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 8: DATABASE ENGINEERING
+(SQL, PostgreSQL, NoSQL, Scaling)
+================================================================
+
+SEEKHNE KE MAQASID:
+- Relational databases deeply samajhna
+- Indexes, transactions, ACID
+- Query optimization
+- NoSQL kab use karna
+- Database scaling patterns
+
+================================================================
+SECTION 1: RELATIONAL DATABASES FUNDAMENTALS
+================================================================
+
+Relational DB = Data tables mein store hota hai
+                Tables ke beech relationships hoti hain
+
+Core Concepts:
+
+TABLE: Rows aur columns ka grid
+  users:
+  | id | email          | name  | created_at |
+  | 1  | ali@email.com  | Ali   | 2024-01-01 |
+  | 2  | sara@email.com | Sara  | 2024-01-02 |
+
+PRIMARY KEY: Unique identifier har row ka
+  → id column (usually auto-increment or UUID)
+
+FOREIGN KEY: Dusri table ke primary key ka reference
+  orders.user_id → users.id
+
+CONSTRAINTS: Rules jo data integrity ensure karte hain
+  NOT NULL → column khaali nahi ho sakta
+  UNIQUE → values repeat nahi ho sakti
+  CHECK → custom condition (age > 0)
+  DEFAULT → default value
+
+================================================================
+SECTION 2: SQL FUNDAMENTALS
+================================================================
+
+--- BASIC QUERIES ---
+
+SELECT:
+  SELECT id, name, email FROM users;
+  SELECT * FROM users WHERE role = 'admin';
+  SELECT * FROM users ORDER BY created_at DESC LIMIT 10;
+
+INSERT:
+  INSERT INTO users (email, name, password_hash)
+  VALUES ('ali@email.com', 'Ali', 'hashed_pass');
+
+UPDATE:
+  UPDATE users
+  SET name = 'Ali Khan', updated_at = NOW()
+  WHERE id = 1;
+  -- HAMESHA WHERE clause use karo!
+
+DELETE:
+  DELETE FROM users WHERE id = 1;
+  -- WARNING: Bina WHERE DELETE karo → poora table delete!
+
+--- JOINS ---
+
+INNER JOIN (sirf matching rows):
+  SELECT u.name, o.total
+  FROM users u
+  INNER JOIN orders o ON u.id = o.user_id;
+
+LEFT JOIN (sab left table, matching right):
+  SELECT u.name, o.total
+  FROM users u
+  LEFT JOIN orders o ON u.id = o.user_id;
+  -- Users jo orders nahi kiye woh bhi aayein ge (o.total = NULL)
+
+--- AGGREGATIONS ---
+
+  SELECT
+    user_id,
+    COUNT(*) as order_count,
+    SUM(total) as total_spent,
+    AVG(total) as avg_order
+  FROM orders
+  GROUP BY user_id
+  HAVING COUNT(*) > 5; -- sirf woh users jo 5+ orders kiye
+
+================================================================
+SECTION 3: INDEXES — PERFORMANCE KI JAAN
+================================================================
+
+Index = Ek alag data structure jo fast lookup enable karta hai
+      = Book mein index page ki tarah
+
+Bina index:
+  SELECT * FROM users WHERE email = 'ali@email.com';
+  → Database har row scan karta hai → O(n)
+  → 1 million users → 1 million rows check
+
+Index ke saath:
+  CREATE INDEX idx_users_email ON users(email);
+  → Database directly jump karta hai → O(log n)
+  → 1 million users → ~20 comparisons
+
+--- INDEX TYPES ---
+
+B-TREE Index (default, most common):
+  → Range queries, equality, ORDER BY
+  → CREATE INDEX idx_created_at ON orders(created_at);
+
+HASH Index:
+  → Sirf equality checks
+  → Faster than B-tree for exact match
+
+COMPOSITE Index (multiple columns):
+  → CREATE INDEX idx_user_status ON orders(user_id, status);
+  → Query: WHERE user_id = 1 AND status = 'pending' → uses index
+
+PARTIAL Index:
+  → CREATE INDEX idx_active_users ON users(email) WHERE deleted_at IS NULL;
+  → Sirf active users index mein
+
+UNIQUE Index:
+  → CREATE UNIQUE INDEX idx_unique_email ON users(email);
+  → Duplicate values prevent karta hai
+
+--- INDEX TRADE-OFFS ---
+
+Pros:
+  - Read queries fast
+  - ORDER BY fast
+  - JOIN fast
+
+Cons:
+  - Write slow (har write pe index update)
+  - Disk space zyada
+  - Too many indexes → writes bahut slow
+
+Rule: Index karo woh columns jo WHERE, JOIN, ORDER BY mein frequently use hon.
+
+--- N+1 QUERY PROBLEM ---
+
+Common senior interview topic — aur production bug.
+
+Problem:
+  // Get all users with their order count
+  const users = await db.query('SELECT * FROM users'); // 1 query
+  
+  for (const user of users) {
+    const orders = await db.query(  // N queries! (1 per user)
+      'SELECT COUNT(*) FROM orders WHERE user_id = ?',
+      [user.id]
+    );
+    user.orderCount = orders[0].count;
+  }
+  
+  100 users → 101 queries! Bahut slow.
+
+Fix (JOINs ya subquery):
+  SELECT u.*, COUNT(o.id) as order_count
+  FROM users u
+  LEFT JOIN orders o ON u.id = o.user_id
+  GROUP BY u.id;
+  // Sirf 1 query!
+
+================================================================
+SECTION 4: TRANSACTIONS & ACID
+================================================================
+
+Transaction = Group of database operations jo ek unit ki tarah treat hote hain
+            = Ya sab kaam karein, ya koi nahi
+
+Real Example (Bank transfer):
+  BEGIN TRANSACTION;
+  
+  UPDATE accounts SET balance = balance - 1000 WHERE id = 1;
+  UPDATE accounts SET balance = balance + 1000 WHERE id = 2;
+  
+  COMMIT; -- Dono updates permanent
+
+  -- Agar kuch fail ho:
+  ROLLBACK; -- Dono updates cancel
+
+ACID Properties:
+
+A — ATOMICITY:
+  Transaction ya completely succeed hoti hai ya completely fail
+  (half-done state nahi hoti)
+
+C — CONSISTENCY:
+  Transaction ke baad database valid state mein hona chahiye
+  (constraints, rules sab valid)
+
+I — ISOLATION:
+  Concurrent transactions ek dusre ko affect nahi kartin
+  (ek ki changes dusre ko intermediate state mein nahi dikhni)
+
+D — DURABILITY:
+  Committed transaction hamesha persist rahegi
+  (crash ke baad bhi data safe)
+
+--- ISOLATION LEVELS ---
+
+READ UNCOMMITTED (lowest):
+  → Dirty reads possible (uncommitted data dekh sakte ho)
+  → Almost kabhi use nahi karo
+
+READ COMMITTED (PostgreSQL default):
+  → Sirf committed data dekho
+  → Non-repeatable reads possible
+
+REPEATABLE READ:
+  → Same query → same results throughout transaction
+  → Phantom reads possible
+
+SERIALIZABLE (highest):
+  → Full isolation
+  → Slow (locking)
+
+Real Guidance:
+  - Zyada tar cases mein: READ COMMITTED
+  - Financial transactions: REPEATABLE READ ya SERIALIZABLE
+  - Analytics/reports: READ UNCOMMITTED sometimes ok
+
+--- DEADLOCKS ---
+
+Kya hai: Do transactions ek dusre ka wait kar rahe hain
+
+Example:
+  Transaction A: Lock users row 1, wait for orders row 1
+  Transaction B: Lock orders row 1, wait for users row 1
+  → Deadlock!
+
+Prevention:
+  - Always resources same order mein lock karo
+  - Transactions short rakho
+  - Database automatically detect aur kill karta hai (PostgreSQL)
+  - Application mein retry logic rakho
+
+================================================================
+SECTION 5: QUERY OPTIMIZATION
+================================================================
+
+--- EXPLAIN PLAN ---
+
+Pehle slow query ka EXPLAIN dekho:
+
+  EXPLAIN ANALYZE
+  SELECT * FROM orders
+  WHERE user_id = 1 AND status = 'pending';
+
+Output samajhna:
+  - Seq Scan → Slow (full table scan)
+  - Index Scan → Good
+  - Index Only Scan → Very Good
+  - Rows → How many rows processed
+  - Cost → Estimated cost
+  - Actual Time → Real time
+
+--- COMMON OPTIMIZATIONS ---
+
+1. Indexes add karo (upar padha)
+
+2. SELECT * mat use karo:
+   BAD:  SELECT * FROM users
+   GOOD: SELECT id, email, name FROM users
+
+3. Pagination use karo:
+   BAD:  SELECT * FROM orders -- 1 million rows return
+   GOOD: SELECT * FROM orders LIMIT 20 OFFSET 0
+
+4. OFFSET bade numbers pe slow hoti hai:
+   BAD:  LIMIT 20 OFFSET 100000
+   GOOD: Cursor-based pagination:
+         WHERE id > last_seen_id LIMIT 20
+
+5. WHERE clause mein functions mat use karo:
+   BAD:  WHERE YEAR(created_at) = 2024 -- Index use nahi hoga
+   GOOD: WHERE created_at >= '2024-01-01' AND created_at < '2025-01-01'
+
+6. JOIN ke baad filter karo (sirf zaroori):
+   Use WHERE ya ON clause properly
+
+================================================================
+SECTION 6: DATABASE MIGRATIONS
+================================================================
+
+Migration = Database schema ka versioned change
+
+Rules:
+  1. Kabhi existing migration edit mat karo
+  2. Har change ke liye naya migration file banao
+  3. Migrations reversible honi chahiye (up + down)
+  4. Production mein migration apply karne se pehle backup lo
+  5. Large table migrations carefully karo (avoid table locks)
+
+Example Migration File:
+  -- migration: 001_create_users_table.sql
+  
+  -- UP
+  CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+  );
+  
+  -- DOWN
+  DROP TABLE users;
+
+Large Table Migration (Safe approach):
+  -- Adding a column to 10 million row table:
+  
+  -- Step 1: Add column as nullable (fast, no lock)
+  ALTER TABLE orders ADD COLUMN shipping_cost DECIMAL(10,2);
+  
+  -- Step 2: Backfill in batches (background job)
+  UPDATE orders SET shipping_cost = 0 WHERE id IN (
+    SELECT id FROM orders WHERE shipping_cost IS NULL LIMIT 1000
+  );
+  
+  -- Step 3: Add NOT NULL constraint after backfill complete
+  ALTER TABLE orders ALTER COLUMN shipping_cost SET NOT NULL;
+
+================================================================
+SECTION 7: CONNECTION POOLING
+================================================================
+
+Problem: Database connections expensive hain (time + memory)
+         Har request ke liye naya connection → slow!
+
+Solution: Connection Pool
+  - Fixed connections maintain rakho (e.g., 10-20)
+  - Requests pool se connection lein aur return karein
+
+PgBouncer (PostgreSQL):
+  Application → PgBouncer Pool → PostgreSQL
+
+Configuration:
+  Pool size: (2 × CPU cores) + effective spindle count
+  Typical: 10-20 connections per app instance
+
+Common Mistake:
+  Too many connections → PostgreSQL choke ho jaata hai
+  PostgreSQL max_connections typically 100-500
+  Agar 10 instances × 100 connections = 1000 → problem!
+
+================================================================
+SECTION 8: NoSQL DATABASES
+================================================================
+
+NoSQL kab use karo:
+
+--- DOCUMENT DATABASES (MongoDB, DynamoDB) ---
+
+  Data: JSON-like documents
+  
+  Good for:
+  - Flexible schema (data structure change hoti rehti ho)
+  - Hierarchical/nested data
+  - Content management systems
+  - User profiles with varied attributes
+
+  Bad for:
+  - Complex relationships
+  - ACID transactions (though MongoDB now supports)
+  - Reporting/analytics with complex joins
+
+--- KEY-VALUE STORES (Redis) ---
+
+  Data: Key → Value (string, list, set, hash)
+  
+  Good for:
+  - Caching (database results, API responses)
+  - Session storage
+  - Rate limiting counters
+  - Real-time leaderboards
+  - Pub/Sub messaging
+  - Distributed locks
+
+  Bad for:
+  - Complex queries
+  - Relational data
+  - Persistent storage (typically in-memory)
+
+Redis Common Use Cases:
+  
+  Cache:
+    SET user:123 '{"name":"Ali"}' EX 3600  // 1 hour expire
+    GET user:123
+  
+  Rate Limiting:
+    INCR rate:user:123:minute
+    EXPIRE rate:user:123:minute 60
+  
+  Session:
+    SET session:token123 userId EX 86400  // 24 hours
+  
+  Leaderboard:
+    ZADD leaderboard 1500 "userId:1"  // Sorted set
+
+--- WHEN SQL vs NoSQL ---
+
+Use SQL (PostgreSQL) when:
+  ✅ Data relationships important hain
+  ✅ ACID compliance zaroori hai
+  ✅ Complex queries chahiye
+  ✅ Data structure defined hai
+  ✅ Reporting/analytics
+  ✅ Financial/transactional data
+
+Use NoSQL when:
+  ✅ Massive scale (billions of records)
+  ✅ Schema frequently changes
+  ✅ Horizontal scaling priority
+  ✅ Document-oriented data
+  ✅ Caching (Redis)
+  ✅ Time-series data
+
+================================================================
+SECTION 9: DATABASE SCALING
+================================================================
+
+--- READ REPLICAS ---
+
+Primary DB → Writes
+Read Replicas → Reads (multiple copies)
+
+Setup:
+  Write: db.primary.query('INSERT ...')
+  Read:  db.replica.query('SELECT ...')
+
+Good for: Read-heavy applications
+
+Trade-off: Replication lag → reads might be slightly stale
+
+--- PARTITIONING ---
+
+Table ko alag alag parts mein todna, same database mein.
+
+Range Partitioning:
+  orders_2023, orders_2024, orders_2025
+  → Old data different partition mein
+  → Recent data fast access
+
+Hash Partitioning:
+  user_id % 4 → partition 0, 1, 2, or 3
+
+--- SHARDING ---
+
+Data distribute karna across multiple database servers.
+
+Horizontal sharding:
+  Shard 1: user_id 1-1,000,000
+  Shard 2: user_id 1,000,001-2,000,000
+  
+  Problems:
+  - Cross-shard queries expensive
+  - Resharding complex
+  - Application logic complex
+
+Use only when really needed (millions+ users).
+
+--- CACHING LAYER ---
+
+Redis as cache:
+  Request → Check Redis Cache
+    Cache HIT → Return cached data (fast!)
+    Cache MISS → Query DB → Store in Redis → Return data
+
+Cache Invalidation (hardest problem in CS!):
+  When to invalidate:
+  - Time-based (TTL): SET key value EX 3600
+  - Event-based: User updates → delete user cache
+  - Write-through: Update cache on every DB write
+
+================================================================
+SECTION 10: EXERCISE
+================================================================
+
+TASK 1: Schema Design
+Design a database for a simple blog:
+  - Users can write posts
+  - Posts have categories
+  - Users can comment on posts
+  - Users can like posts
+
+Draw tables, columns, relationships.
+
+TASK 2: Query Optimization
+Slow query:
+  SELECT * FROM orders WHERE YEAR(created_at) = 2024
+
+Aap kaise optimize karoge?
+
+TASK 3: N+1 Problem
+Ek scenario likho jahan N+1 problem ho.
+Phir usse fix karo.
+
+TASK 4: Index Decision
+Table: products (10 million rows)
+Common queries:
+  WHERE category = 'electronics'
+  WHERE price BETWEEN 100 AND 500
+  WHERE category = 'electronics' AND price BETWEEN 100 AND 500
+  ORDER BY created_at DESC
+
+Kaunse indexes banao ge?
+
+================================================================
+QUIZ — PART 8
+================================================================
+
+Q1: N+1 problem kya hai?
+    (a) Database ke N+1 tables hain
+    (b) Loop mein har item ke liye alag query → N+1 total queries
+    (c) Index N+1 baar update hota hai
+    (d) Connection pool N+1 size ka hona chahiye
+
+Jawab: (b)
+
+Q2: ACID mein "A" kya hai?
+    (a) Authorization
+    (b) Atomicity — ya poora transaction succeed ya poora fail
+    (c) Availability
+    (d) Abstraction
+
+Jawab: (b)
+
+Q3: Redis best suited hai:
+    (a) Complex relational data ke liye
+    (b) Caching, sessions, rate limiting ke liye
+    (c) Primary database ke liye
+    (d) File storage ke liye
+
+Jawab: (b)
+
+Q4: Database index ki main trade-off kya hai?
+    (a) Reads slow, writes fast
+    (b) Reads fast, writes slow + extra disk space
+    (c) Reads fast, writes fast, extra memory
+    (d) Reads slow, writes slow
+
+Jawab: (b)
+
+================================================================
+AGLA PART: Part 9 — Backend Engineering
+================================================================

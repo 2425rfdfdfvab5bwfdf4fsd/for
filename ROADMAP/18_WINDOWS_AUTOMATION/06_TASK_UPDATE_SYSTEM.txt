@@ -1,0 +1,53 @@
+================================================================================
+TASK ID:     18-06
+TASK NAME:   Update System (update.bat)
+PHASE:       18 — Windows Automation
+================================================================================
+
+OBJECTIVE:
+    Create update.bat that safely updates the bot to a newer version by
+    stopping the bot, backing up data, updating code, reinstalling dependencies,
+    and restarting.
+
+CONTEXT:
+    UPDATE STEPS:
+    1. Check if bot is running; if so, stop it gracefully
+    2. Backup data/ and .env to backups/{timestamp}/
+    3. Update code (git pull if git repo, else manual copy)
+    4. Activate venv
+    5. Install updated requirements.txt
+    6. Run database migrations if any (python scripts/migrate_db.py)
+    7. Run tests (python -m pytest tests/ -x -q)
+    8. If tests pass: print SUCCESS, prompt to restart
+    9. If tests fail: print FAILURE, restore from backup
+
+    BACKUP FORMAT:
+    backups/2026-01-01_120000/
+        data/           (full copy)
+        .env            (copy)
+        update.log      (update log)
+
+FILES TO CREATE:
+    update.bat
+    scripts/backup.py
+    scripts/migrate_db.py   (placeholder — migrations added per phase)
+
+FILES FORBIDDEN TO MODIFY:
+    app/
+    ROADMAP/
+
+ACCEPTANCE CRITERIA:
+    [ ] update.bat creates backup before any changes
+    [ ] Tests run after update
+    [ ] Failure triggers restore from backup
+    [ ] Clear progress messages
+
+DEFINITION OF DONE:
+    [ ] update.bat and scripts/backup.py created
+    [ ] Phase 18 acceptance criteria met
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated: Phase 18 COMPLETE
+
+NEXT TASK:
+    Begin Phase 19 — Testing
+    Start with: ROADMAP/19_TESTING/01_PHASE_OVERVIEW.txt
+================================================================================

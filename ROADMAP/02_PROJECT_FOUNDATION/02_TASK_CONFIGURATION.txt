@@ -1,0 +1,229 @@
+================================================================================
+TASK: 02-02 — CONFIGURATION SYSTEM
+================================================================================
+TASK ID:        02-02
+TASK NAME:      Configuration System (config.py + .env.example)
+PHASE:          02 — Project Foundation
+OBJECTIVE:      Create the configuration loader (app/config.py) and the
+                complete .env.example template with all settings needed
+                by the trading bot. No hardcoded values in any other module.
+
+CONTEXT:
+  Every configurable parameter must be in .env and loaded via config.py.
+  The bot must never need the user to edit Python files to change settings.
+  config.py is the SINGLE SOURCE OF TRUTH for all runtime parameters.
+  All other modules import from config.py — never from os.environ directly.
+
+DEPENDENCIES:   Task 02-01 complete
+PREVIOUS TASKS: 02-01 PROJECT STRUCTURE
+
+FILES TO INSPECT:
+  - ROADMAP/00_MASTER_ROADMAP.txt (Final Target System section)
+  - ROADMAP/00_REQUIREMENT_DECISIONS.txt
+
+FILES TO CREATE:
+  app/config.py
+  .env.example
+  .gitignore
+
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: Any other files
+
+================================================================================
+DETAILED REQUIREMENTS — app/config.py
+================================================================================
+
+Create a Config class (or dataclass) that loads ALL settings from environment
+variables using python-dotenv. Provide sensible defaults for every setting.
+
+REQUIRED CONFIGURATION SECTIONS:
+
+--- TRADING MODE ---
+TRADING_MODE         = "DEMO"          # DEMO | PAPER | LIVE
+LIVE_TRADING         = false           # Must be explicitly true for live
+MAGIC_NUMBER         = 20260001        # MT5 magic number for bot trades
+
+--- MT5 CONNECTION ---
+MT5_LOGIN            = ""              # Optional (if MT5 already logged in)
+MT5_PASSWORD         = ""             # Optional (if MT5 already logged in)
+MT5_SERVER           = ""             # Broker server name
+MT5_TERMINAL_PATH    = ""             # Path to MT5 terminal64.exe
+
+--- TRADING PAIRS ---
+BOT_PAIRS            = "EURUSD,GBPUSD,USDJPY"
+# Broker symbol mapping (handle suffixes like EURUSDm, EURUSD.pro)
+EURUSD_SYMBOL        = "EURUSD"
+GBPUSD_SYMBOL        = "GBPUSD"
+USDJPY_SYMBOL        = "USDJPY"
+
+--- RISK MANAGEMENT ---
+RISK_PER_TRADE       = 0.5            # % of equity per trade
+MAX_DAILY_TRADES     = 3
+MAX_DAILY_LOSS_PCT   = 2.0            # % of starting equity
+MAX_CONSECUTIVE_LOSSES = 2
+MAX_LOT_SIZE         = 10.0           # Safety cap
+MARGIN_SAFETY_LEVEL  = 150.0          # Minimum margin level %
+
+--- STRATEGY ---
+MIN_CONFLUENCE_SCORE = 8              # Out of 10
+MIN_RR_RATIO         = 2.0            # Minimum risk:reward
+SWING_LOOKBACK       = 20            # Candles for swing detection
+EMA_FAST             = 20
+EMA_SLOW             = 50
+ATR_PERIOD           = 14
+ATR_SL_BUFFER_MULT   = 0.3           # ATR multiplier for SL buffer
+
+--- TRADING SESSIONS ---
+LONDON_SESSION_ENABLED   = true
+LONDON_START_UTC         = "07:00"
+LONDON_END_UTC           = "16:00"
+NEW_YORK_SESSION_ENABLED = true
+NY_START_UTC             = "12:00"
+NY_END_UTC               = "21:00"
+
+--- POSITION MANAGEMENT ---
+ENABLE_BREAK_EVEN        = true
+BREAK_EVEN_R_MULTIPLE    = 1.0
+BREAK_EVEN_BUFFER_PIPS   = 2
+ENABLE_TRAILING_STOP     = true
+TRAILING_STOP_TYPE       = "structure"  # structure | atr
+ENABLE_PARTIAL_PROFIT    = false        # Disabled by default
+PARTIAL_PROFIT_R_TRIGGER = 1.0
+PARTIAL_PROFIT_PCT       = 0.5         # 50% of position
+
+--- OVERNIGHT/WEEKEND ---
+ALLOW_OVERNIGHT          = false
+OVERNIGHT_POLICY         = "close"    # close | hold
+FRIDAY_CUTOFF_UTC        = "20:00"
+
+--- FILTERS ---
+ENABLE_NEWS_FILTER       = true
+NEWS_FILTER_MINUTES_BEFORE = 30
+NEWS_FILTER_MINUTES_AFTER  = 30
+
+MAX_SPREAD_EURUSD        = 3.0        # pips
+MAX_SPREAD_GBPUSD        = 4.0        # pips
+MAX_SPREAD_USDJPY        = 3.0        # pips
+
+VOLATILITY_MIN_ATR_MULT  = 0.5       # Reject if ATR < X * avg_atr
+VOLATILITY_MAX_ATR_MULT  = 3.0       # Reject if ATR > X * avg_atr
+
+--- TELEGRAM ---
+TELEGRAM_ENABLED         = false
+TELEGRAM_BOT_TOKEN       = ""
+TELEGRAM_CHAT_ID         = ""
+
+--- DASHBOARD ---
+DASHBOARD_PORT           = 8080
+DASHBOARD_HOST           = "127.0.0.1"
+
+--- DATABASE ---
+DATABASE_PATH            = "data/trading_bot.db"
+
+--- LOGGING ---
+LOG_LEVEL                = "INFO"
+LOG_DIR                  = "logs"
+LOG_MAX_BYTES            = 10485760   # 10MB
+LOG_BACKUP_COUNT         = 5
+
+--- BACKTESTING ---
+BACKTEST_SPREAD_PIPS     = 1.5       # Simulated spread (per symbol if needed)
+BACKTEST_SLIPPAGE_PIPS   = 0.5       # Max random slippage added to entry
+BACKTEST_COMMISSION_PER_LOT = 7.0   # Round-trip commission in account currency
+                                     # per lot (typical ECN: $7/lot round trip)
+BACKTEST_OVERNIGHT_SWAP_LONG  = -0.50  # Swap pips per lot per night (long)
+BACKTEST_OVERNIGHT_SWAP_SHORT = -0.30  # Swap pips per lot per night (short)
+                                     # Use broker swap table for real values
+                                     # Negative = you PAY, Positive = you RECEIVE
+
+--- SCREENSHOTS ---
+ENABLE_SCREENSHOTS       = false
+SCREENSHOT_DIR           = "data/screenshots"
+
+IMPLEMENTATION RULES:
+  - Use python-dotenv to load .env file
+  - Load environment variables at module level (not per-call)
+  - Provide type conversion (int, float, bool, list)
+  - Validate critical values on load (raise ConfigError if invalid)
+  - Config must be importable: from app.config import Config
+  - Config should be a singleton — use Config() or a module-level instance
+
+VALIDATION IN config.py:
+  - RISK_PER_TRADE must be between 0.01 and 5.0
+  - MAX_DAILY_LOSS_PCT must be between 0.1 and 20.0
+  - MIN_CONFLUENCE_SCORE must be between 1 and 10
+  - MIN_RR_RATIO must be >= 1.0
+  - TRADING_MODE must be one of: DEMO, PAPER, LIVE, BACKTEST
+  - If LIVE_TRADING=true, log a prominent WARNING
+
+================================================================================
+DETAILED REQUIREMENTS — .env.example
+================================================================================
+
+Create a complete .env.example file with:
+  - Every setting from the config above
+  - Clear comments explaining each setting
+  - Safe default values (DEMO mode, no real credentials)
+  - Grouping by section (same sections as config.py)
+  - Instructions at the top on how to use it:
+    "# Copy this file to .env and fill in your values"
+    "# NEVER commit .env to git — it contains your credentials"
+
+================================================================================
+DETAILED REQUIREMENTS — .gitignore
+================================================================================
+
+Must include:
+  .env
+  logs/
+  data/historical/
+  data/screenshots/
+  data/reports/
+  __pycache__/
+  *.pyc
+  *.pyo
+  .pytest_cache/
+  *.egg-info/
+  dist/
+  build/
+  .venv/
+  venv/
+  *.db
+  *.db-wal
+  *.db-shm
+
+================================================================================
+IMPLEMENTATION STEPS
+================================================================================
+
+1. Create app/config.py with the Config class
+2. Implement all configuration sections
+3. Add validation logic for critical parameters
+4. Create .env.example with all settings and comments
+5. Create .gitignore
+6. Write a quick test: python -c "from app.config import Config; c = Config(); print(c.TRADING_MODE)"
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+python -m py_compile app/config.py
+python -c "from app.config import Config; c = Config(); print('Config loaded:', c.TRADING_MODE)"
+python -c "from app.config import Config; print('Risk:', Config().RISK_PER_TRADE)"
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ app/config.py imports without errors
+□ Config() loads with default values from .env.example
+□ All settings accessible as attributes
+□ LIVE_TRADING defaults to false
+□ TRADING_MODE defaults to "DEMO"
+□ .env.example is complete and well-commented
+□ .gitignore includes .env
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/02_PROJECT_FOUNDATION/03_TASK_LOGGING.txt
+================================================================================

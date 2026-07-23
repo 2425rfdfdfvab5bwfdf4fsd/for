@@ -1,0 +1,79 @@
+================================================================================
+TASK ID:     10-04
+TASK NAME:   Trailing Stop Manager
+PHASE:       10 — Position Management
+================================================================================
+
+OBJECTIVE:
+    Implement TrailingStopManager that dynamically moves the SL behind price
+    as the trade moves in profit, using ATR-based trail distance.
+
+CONTEXT:
+    TRAILING STOP RULE:
+    - Activation threshold: price must be beyond TP1 (position profitable > 1R)
+    - Trail distance: ATR(14) * TRAIL_ATR_MULTIPLIER (default: 1.5)
+    - Trail update frequency: only when new SL would be tighter than current SL
+    - SL only moves in profit direction — NEVER widens
+
+    ENABLE_TRAILING_STOP=true (default, configurable)
+
+    ATR source: current H1 ATR from strategy engine (passed in context)
+
+DEPENDENCIES:
+    - 10-01 PositionManager
+    - 10-02 BreakEvenManager (trail activates after BE is set)
+    - Phase 05 for ATR value
+
+FILES TO CREATE:
+    app/management/trailing_stop.py
+    tests/test_position_management/test_trailing_stop.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class TrailingStopManager:
+        check_and_apply(
+            position: Position,
+            trade_record: TradeRecord,
+            current_price: float,
+            current_atr: float
+        ) -> TrailAction | None
+
+    TrailAction:
+        new_sl: float
+        trail_distance: float
+        reason: str    # "TRAILING_STOP_UPDATE"
+        executed: bool
+
+    TRAIL CALCULATION (LONG):
+        trail_distance = current_atr * TRAIL_ATR_MULTIPLIER
+        proposed_sl = current_price - trail_distance
+        if proposed_sl > current_sl: update (tighten)
+        else: no action
+
+    TRAIL CALCULATION (SHORT):
+        proposed_sl = current_price + trail_distance
+        if proposed_sl < current_sl: update (tighten)
+        else: no action
+
+TEST REQUIREMENTS:
+    - test_trail_tightens_on_profit()
+    - test_trail_does_not_widen()
+    - test_trail_not_activated_before_tp1()
+    - test_short_trail_calculation()
+
+ACCEPTANCE CRITERIA:
+    [ ] SL only moves in profit direction
+    [ ] Trail activates after TP1 / BE
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] trailing_stop.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 10-05 — TASK_TRADE_EXPIRATION.txt
+================================================================================

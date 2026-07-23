@@ -1,0 +1,58 @@
+================================================================================
+TASK ID:     15-05
+TASK NAME:   Backtest Reports
+PHASE:       15 — Backtesting
+================================================================================
+
+OBJECTIVE:
+    Implement BacktestReporter that generates a comprehensive HTML report
+    and CSV trade log from backtest results.
+
+DEPENDENCIES:
+    - 15-04 MetricsCalculator
+
+FILES TO CREATE:
+    backtesting/reports.py
+    backtesting/templates/backtest_report.html
+    run_backtest.py
+    tests/test_backtesting/test_reports.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/strategy/
+    ROADMAP/
+
+REPORT SECTIONS (HTML):
+    1. Cover: Symbol, Date Range, Initial Capital, Generated Date
+    2. Executive Summary: key metrics table
+    3. Equity Curve Chart (Chart.js embedded)
+    4. Monthly Returns Table (heatmap style)
+    5. Trade Statistics Table
+    6. Drawdown Chart
+    7. Win/Loss Distribution Histogram
+    8. Confluence Score Distribution
+    9. Trade Log (full table)
+    10. Risk Warnings (low sample size, data quality issues)
+    11. DISCLAIMER: "Past performance does not guarantee future results.
+        Win rate target of 55-65% is a performance goal, not a guarantee."
+
+CSV OUTPUT:
+    trades_{symbol}_{from_date}_{to_date}.csv
+    Fields: all SimulatedTrade fields + all MetricsCalculator results
+
+ACCEPTANCE CRITERIA:
+    [ ] HTML report opens in browser without errors
+    [ ] Disclaimer present on all reports
+    [ ] CSV exports correctly
+    [ ] run_backtest.py entry point functional
+    [ ] Phase 15 acceptance criteria met
+
+DEFINITION OF DONE:
+    [ ] reports.py and run_backtest.py created
+    [ ] HTML report generated with real backtest data
+    [ ] Phase 15 COMPLETE in ROADMAP/00_PROJECT_STATUS.txt
+
+NEXT TASK:
+    Begin Phase 16 — Validation
+    Start with: ROADMAP/16_VALIDATION/01_PHASE_OVERVIEW.txt
+================================================================================

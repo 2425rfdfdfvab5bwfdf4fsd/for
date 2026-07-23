@@ -1,0 +1,77 @@
+================================================================================
+PHASE 13 — TRADE JOURNAL
+================================================================================
+
+PHASE NAME:         Trade Journal
+PHASE OBJECTIVE:    Build a comprehensive trade journaling system that records
+                    every trade, every rejection, missed opportunities, and
+                    optionally captures chart screenshots for review.
+
+WHY THIS PHASE EXISTS:
+    A trading bot without detailed records cannot improve. The journal provides
+    the raw data for self-improvement analytics (Phase 17) and gives the user
+    full transparency into every decision the bot makes.
+
+DEPENDENCIES:
+    - Phase 04 (Data Layer): database repositories
+    - Phase 06 (Confluence): rejection reasons and scores
+    - Phase 07 (Risk): risk validation results
+    - Phase 09 (Execution): execution results
+    - Phase 10 (Position Management): management events
+
+INPUTS:
+    - Trade events from main loop
+    - Rejection events from confluence and risk engines
+    - Signal scan results (for missed trades)
+    - MT5 screenshots (optional)
+
+OUTPUTS:
+    - Detailed trade records (entry, exit, all parameters)
+    - Rejection journal (why each setup was rejected)
+    - Missed trade analysis (setups that would have been valid)
+    - Chart screenshots saved to disk (optional)
+
+FILES EXPECTED TO BE CREATED:
+    app/journal/trade_journal.py
+    app/journal/rejection_journal.py
+    app/journal/screenshot_manager.py
+    app/journal/missed_trade_analyzer.py
+    app/journal/__init__.py
+    tests/test_journal/test_trade_journal.py
+    tests/test_journal/test_rejection_journal.py
+    tests/test_journal/test_missed_trade.py
+
+FILES EXPECTED TO BE MODIFIED:
+    app/database/models.py    (add JournalEntry, RejectionEntry, MissedTradeEntry)
+    app/database/repositories.py    (add journal repository methods)
+
+FILES THAT MUST NOT BE MODIFIED:
+    app/mt5/
+    app/strategy/
+    app/risk/
+    app/execution/
+    ROADMAP/
+
+TASK ORDER:
+    1. 01_TASK_TRADE_JOURNAL.txt
+    2. 02_TASK_REJECTION_JOURNAL.txt
+    3. 03_TASK_SCREENSHOTS.txt
+    4. 04_TASK_MISSED_TRADE_ANALYSIS.txt
+
+ACCEPTANCE CRITERIA:
+    [ ] Every executed trade has a complete journal entry
+    [ ] Every rejected signal has a rejection record
+    [ ] Journal records are queryable from the dashboard
+    [ ] Screenshots saved when SCREENSHOT_ENABLED=true
+    [ ] Missed trade analysis identifies setups above threshold that were not taken
+    [ ] All tests pass
+
+KNOWN RISKS:
+    - MT5 screenshot API may not be available on all platforms; make optional
+    - Journal must not slow down the main loop; write asynchronously if needed
+
+HANDOFF REQUIREMENTS:
+    Before Phase 14 (Dashboard):
+    - All journal repositories functional
+    - Data available for dashboard analytics queries
+================================================================================

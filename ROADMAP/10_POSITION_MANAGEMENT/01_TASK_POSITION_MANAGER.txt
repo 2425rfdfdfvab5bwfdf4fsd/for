@@ -1,0 +1,72 @@
+================================================================================
+TASK ID:     10-01
+TASK NAME:   Position Manager (Orchestrator)
+PHASE:       10 — Position Management
+================================================================================
+
+OBJECTIVE:
+    Implement PositionManager as the single orchestrator that iterates all
+    open positions on each main loop tick and applies the appropriate
+    management actions.
+
+CONTEXT:
+    Called by the main loop on every iteration. For each open position:
+    1. Fetch current price
+    2. Check break-even trigger
+    3. Check partial profit trigger
+    4. Check trailing stop update
+    5. Check trade expiration
+    6. Log any actions taken
+
+DEPENDENCIES:
+    - Phase 03 MT5: positions_get, order_send
+    - Phase 04 database: open trade records
+    - 10-02 through 10-05 sub-managers (implement skeleton first, fill later)
+
+FILES TO CREATE:
+    app/management/position_manager.py
+    app/management/__init__.py
+    tests/test_position_management/test_position_manager.py
+
+FILES TO MODIFY:
+    app/database/models.py    — add PositionManagementEvent
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class PositionManager:
+        process_all(
+            mt5_positions: list[Position],
+            db_trades: list[TradeRecord],
+            current_prices: dict[str, float]   # symbol → current price
+        ) -> list[PositionManagementEvent]
+
+    Processing rules:
+        - If position not in db_trades: flag as orphan (log CRITICAL)
+        - Apply sub-managers in order: BE → Partial → Trail → Expiration
+        - Each sub-manager returns an action or None
+        - Actions are executed via MT5, then logged in database
+
+TEST REQUIREMENTS:
+    - test_no_positions_no_events()
+    - test_single_position_processed()
+    - test_orphan_position_flagged()
+    - test_sub_managers_called_in_order()
+
+ACCEPTANCE CRITERIA:
+    [ ] process_all() iterates all positions
+    [ ] Sub-managers called correctly
+    [ ] Events written to database
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] position_manager.py created
+    [ ] Tests pass
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 10-02 — TASK_BREAK_EVEN.txt
+================================================================================

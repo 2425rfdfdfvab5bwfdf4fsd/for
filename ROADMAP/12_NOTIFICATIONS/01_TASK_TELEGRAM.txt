@@ -1,0 +1,120 @@
+================================================================================
+TASK ID:     12-01
+TASK NAME:   Telegram Notifications
+PHASE:       12 — Notifications
+================================================================================
+
+OBJECTIVE:
+    Implement TelegramClient and Notifier that send formatted alerts for all
+    key bot events via the Telegram Bot API.
+
+CONTEXT:
+    Telegram Bot API endpoint:
+        POST https://api.telegram.org/bot{TOKEN}/sendMessage
+
+    Configuration (from .env):
+        TELEGRAM_ENABLED=true
+        TELEGRAM_BOT_TOKEN=<your_token>
+        TELEGRAM_CHAT_ID=<your_chat_id>
+
+    NOTIFICATION EVENTS:
+        BOT_STARTED         — on startup
+        BOT_STOPPED         — on graceful shutdown
+        BOT_RESTARTED       — after watchdog restart
+        TRADE_ENTRY         — on successful order execution
+        TRADE_EXIT_TP       — on TP hit
+        TRADE_EXIT_SL       — on SL hit
+        TRADE_EXIT_BE       — on break-even exit
+        TRADE_EXIT_EOD      — on EOD close
+        TRADE_PARTIAL       — on partial profit close
+        SIGNAL_REJECTED     — on low confluence score (optional, configurable)
+        RISK_BLOCKED        — on risk limit hit (daily loss, consecutive loss)
+        MT5_DISCONNECTED    — on MT5 connection loss
+        MT5_RECONNECTED     — on MT5 reconnection
+        CRITICAL_ERROR      — on unhandled exception
+        DAILY_REPORT        — daily summary (handled by daily_reporter.py)
+
+DEPENDENCIES:
+    - Phase 02 config
+
+FILES TO CREATE:
+    app/notifications/telegram_client.py
+    app/notifications/message_templates.py
+    app/notifications/notifier.py
+    app/notifications/__init__.py
+    tests/test_notifications/test_telegram.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+--------------------------------------------------------------------------------
+DETAILED REQUIREMENTS:
+--------------------------------------------------------------------------------
+
+class TelegramClient:
+    send_message(text: str, parse_mode: str = "HTML") -> bool
+    send_message_async(text: str) -> None   (fire-and-forget, queue-based)
+
+RETRY POLICY:
+    - On network failure: retry once after 5 seconds
+    - After retry failure: log WARNING, continue (never block the bot)
+    - Never raise exceptions to caller
+
+MESSAGE TEMPLATES (in message_templates.py):
+    All messages use HTML parse_mode.
+
+    TRADE_ENTRY example:
+    ╔══════════════════════╗
+    ║  🟢 TRADE OPENED     ║
+    ╠══════════════════════╣
+    ║ Pair:    EURUSD      ║
+    ║ Dir:     BUY         ║
+    ║ Entry:   1.08450     ║
+    ║ SL:      1.08200     ║
+    ║ TP1:     1.08700     ║
+    ║ TP2:     1.08950     ║
+    ║ Lots:    0.02        ║
+    ║ Score:   9.0/10 (A)  ║
+    ║ Risk:    $50.00      ║
+    ║ R:R:     1:2.0       ║
+    ╚══════════════════════╝
+
+    CRITICAL_ERROR example:
+    🚨 CRITICAL ERROR
+    <b>Error:</b> MT5 connection lost
+    <b>Time:</b> 2026-01-01 12:00:00 UTC
+    <b>Action:</b> Attempting reconnect...
+
+class Notifier:
+    notify(event_type: str, data: dict) -> None
+    — Looks up template, formats message, sends via TelegramClient
+    — If TELEGRAM_ENABLED=false: no-op (log DEBUG only)
+
+TEST REQUIREMENTS (all using mock HTTP requests):
+    - test_trade_entry_message_sent()
+    - test_telegram_disabled_no_send()
+    - test_network_failure_retried_once()
+    - test_network_failure_does_not_raise()
+    - test_message_template_formatting()
+
+VALIDATION COMMANDS:
+    pytest tests/test_notifications/test_telegram.py -v
+    python -c "from app.notifications.notifier import Notifier; print('OK')"
+
+ACCEPTANCE CRITERIA:
+    [ ] TelegramClient sends messages via mock HTTP
+    [ ] All event types have templates
+    [ ] Notifier is a no-op when disabled
+    [ ] Network failure handled gracefully
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] telegram_client.py, message_templates.py, notifier.py created
+    [ ] Tests pass
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 12-02 — TASK_DAILY_REPORTS.txt
+================================================================================

@@ -1,0 +1,65 @@
+================================================================================
+TASK ID:     16-05
+TASK NAME:   Robustness Testing
+PHASE:       16 — Validation
+================================================================================
+
+OBJECTIVE:
+    Implement RobustnessTester that subjects the backtest to stress conditions:
+    higher spread, higher slippage, and different market regimes to ensure
+    the strategy does not catastrophically fail under adverse conditions.
+
+CONTEXT:
+    ROBUSTNESS TESTS:
+    1. 2× spread: double all spread costs
+    2. 5× slippage: multiply slippage by 5
+    3. Bull market period only (2020–2021)
+    4. Bear market period only (2022)
+    5. High volatility period only
+    6. Low volatility period only
+
+    Strategy should remain profitable (or at worst near breakeven) under
+    2× spread and 5× slippage. If it goes deeply negative: NOT robust.
+
+DEPENDENCIES:
+    - Phase 15 BacktestEngine, RealisticExecutionSimulator
+
+FILES TO CREATE:
+    validation/robustness_testing.py
+    results/robustness/
+
+FILES FORBIDDEN TO MODIFY:
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class RobustnessTester:
+        run_all_tests(base_config) -> RobustnessReport
+
+    RobustnessReport:
+        test_results: list[RobustnessTestResult]
+        overall_verdict: str   # "ROBUST", "FRAGILE", "ACCEPTABLE"
+
+    RobustnessTestResult:
+        test_name: str
+        base_pnl: float
+        stressed_pnl: float
+        degradation_pct: float
+        passed: bool   # degradation < 50% = passed
+
+ACCEPTANCE CRITERIA:
+    [ ] All 6 stress tests run
+    [ ] Results compared to baseline
+    [ ] FRAGILE verdict blocks Phase 21 progression
+    [ ] Phase 16 acceptance criteria met
+
+DEFINITION OF DONE:
+    [ ] robustness_testing.py created
+    [ ] Phase 16 results saved
+    [ ] Phase 16 COMPLETE in ROADMAP/00_PROJECT_STATUS.txt
+    [ ] *** HUMAN REVIEW REQUIRED before Phase 21 ***
+
+NEXT TASK:
+    Begin Phase 17 — Self Improvement
+    Start with: ROADMAP/17_SELF_IMPROVEMENT/01_PHASE_OVERVIEW.txt
+================================================================================

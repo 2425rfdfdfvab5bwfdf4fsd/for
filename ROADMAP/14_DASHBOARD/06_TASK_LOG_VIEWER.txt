@@ -1,0 +1,49 @@
+================================================================================
+TASK ID:     14-06
+TASK NAME:   Log Viewer
+PHASE:       14 — Dashboard
+================================================================================
+
+OBJECTIVE:
+    Build the log viewer page that displays the bot's recent log output with
+    level filtering and search capability.
+
+DEPENDENCIES:
+    - 14-01 Backend API (/api/logs)
+
+FILES TO CREATE:
+    app/dashboard/templates/logs.html
+    app/dashboard/static/js/logs.js
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+PAGE FEATURES:
+    - Log level filter buttons: ALL | DEBUG | INFO | WARNING | ERROR | CRITICAL
+    - Text search box (client-side filtering)
+    - Auto-scroll to bottom toggle
+    - Auto-refresh every 15 seconds
+    - Color-coded by level:
+        DEBUG:    gray
+        INFO:     white
+        WARNING:  yellow
+        ERROR:    orange
+        CRITICAL: red (bold)
+    - Line count indicator: "Showing last 500 lines"
+    - Timestamp | Level | Module | Message columns
+
+ACCEPTANCE CRITERIA:
+    [ ] Log lines displayed with correct colors
+    [ ] Level filter works
+    [ ] Search works (client-side)
+    [ ] Auto-refresh functional
+
+DEFINITION OF DONE:
+    [ ] logs.html and logs.js created
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 14-07 — TASK_HEALTH_MONITOR.txt
+================================================================================

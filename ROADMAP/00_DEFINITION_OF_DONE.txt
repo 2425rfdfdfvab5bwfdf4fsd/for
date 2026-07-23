@@ -1,0 +1,325 @@
+================================================================================
+DEFINITION OF DONE
+================================================================================
+Project: MT5 Automated Forex Trading Bot
+
+A phase is NOT complete simply because code was generated.
+A task is NOT complete simply because the agent reported success.
+
+================================================================================
+TASK-LEVEL DEFINITION OF DONE
+================================================================================
+
+A task is COMPLETE only when ALL of the following are true:
+
+  □ Implementation exists (the code has been written)
+  □ Code is syntactically valid (no Python syntax errors)
+  □ All imports resolve correctly
+  □ The module can be imported: python -c "import app.[module]"
+  □ All specified tests pass: pytest tests/[relevant_test_file].py
+  □ Edge cases specified in the task are tested
+  □ No critical errors remain (warnings are acceptable if documented)
+  □ Scope was respected (no unrelated files were modified)
+  □ No hardcoded secrets or credentials
+  □ Code follows patterns in CODE_STANDARDS.md
+  □ Acceptance criteria from the task file are satisfied
+  □ Task marked [✓] in ROADMAP/00_PROJECT_STATUS.txt
+
+================================================================================
+PHASE-LEVEL DEFINITION OF DONE
+================================================================================
+
+A phase is COMPLETE only when ALL tasks in the phase are [✓] DONE, AND:
+
+  □ All phase tests pass (full test run for the phase scope)
+  □ Integration with previously completed phases works
+  □ No regressions introduced in previously working code
+  □ Phase acceptance criteria are satisfied
+  □ All files expected to be created exist
+  □ No files were unexpectedly modified outside the phase scope
+  □ Phase marked [✓] in ROADMAP/00_PROJECT_STATUS.txt
+  □ Checkpoint created
+  □ Known limitations documented
+
+================================================================================
+PHASE-SPECIFIC COMPLETION CRITERIA
+================================================================================
+
+PHASE 01 — PROJECT DISCOVERY: DONE when:
+  □ Complete file inventory exists
+  □ Requirements traceability matrix created
+  □ Any existing code is understood and documented
+
+PHASE 02 — PROJECT FOUNDATION: DONE when:
+  □ Project folder structure exists
+  □ .env.example is complete with all settings
+  □ requirements.txt lists all dependencies
+  □ All context files created (replit.md, AI_RULES.md, ARCHITECTURE.md, etc.)
+  □ Logging system works (creates log files)
+  □ Configuration loads without errors
+
+PHASE 03 — MT5 INTEGRATION: DONE when:
+  □ MT5 connection module exists with full mock support for testing
+  □ Symbol discovery logic implemented
+  □ Market data fetch (OHLCV) works with mock data
+  □ Connection recovery logic implemented
+  □ Account validation logic implemented
+  □ All MT5 tests pass with mocked MT5
+
+PHASE 04 — DATA LAYER: DONE when:
+  □ SQLite database initializes correctly
+  □ All tables created (trades, positions, risk_state, signals, etc.)
+  □ All CRUD repositories work
+  □ Database persists and reloads correctly
+  □ Repository tests pass
+
+PHASE 05 — STRATEGY ENGINE: DONE when:
+  □ Swing high/low detection works with unit tests
+  □ BOS detection works with unit tests
+  □ CHoCH detection works with unit tests
+  □ Liquidity sweep detection works
+  □ Equal highs/lows detection works
+  □ Order Block detection works
+  □ FVG detection works
+  □ Displacement measurement works
+  □ EMA calculation correct
+  □ ATR calculation correct
+  □ Market regime classifier works
+  □ Signal engine assembles complete setups
+  □ ALL strategy functions have algorithmic definitions (no vague rules)
+  □ All strategy tests pass with deterministic test data
+
+PHASE 06 — CONFLUENCE ENGINE: DONE when:
+  □ 10-factor scorer produces consistent results
+  □ Minimum threshold (8/10) enforced
+  □ Quality grades (A+/A/B/C/REJECTED) work correctly
+  □ Signal deduplication prevents repeated signals
+  □ Cooldown system works
+  □ All confluence tests pass
+
+PHASE 07 — RISK ENGINE: DONE when:
+  □ Position sizing correctly calculates lot size for 0.5% risk
+  □ Calculation works for all three pairs (EURUSD/GBPUSD/USDJPY)
+  □ SL calculation uses structure + ATR buffer
+  □ TP calculation uses structure/liquidity targets
+  □ R:R validation enforces 1:2 minimum
+  □ Daily trade counter works correctly across restarts
+  □ Daily loss limit (2%) enforced correctly
+  □ Consecutive loss protection (2 losses) works
+  □ Correlation check works for all pair combinations
+  □ Margin safety checks work
+  □ All risk tests pass — especially edge cases
+
+PHASE 08 — FILTERS: DONE when:
+  □ Session filter correctly identifies London/New York hours
+  □ Session filter handles DST transitions correctly
+  □ Spread filter works per-pair
+  □ News filter works (both automatic and manual modes)
+  □ Volatility filter (ATR-based) works
+  □ Friday/overnight cutoffs work
+  □ All filter tests pass
+
+PHASE 09 — EXECUTION ENGINE: DONE when:
+  □ Order validation checks all broker constraints
+  □ Market order execution submits correctly (with mock MT5)
+  □ Post-execution verification checks order result
+  □ Duplicate trade prevention works
+  □ Orphan position recovery works
+  □ No duplicate trade possible in any test scenario
+  □ Execution tests pass including failure scenarios
+
+PHASE 10 — POSITION MANAGEMENT: DONE when:
+  □ Position manager tracks all bot-owned positions
+  □ Break-even logic triggers at correct R-multiple
+  □ Partial profit (optional) triggers correctly when enabled
+  □ Trailing stop follows correct rules
+  □ Trade expiration works
+  □ Position manager handles restarts gracefully
+  □ Position management tests pass
+
+PHASE 11 — AUTOMATION: DONE when:
+  □ Main bot loop runs continuously without crashing
+  □ Efficient scan cycle (H4 analyzed less often than M5)
+  □ Singleton protection prevents double execution
+  □ Watchdog detects frozen bot and attempts restart
+  □ Heartbeat emits on schedule
+  □ Auto-recovery reconnects MT5 correctly
+  □ Graceful shutdown saves state cleanly
+  □ Automation tests pass
+
+PHASE 12 — NOTIFICATIONS: DONE when:
+  □ Telegram sends bot started/stopped/trade open/close messages
+  □ Telegram failure does NOT stop trading
+  □ Daily report generates correctly and is sent via Telegram
+  □ Weekly report generates correctly
+  □ Monthly report generates correctly
+  □ All notification tests pass (with mocked Telegram)
+
+PHASE 13 — TRADE JOURNAL: DONE when:
+  □ Every trade is fully recorded in SQLite
+  □ Every rejected signal is recorded with reason
+  □ Missed-trade analysis runs post-session
+  □ Screenshot system works (when enabled)
+  □ Journal tests pass
+
+PHASE 14 — DASHBOARD: DONE when:
+  □ FastAPI server starts without errors
+  □ Overview page shows correct bot status
+  □ Market scanner shows pair status + scores
+  □ Open positions page shows live positions
+  □ Trade history page shows past trades
+  □ Analytics page shows win rate, profit factor, etc.
+  □ Log viewer shows recent logs
+  □ Health monitor shows component status
+  □ "Why no trade?" panel shows current reason
+  □ Dashboard tests pass
+  □ run_dashboard.bat works on Windows (documented)
+
+PHASE 15 — BACKTESTING: DONE when:
+  □ Historical data loader fetches and caches OHLCV data
+  □ Backtest engine uses same strategy logic as live bot
+  □ Execution simulation includes spread, slippage
+  □ No look-ahead bias in any scenario (verified by code review)
+  □ All performance metrics calculated correctly
+  □ HTML report generated
+  □ CSV trade list generated
+  □ run_backtest.bat works on Windows (documented)
+  □ Backtest tests pass
+
+PHASE 16 — VALIDATION: DONE when:
+  □ In-sample and out-of-sample data are strictly separated
+  □ Walk-forward test runner works
+  □ Overfitting check flags suspicious parameter curves
+  □ Robustness test across different years/conditions runs
+  □ Results clearly labeled (in-sample vs out-of-sample)
+  □ Validation tests pass
+
+PHASE 17 — SELF-IMPROVEMENT: DONE when:
+  □ Performance analytics engine produces segment breakdowns
+  □ Minimum evidence gates enforced (20 trades, 8/segment)
+  □ Recommendation engine generates human-readable output
+  □ NO automatic parameter changes made by the system
+  □ Self-improvement tests pass
+
+PHASE 18 — WINDOWS AUTOMATION: DONE when:
+  □ setup.bat installs everything from scratch on a clean Windows system
+  □ configure.bat walks through all configuration options
+  □ start_bot.bat starts the bot correctly
+  □ stop_bot.bat stops the bot gracefully
+  □ restart_bot.bat restarts cleanly
+  □ status.bat shows current bot status
+  □ run_dashboard.bat starts the dashboard
+  □ run_backtest.bat runs the backtest
+  □ run_tests.bat runs the test suite
+  □ update.bat updates safely
+  □ enable_autostart.bat configures Windows Task Scheduler
+  □ disable_autostart.bat removes the Task Scheduler entry
+  □ All .bat files are idempotent (safe to run multiple times)
+
+PHASE 19 — TESTING: DONE when:
+  □ All unit tests pass: pytest tests/unit/
+  □ All integration tests pass: pytest tests/integration/
+  □ All failure tests pass: pytest tests/failure/
+  □ All recovery tests pass: pytest tests/recovery/
+  □ Test coverage report generated
+  □ No critical test failures remain
+  □ run_tests.bat works and shows results clearly
+
+PHASE 20 — SECURITY: DONE when:
+  □ No secrets in any Python file
+  □ .env is in .gitignore
+  □ No secrets appear in log output
+  □ LIVE_TRADING=true is required for real trading (cannot be bypassed)
+  □ Account verification works in live mode
+  □ Input validation on all external data sources (MT5 data, Telegram, news)
+  □ Security audit checklist complete
+
+PHASE 21 — FINAL VALIDATION: DONE when:
+  □ Bot runs on MT5 demo account for at least 1 week without crashes
+  □ All test scenarios from test suite pass
+  □ No duplicate trades occurred during demo run
+  □ Daily reports generated correctly
+  □ Telegram notifications worked correctly
+  □ Dashboard showed correct information
+  □ Recovery scenarios worked (manual MT5 disconnect + reconnect)
+  □ Go/No-go checklist completed and signed off by user
+
+PHASE 22 — DOCUMENTATION: DONE when:
+  □ README.md is complete and accurate
+  □ User guide covers all setup steps
+  □ Troubleshooting guide covers common problems
+  □ Operations guide covers daily/weekly maintenance
+  □ All .bat file purposes are documented
+
+================================================================================
+PROJECT-LEVEL DEFINITION OF DONE
+================================================================================
+
+The ENTIRE PROJECT is complete only when ALL of the following are true:
+
+TECHNICAL REQUIREMENTS:
+  □ All 22 phases are [✓] COMPLETE
+  □ All critical tests pass
+  □ No look-ahead bias identified in backtesting
+  □ No critical risk-management bugs found
+  □ MT5 execution is validated on demo account
+  □ Recovery scenarios are validated
+  □ Duplicate trade protection is validated
+
+TRADING VALIDATION:
+  □ Backtesting completed with at least 2 years of data
+  □ Walk-forward validation completed
+  □ Out-of-sample performance documented
+  □ Performance metrics (win rate, profit factor, drawdown) documented
+  □ Performance labeled clearly as in-sample vs out-of-sample
+  □ 55–65% win rate target NOT claimed as guaranteed
+  □ Positive expectancy demonstrated in out-of-sample data
+
+DEMO VALIDATION:
+  □ Bot ran on demo account for minimum 1–2 weeks
+  □ No crashes or unexpected behavior
+  □ All safety controls verified (daily limits, consecutive losses, etc.)
+  □ Telegram notifications verified
+  □ Dashboard verified
+
+WINDOWS SETUP:
+  □ setup.bat works on clean Windows 10/11
+  □ configure.bat guides through all options
+  □ All .bat files work correctly
+  □ Autostart tested
+
+DOCUMENTATION:
+  □ README complete
+  □ User guide complete
+  □ Troubleshooting guide complete
+  □ Operations guide complete
+
+LIVE TRADING READINESS (separate checklist):
+  □ Demo validation passed
+  □ Risk parameters reviewed and approved by user
+  □ LIVE_TRADING=true explicitly set by user
+  □ Account verification configured
+  □ Emergency stop procedure documented
+  □ User understands that past performance does not guarantee future results
+
+================================================================================
+WHAT "DONE" IS NOT
+================================================================================
+
+"Done" is NOT:
+  ✗ "The agent says it's complete"
+  ✗ "The code looks reasonable"
+  ✗ "I didn't get an error"
+  ✗ "It worked once in manual testing"
+  ✗ "The tests I wrote pass"
+
+"Done" IS:
+  ✓ All specified tests pass
+  ✓ Edge cases tested
+  ✓ Code reviewed by a human (you)
+  ✓ Acceptance criteria verified
+  ✓ No scope violations
+
+================================================================================
+END OF DEFINITION OF DONE
+================================================================================

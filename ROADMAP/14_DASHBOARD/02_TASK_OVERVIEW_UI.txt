@@ -1,0 +1,70 @@
+================================================================================
+TASK ID:     14-02
+TASK NAME:   Dashboard Overview UI
+PHASE:       14 — Dashboard
+================================================================================
+
+OBJECTIVE:
+    Build the main dashboard overview page (index.html) that shows the bot's
+    live status, key metrics, and today's trading summary in a clean layout.
+
+CONTEXT:
+    Auto-refreshes every 30 seconds via JavaScript.
+    Responsive layout (desktop-first, readable on laptop screen).
+    Dark theme preferred for trading environment.
+
+DEPENDENCIES:
+    - 14-01 Backend API
+
+FILES TO CREATE:
+    app/dashboard/templates/index.html
+    app/dashboard/templates/base.html
+    app/dashboard/static/css/dashboard.css
+    app/dashboard/static/js/dashboard.js
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+OVERVIEW PAGE SECTIONS:
+
+    1. HEADER BAR
+       Bot name | Mode (DEMO/LIVE) | Status indicator | Last updated time
+
+    2. STATUS CARDS (top row)
+       [ BOT STATUS ]  [ MT5 STATUS ]  [ SESSION ]  [ TRADING ALLOWED ]
+       RUNNING/STOPPED  CONNECTED       LONDON        YES/NO
+       Color: Green/Red based on status
+
+    3. DAILY METRICS (second row)
+       [ TRADES ]    [ P&L ]       [ DAILY LOSS ]   [ CONSECUTIVE LOSSES ]
+       2 / 3         +$75.50       0.38% / 2%        0 / 2
+       [Equity: $20,075.50]
+
+    4. OPEN POSITIONS TABLE
+       Symbol | Dir | Entry | Current P&L | SL | TP2 | Duration | Score
+
+    5. TODAY'S TRADE HISTORY (collapsed by default)
+       Recent trades table
+
+IMPLEMENTATION NOTES:
+    - Use fetch() API for all data calls
+    - Show loading spinner while fetching
+    - Show "BOT OFFLINE" banner if /api/status returns stale heartbeat
+    - No jQuery — pure vanilla JS
+
+ACCEPTANCE CRITERIA:
+    [ ] Overview page renders without errors
+    [ ] Status cards update on refresh
+    [ ] Open positions table populated
+    [ ] Bot offline state handled gracefully
+
+DEFINITION OF DONE:
+    [ ] index.html, base.html, dashboard.css, dashboard.js created
+    [ ] Page renders correctly in browser
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 14-03 — TASK_MARKET_SCANNER.txt
+================================================================================

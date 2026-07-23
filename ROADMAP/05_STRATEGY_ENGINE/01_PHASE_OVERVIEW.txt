@@ -1,0 +1,74 @@
+================================================================================
+PHASE 05 — STRATEGY ENGINE
+================================================================================
+PHASE NAME:       Strategy Engine
+PHASE OBJECTIVE:  Implement all SMC/ICT strategy components with explicit,
+                  deterministic algorithmic definitions. Every concept must
+                  be objectively programmable — no vague rules allowed.
+
+WHY THIS PHASE EXISTS:
+  The strategy engine is the analytical brain of the bot. It detects
+  market structure, identifies high-probability setups, and generates
+  trade signals. All logic must be deterministic and backtestable — the
+  same code runs in both live and backtest modes.
+
+DEPENDENCIES:     Phase 03 (market data), Phase 04 (data layer)
+
+CRITICAL RULE — ALGORITHMIC DEFINITIONS REQUIRED:
+  Every strategy concept must have an explicit definition:
+  - What qualifies it (exact conditions)
+  - How it is detected (exact algorithm)
+  - When it is invalidated
+  - How freshness/age is determined
+
+  FORBIDDEN: "detect a strong order block" (vague)
+  REQUIRED:  See task files for exact algorithmic definitions
+
+INPUTS:
+  - app/mt5/market_data.py (OHLCV DataFrames)
+  - app/config.py (strategy parameters)
+
+OUTPUTS:
+  - app/strategy/market_structure.py
+  - app/strategy/bos_choch.py
+  - app/strategy/liquidity.py
+  - app/strategy/order_blocks.py
+  - app/strategy/fvg.py
+  - app/strategy/displacement.py
+  - app/strategy/indicators.py
+  - app/strategy/market_regime.py
+  - app/strategy/signal_engine.py
+  - tests/unit/test_strategy_*.py (one per module)
+
+FILES THAT MUST NOT BE MODIFIED:
+  app/mt5/, app/database/, app/config.py, app/logger.py
+
+TASK ORDER (sequential — each builds on previous):
+  01_TASK_MARKET_STRUCTURE.txt
+  02_TASK_BOS_CHoCH.txt
+  03_TASK_LIQUIDITY.txt
+  04_TASK_ORDER_BLOCKS.txt
+  05_TASK_FVG.txt
+  06_TASK_DISPLACEMENT.txt
+  07_TASK_EMA_ATR.txt
+  08_TASK_MARKET_REGIME.txt
+  09_TASK_SIGNAL_ENGINE.txt
+
+TESTING REQUIREMENTS:
+  □ Each module tested with synthetic OHLCV data (no real MT5 needed)
+  □ Known patterns injected into test data to verify detection
+  □ Edge cases: flat markets, sudden spikes, gaps
+
+ACCEPTANCE CRITERIA:
+  □ All strategy functions are deterministic (same input → same output always)
+  □ No lookahead bias (decisions only use data up to current candle)
+  □ All tests pass with synthetic data
+
+KNOWN RISKS:
+  - SMC/ICT concepts are subjective in practice — must pin exact rules
+  - Look-ahead bias is a common mistake; each function must only see past data
+  - Parameter sensitivity: document which parameters have high impact
+
+ROLLBACK STRATEGY:
+  Each task file is independent. Delete and redo the specific module.
+================================================================================

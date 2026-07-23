@@ -1,0 +1,96 @@
+================================================================================
+TASK ID:     21-01
+TASK NAME:   Production Readiness Check
+PHASE:       21 — Final Validation
+================================================================================
+
+OBJECTIVE:
+    Implement ProductionReadinessChecker and create PRODUCTION_CHECKLIST.md
+    that programmatically verifies all critical system components are ready
+    for production use.
+
+CONTEXT:
+    This is a comprehensive automated checklist. It does not make judgment
+    calls — it verifies objective, measurable criteria.
+
+DEPENDENCIES:
+    - All phases 02–20 complete
+
+FILES TO CREATE:
+    validation/production_readiness.py
+    docs/PRODUCTION_CHECKLIST.md
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    ROADMAP/
+
+PRODUCTION READINESS CHECKS:
+
+    CONFIGURATION:
+    [ ] .env file exists and has all required variables
+    [ ] TRADING_MODE is set
+    [ ] All symbols configured and valid
+    [ ] Risk parameters within safe bounds
+
+    CODE QUALITY:
+    [ ] All unit tests pass (0 failures)
+    [ ] All integration tests pass
+    [ ] Code coverage >= 80% on core modules
+    [ ] No critical security issues
+
+    MT5 INTEGRATION:
+    [ ] MT5 connection tested successfully
+    [ ] All symbols available and tradeable
+    [ ] Account validated
+    [ ] Order execution tested (paper order)
+
+    RISK ENGINE:
+    [ ] Position sizing formula verified
+    [ ] Daily limits enforced correctly
+    [ ] Consecutive loss protection active
+
+    AUTOMATION:
+    [ ] Main loop runs 100 iterations without error (dry run)
+    [ ] Singleton guard works
+    [ ] Watchdog monitoring active
+    [ ] Heartbeat updating correctly
+
+    VALIDATION:
+    [ ] Backtest completed
+    [ ] Out-of-sample results acceptable (not FAIL)
+    [ ] Walk-forward consistency >= 50%
+
+    SECURITY:
+    [ ] Live trading guards tested
+    [ ] No secrets in logs
+    [ ] .gitignore configured
+
+    NOTIFICATIONS:
+    [ ] Telegram test message sent successfully
+    [ ] Daily report template verified
+
+DETAILED REQUIREMENTS:
+    class ProductionReadinessChecker:
+        run_all_checks(config, mt5, db) -> ReadinessReport
+
+    ReadinessReport:
+        total_checks: int
+        passed: int
+        failed: int
+        warnings: int
+        blocking_failures: list[str]
+        overall_verdict: str   # "READY", "NOT_READY", "NEEDS_REVIEW"
+
+ACCEPTANCE CRITERIA:
+    [ ] All checks run programmatically
+    [ ] Blocking failures prevent "READY" verdict
+    [ ] PRODUCTION_CHECKLIST.md documents all checks
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] production_readiness.py created
+    [ ] PRODUCTION_CHECKLIST.md created
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 21-02 — TASK_DEMO_READINESS.txt
+================================================================================

@@ -1,0 +1,126 @@
+================================================================================
+TASK ID:     22-04
+TASK NAME:   Operations Guide
+PHASE:       22 — Documentation
+================================================================================
+
+OBJECTIVE:
+    Create an operations guide covering the daily, weekly, and monthly
+    operational procedures for running the bot safely in production.
+
+DEPENDENCIES:
+    - 22-03 Troubleshooting Guide complete
+
+FILES TO CREATE:
+    docs/OPERATIONS_GUIDE.md
+
+FILES FORBIDDEN TO MODIFY:
+    app/
+    ROADMAP/
+
+OPERATIONS GUIDE SECTIONS:
+
+    1. DAILY OPERATIONS CHECKLIST
+       Before market open (07:00 UTC):
+       [ ] Check status.bat — bot running?
+       [ ] Check Telegram — any overnight alerts?
+       [ ] Check dashboard health page
+       [ ] Check MT5 connection
+
+       During session:
+       [ ] Monitor Telegram for trade notifications
+       [ ] Check dashboard once per hour (optional)
+
+       After session (20:30 UTC):
+       [ ] Review daily Telegram report
+       [ ] Check dashboard analytics
+       [ ] Review any unusual events in log viewer
+
+    2. WEEKLY OPERATIONS
+       [ ] Review weekly analytics report
+       [ ] Review rejection journal (common rejection reasons)
+       [ ] Review missed trades analysis
+       [ ] Check log files for WARNING/ERROR patterns
+       [ ] Run run_tests.bat to verify system integrity
+       [ ] Review any parameter change recommendations from self-improvement
+
+    3. MONTHLY OPERATIONS
+       [ ] Generate monthly performance report
+       [ ] Compare to previous months
+       [ ] Review backtesting results vs actual performance
+       [ ] Consider (with caution) parameter adjustments
+       [ ] Check for system updates
+       [ ] Review security (rotate Telegram token if needed)
+       [ ] Backup data directory
+
+    4. PARAMETER ADJUSTMENT PROCESS
+       NEVER adjust parameters based on:
+       - One or two trades
+       - A few days of performance
+       - Intuition or "feels"
+
+       ONLY adjust parameters after:
+       - At least 30 trades under current parameters
+       - Self-improvement analytics shows evidence
+       - Evidence gates classify evidence as MODERATE or STRONG
+       - New backtesting run with proposed parameters
+       - Out-of-sample validation of new parameters
+
+    5. EMERGENCY PROCEDURES
+       Bot placing unexpected trades:
+       → stop_bot.bat immediately
+       → Check what happened in dashboard logs
+       → Do not restart until root cause identified
+
+       Account balance dropping rapidly:
+       → stop_bot.bat immediately
+       → Check MT5 open positions
+       → Close positions manually if needed
+       → Never restart in live mode without full investigation
+
+       MT5 not connecting:
+       → Check MT5 is open and logged in
+       → Check broker server status
+       → Check internet connection
+       → Bot will auto-reconnect when MT5 is available again
+
+    6. BACKUP AND RECOVERY
+       What to backup: data/ directory, .env file, config files
+       How to backup: update.bat creates automatic backup
+       Manual backup: scripts/backup.py
+       Backup frequency: at minimum weekly
+
+    7. PERFORMANCE BENCHMARKS
+       What "good" looks like after 3+ months:
+       - Win rate: 50-65% (target 55-65%)
+       - Profit factor: > 1.3
+       - Max drawdown: < 10%
+       - Monthly consistency: >= 60% profitable months
+
+       If performance is consistently below benchmark:
+       - Do not increase risk
+       - Reduce to minimum position size
+       - Review strategy parameters with backtest evidence
+
+    8. WHEN TO STOP LIVE TRADING
+       Stop immediately if:
+       - Drawdown exceeds 10% of account
+       - 5+ consecutive losses
+       - Bot places orders not matching strategy
+       - Any unresolved critical bug
+
+ACCEPTANCE CRITERIA:
+    [ ] All operational procedures documented
+    [ ] Emergency procedures clear and actionable
+    [ ] Performance benchmarks honest and realistic
+    [ ] Risk warnings present throughout
+
+DEFINITION OF DONE:
+    [ ] docs/OPERATIONS_GUIDE.md created
+    [ ] Phase 22 acceptance criteria met
+    [ ] Phase 22 COMPLETE in ROADMAP/00_PROJECT_STATUS.txt
+
+    *** THE COMPLETE ROADMAP IS NOW BUILT ***
+    All 22 phases documented. Begin with Phase 01 (Project Discovery).
+    Follow tasks sequentially. Do not skip phases.
+================================================================================

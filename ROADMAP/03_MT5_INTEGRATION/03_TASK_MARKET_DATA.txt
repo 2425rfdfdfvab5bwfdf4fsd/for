@@ -1,0 +1,119 @@
+================================================================================
+TASK: 03-03 — MARKET DATA
+================================================================================
+TASK ID:        03-03
+TASK NAME:      Market Data Fetching + Caching
+PHASE:          03 — MT5 Integration
+OBJECTIVE:      Create app/mt5/market_data.py to fetch OHLCV (candlestick)
+                data from MT5 for all required timeframes, with intelligent
+                caching to avoid re-fetching unchanged higher timeframe data.
+
+CONTEXT:
+  The strategy engine needs H4, H1, M15, M5 OHLCV data for all 3 pairs.
+  Re-fetching all data every minute wastes resources. The caching system
+  must detect when a new candle has formed on each timeframe and only
+  re-fetch when necessary. Data is returned as pandas DataFrames.
+
+DEPENDENCIES:   Task 03-02 complete
+PREVIOUS TASKS: 03-02 SYMBOL DISCOVERY
+
+FILES TO INSPECT:   app/config.py, app/mt5/connection.py, app/mt5/symbols.py
+FILES TO CREATE:
+  app/mt5/market_data.py
+  tests/unit/test_mt5_market_data.py
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: app/mt5/connection.py, app/mt5/symbols.py
+
+================================================================================
+DETAILED REQUIREMENTS
+================================================================================
+
+TIMEFRAME CONSTANTS (match MT5):
+  TIMEFRAME_M5  = mt5.TIMEFRAME_M5   (5 minutes)
+  TIMEFRAME_M15 = mt5.TIMEFRAME_M15  (15 minutes)
+  TIMEFRAME_H1  = mt5.TIMEFRAME_H1   (1 hour)
+  TIMEFRAME_H4  = mt5.TIMEFRAME_H4   (4 hours)
+
+class MarketDataFetcher:
+
+    def __init__(self, config: Config, connection: MT5Connection,
+                 symbol_manager: SymbolManager):
+        self._cache: dict = {}        # symbol+timeframe -> (DataFrame, last_bar_time)
+        self._cache_expiry: dict = {} # timeframe -> seconds_until_new_bar
+
+    def get_ohlcv(self, symbol: str, timeframe: int,
+                  count: int = 200) -> Optional[pd.DataFrame]:
+        """
+        Fetch OHLCV data. Returns DataFrame with columns:
+          time (datetime, UTC), open, high, low, close, tick_volume
+        
+        Uses cache: only re-fetches when a new candle has formed.
+        Returns None on failure.
+        Logs data quality issues (gaps, unusual values).
+        """
+
+    def get_current_bar(self, symbol: str,
+                        timeframe: int) -> Optional[pd.Series]:
+        """Returns the most recent completed candle as a Series."""
+
+    def get_spread_pips(self, symbol: str) -> Optional[float]:
+        """Returns current spread in pips for the symbol."""
+
+    def invalidate_cache(self, symbol: str = None,
+                         timeframe: int = None) -> None:
+        """Clears cache (all or specific symbol/timeframe)."""
+
+    def is_data_fresh(self, symbol: str, timeframe: int) -> bool:
+        """
+        Returns True if the data is recent enough.
+        For M5: data should be less than 6 minutes old.
+        For H4: data should be less than 5 hours old.
+        """
+
+CACHING LOGIC:
+  - H4 candles: refresh every 4 hours (seconds_until_new_bar = 4*3600)
+  - H1 candles: refresh every 1 hour
+  - M15 candles: refresh every 15 minutes
+  - M5 candles: refresh every 5 minutes
+  - Actually check bar open time: cache valid if current time < last_bar_time + timeframe_seconds
+
+DataFrame REQUIREMENTS:
+  - time column is datetime objects (UTC, timezone-aware preferred)
+  - index is integer (not time-based, for compatibility)
+  - Last row is the MOST RECENT completed candle (not the current incomplete one)
+  - data = data[:-1]  (drop current forming candle)
+  - Minimum 100 candles fetched (for indicator calculations)
+
+DATA VALIDATION:
+  - Reject DataFrame if fewer than 50 rows
+  - Reject DataFrame if any OHLCV column has NaN values
+  - Log a warning if gaps detected (missing candles)
+  - Verify high >= open, high >= close, low <= open, low <= close
+
+================================================================================
+TEST DATA
+================================================================================
+Create a test helper: tests/unit/helpers/make_ohlcv.py
+  def make_test_ohlcv(n=200, base_price=1.1000) -> pd.DataFrame:
+      """Generate synthetic OHLCV data for testing."""
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+python -m py_compile app/mt5/market_data.py
+pytest tests/unit/test_mt5_market_data.py -v
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ get_ohlcv returns pandas DataFrame with correct columns
+□ Caching works (second call doesn't fetch when cache is fresh)
+□ Data validation rejects bad data
+□ Tests pass with mocked MT5
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/03_MT5_INTEGRATION/04_TASK_CONNECTION_RECOVERY.txt
+================================================================================

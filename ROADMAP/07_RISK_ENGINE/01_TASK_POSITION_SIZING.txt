@@ -1,0 +1,93 @@
+================================================================================
+TASK ID:     07-01
+TASK NAME:   Position Sizing Calculator
+PHASE:       07 — Risk Engine
+================================================================================
+
+OBJECTIVE:
+    Implement a deterministic position sizer that calculates lot size based on
+    account equity, risk percentage, and stop-loss distance in pips.
+
+CONTEXT:
+    Formula:
+        risk_amount = account_equity * (RISK_PER_TRADE / 100)
+        pip_value   = (contract_size * tick_size) / tick_value_per_lot
+                      [obtained from MT5 symbol info]
+        lot_size    = risk_amount / (sl_pips * pip_value_per_lot)
+        lot_size    = floor(lot_size / lot_step) * lot_step  [round DOWN]
+        lot_size    = clamp(lot_size, min_lot, max_lot)
+
+    RISK_PER_TRADE default: 0.5%
+    NEVER round up — always protect capital.
+
+DEPENDENCIES:
+    - Phase 03 MT5 symbol info available
+    - Phase 02 config loaded
+
+FILES TO INSPECT:
+    app/mt5/connection.py
+    app/config.py
+
+FILES TO CREATE:
+    app/risk/position_sizer.py
+    tests/test_risk/test_position_sizer.py
+
+FILES TO MODIFY:
+    app/database/models.py    — add PositionSizeResult dataclass
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/strategy/
+    app/confluence/
+    ROADMAP/
+
+--------------------------------------------------------------------------------
+DETAILED REQUIREMENTS:
+--------------------------------------------------------------------------------
+
+CLASS: PositionSizer
+    calculate(
+        account_equity: float,
+        sl_pips: float,
+        symbol: str,
+        symbol_info: SymbolInfo   # from MT5
+    ) -> PositionSizeResult
+
+PositionSizeResult:
+    lot_size: float
+    risk_amount: float
+    pip_value_per_lot: float
+    sl_pips: float
+    max_loss_amount: float
+    within_margin: bool
+
+GUARD RAILS:
+    - If sl_pips <= 0: raise ValueError("SL pips must be positive")
+    - If account_equity <= 0: raise ValueError("Equity must be positive")
+    - If calculated lot_size < min_lot: return lot_size=0, reason="BELOW_MIN_LOT"
+    - Log all inputs and outputs for every calculation
+
+TEST REQUIREMENTS:
+    - test_standard_calculation_eurusd()
+    - test_rounds_down_not_up()
+    - test_respects_min_lot()
+    - test_respects_max_lot()
+    - test_zero_sl_raises()
+    - test_zero_equity_raises()
+
+VALIDATION COMMANDS:
+    pytest tests/test_risk/test_position_sizer.py -v
+
+ACCEPTANCE CRITERIA:
+    [ ] Formula produces correct lot size for known EURUSD inputs
+    [ ] Always rounds DOWN to nearest lot step
+    [ ] Clamps to broker min/max lot constraints
+    [ ] All 6 tests pass
+
+DEFINITION OF DONE:
+    [ ] position_sizer.py created and tested
+    [ ] PositionSizeResult in models.py
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 07-02 — TASK_SL_TP.txt
+================================================================================

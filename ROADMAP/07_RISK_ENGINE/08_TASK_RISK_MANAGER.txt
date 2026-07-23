@@ -1,0 +1,86 @@
+================================================================================
+TASK ID:     07-08
+TASK NAME:   Risk Manager (Integration)
+PHASE:       07 — Risk Engine
+================================================================================
+
+OBJECTIVE:
+    Implement RiskManager as the single entry point that orchestrates all 7
+    risk sub-components. A trade must pass ALL checks to be APPROVED.
+
+CONTEXT:
+    RiskManager.validate(scored_signal, context) runs checks in this order:
+    1. DailyLimitsChecker
+    2. ConsecutiveLossChecker
+    3. CorrelationFilter
+    4. SLTPCalculator
+    5. RRValidator
+    6. PositionSizer
+    7. MarginSafetyChecker
+
+    First failure stops the chain (short-circuit). Result includes which check
+    failed and why, for logging and journal entry.
+
+DEPENDENCIES:
+    - 07-01 through 07-07 all complete
+
+FILES TO CREATE:
+    app/risk/risk_manager.py
+    tests/test_risk/test_risk_manager.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/strategy/
+    app/confluence/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class RiskManager:
+        validate(
+            scored_signal: ScoredSignal,
+            context: RiskContext       # equity, open positions, daily stats
+        ) -> RiskValidationResult
+
+    RiskValidationResult:
+        approved: bool
+        rejection_reason: str | None
+        failed_check: str | None
+        trade_params: TradeParameters | None  # populated only if approved
+
+    TradeParameters:
+        symbol: str
+        direction: str       # BUY or SELL
+        lot_size: float
+        entry_price: float
+        sl_price: float
+        tp1_price: float
+        tp2_price: float
+        sl_pips: float
+        rr_ratio: float
+        risk_amount: float
+
+TEST REQUIREMENTS:
+    - test_all_checks_pass_approved()
+    - test_daily_limit_fails_rejected()
+    - test_consecutive_loss_fails_rejected()
+    - test_correlation_fails_rejected()
+    - test_rr_fails_rejected()
+    - test_margin_fails_rejected()
+    - test_result_includes_trade_params_when_approved()
+
+ACCEPTANCE CRITERIA:
+    [ ] RiskManager is the sole gate before order execution
+    [ ] All 7 sub-checks are called in correct order
+    [ ] Rejected result always includes reason
+    [ ] Approved result always includes TradeParameters
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] risk_manager.py created and all integration tests pass
+    [ ] Phase 07 acceptance criteria met
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated: Phase 07 COMPLETE
+
+NEXT TASK:
+    Begin Phase 08 — Filters
+    Start with: ROADMAP/08_FILTERS/01_PHASE_OVERVIEW.txt
+================================================================================

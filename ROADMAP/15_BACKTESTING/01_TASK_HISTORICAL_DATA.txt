@@ -1,0 +1,73 @@
+================================================================================
+TASK ID:     15-01
+TASK NAME:   Historical Data Manager
+PHASE:       15 — Backtesting
+================================================================================
+
+OBJECTIVE:
+    Implement HistoricalDataManager that downloads, caches, and provides
+    clean OHLCV data for backtesting from MT5.
+
+CONTEXT:
+    Data source: MT5 copy_rates_range() function.
+    Timeframes needed: H4, H1, M15, M5 for all 3 symbols.
+    Data stored in SQLite (separate backtest database) or CSV files.
+
+    DATA QUALITY CHECKS:
+    - Detect and log gaps > 5 bars
+    - Remove duplicate timestamps
+    - Verify OHLCV values are valid (H >= L, H >= O, H >= C, etc.)
+    - Report data coverage: start date, end date, total bars, gaps
+
+DEPENDENCIES:
+    - Phase 03 MT5 connection (to download data)
+    - Phase 04 database (storage)
+    - Phase 02 config
+
+FILES TO CREATE:
+    backtesting/historical_data.py
+    backtesting/__init__.py
+    tests/test_backtesting/test_historical_data.py
+    data/historical/           (directory for CSV files)
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class HistoricalDataManager:
+        download(symbol, timeframe, from_date, to_date) -> pd.DataFrame
+        load_from_cache(symbol, timeframe) -> pd.DataFrame | None
+        save_to_cache(symbol, timeframe, df) -> None
+        validate(df) -> DataValidationResult
+
+    DataValidationResult:
+        valid: bool
+        total_bars: int
+        gaps_detected: int
+        gap_details: list[str]
+        coverage_pct: float
+        warnings: list[str]
+
+    DATA COLUMNS:
+        time (datetime UTC), open, high, low, close, tick_volume, spread
+
+TEST REQUIREMENTS:
+    - test_data_validation_passes_clean_data()
+    - test_gap_detection()
+    - test_duplicate_removal()
+    - test_ohlcv_validity_check()
+
+ACCEPTANCE CRITERIA:
+    [ ] Data downloaded from MT5 and cached
+    [ ] Gaps detected and logged
+    [ ] Invalid bars removed
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] historical_data.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 15-02 — TASK_BACKTEST_ENGINE.txt
+================================================================================

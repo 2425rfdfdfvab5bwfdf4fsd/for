@@ -1,0 +1,65 @@
+================================================================================
+TASK ID:     14-05
+TASK NAME:   Analytics Page
+PHASE:       14 — Dashboard
+================================================================================
+
+OBJECTIVE:
+    Build the analytics page with performance charts and key statistics
+    using Chart.js for visualization.
+
+DEPENDENCIES:
+    - 14-01 Backend API (/api/stats, /api/equity_curve)
+
+FILES TO CREATE:
+    app/dashboard/templates/analytics.html
+    app/dashboard/static/js/analytics.js
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+PAGE SECTIONS AND CHARTS:
+
+    1. PERIOD SELECTOR: 1D | 7D | 30D | ALL
+
+    2. KEY METRICS ROW:
+       Total Trades | Win Rate | Profit Factor | Max Drawdown | Avg R:R | Avg Score
+
+    3. EQUITY CURVE CHART (Chart.js line chart)
+       Daily equity over selected period
+
+    4. WIN/LOSS DISTRIBUTION (bar chart)
+       Wins vs Losses by symbol
+
+    5. CONFLUENCE SCORE DISTRIBUTION (histogram)
+       Distribution of accepted trade scores (8.0–10.0)
+
+    6. SESSION PERFORMANCE TABLE
+       London vs New York: trades, win rate, avg P&L
+
+    7. REJECTION SUMMARY (pie chart)
+       Top 5 rejection categories
+
+    8. TRADE HISTORY TABLE (sortable)
+       Date | Symbol | Dir | Score | Entry | Exit | P&L | R-Multiple | Duration
+
+IMPLEMENTATION NOTES:
+    - Chart.js loaded from CDN (no npm required)
+    - All charts update when period selector changes
+    - Export to CSV button for trade history table
+
+ACCEPTANCE CRITERIA:
+    [ ] All 4 charts rendered with real data
+    [ ] Period selector changes update all charts
+    [ ] Key metrics calculated correctly
+    [ ] CSV export functional
+
+DEFINITION OF DONE:
+    [ ] analytics.html and analytics.js created
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 14-06 — TASK_LOG_VIEWER.txt
+================================================================================

@@ -1,0 +1,58 @@
+================================================================================
+TASK ID:     08-04
+TASK NAME:   Volatility Filter
+PHASE:       08 — Filters
+================================================================================
+
+OBJECTIVE:
+    Implement VolatilityFilter that blocks scanning when ATR indicates
+    abnormally low or abnormally high volatility conditions.
+
+CONTEXT:
+    Normal trading requires adequate volatility to reach TP and avoid noise.
+    Extremes in either direction increase risk:
+    - Too low ATR: spread consumes too much of the expected move
+    - Too high ATR: price moves violently, SL at normal distance easily hit
+
+    ATR source: H1 ATR(14) calculated by strategy engine.
+
+    Thresholds (configurable per symbol):
+        MIN_ATR_PIPS: minimum acceptable ATR in pips (default: 5)
+        MAX_ATR_PIPS: maximum acceptable ATR in pips (default: 80)
+
+DEPENDENCIES:
+    - Phase 05 Strategy Engine: ATR values computed
+    - Phase 02 config
+
+FILES TO CREATE:
+    app/filters/volatility_filter.py
+    tests/test_filters/test_volatility.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class VolatilityFilter:
+        check(symbol: str, atr_pips: float) -> FilterResult
+
+TEST REQUIREMENTS:
+    - test_normal_atr_passes()
+    - test_atr_too_low_blocked()
+    - test_atr_too_high_blocked()
+    - test_atr_at_min_passes()
+    - test_atr_at_max_passes()
+
+ACCEPTANCE CRITERIA:
+    [ ] ATR outside thresholds blocks scanning
+    [ ] At-boundary values pass
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] volatility_filter.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 08-05 — TASK_TRADING_CUTOFFS.txt
+================================================================================

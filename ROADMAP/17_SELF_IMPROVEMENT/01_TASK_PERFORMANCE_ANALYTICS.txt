@@ -1,0 +1,72 @@
+================================================================================
+TASK ID:     17-01
+TASK NAME:   Performance Analytics
+PHASE:       17 — Self-Improvement Analytics
+================================================================================
+
+OBJECTIVE:
+    Implement PerformanceAnalytics that generates automated weekly and monthly
+    performance summaries from the trade journal database.
+
+CONTEXT:
+    Analytics run on-demand (triggered by the user via CLI or scheduled).
+    NOT real-time — runs after market hours.
+
+    OUTPUT CONTENT:
+    - Period: week/month
+    - Total trades, win rate, P&L, profit factor
+    - Best performing symbol, worst performing symbol
+    - Best performing session, worst performing session
+    - Average confluence score of winners vs losers
+    - Average R:R of winners vs losers
+    - Comparison to previous period (trend up/down)
+
+DEPENDENCIES:
+    - Phase 04 database
+    - Phase 13 trade journal
+
+FILES TO CREATE:
+    app/analytics/performance_analytics.py
+    app/analytics/__init__.py
+    tests/test_self_improvement/test_analytics.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class PerformanceAnalytics:
+        generate_weekly_report(week_start: date) -> PerformanceReport
+        generate_monthly_report(year: int, month: int) -> PerformanceReport
+        compare_periods(period_a: PerformanceReport, period_b: PerformanceReport) -> ComparisonReport
+
+    PerformanceReport:
+        period_label: str
+        total_trades: int
+        win_rate: float
+        profit_factor: float
+        total_pnl: float
+        by_symbol: dict[str, SymbolStats]
+        by_session: dict[str, SessionStats]
+        avg_score_winners: float
+        avg_score_losers: float
+        score_gap: float   # winners avg score - losers avg score
+
+TEST REQUIREMENTS:
+    - test_weekly_report_correct()
+    - test_monthly_report_correct()
+    - test_period_comparison()
+    - test_empty_period_handled()
+
+ACCEPTANCE CRITERIA:
+    [ ] Reports generated with correct aggregation
+    [ ] Empty period handled gracefully
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] performance_analytics.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 17-02 — TASK_SEGMENT_ANALYSIS.txt
+================================================================================

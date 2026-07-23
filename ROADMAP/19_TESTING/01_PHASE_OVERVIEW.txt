@@ -1,0 +1,69 @@
+================================================================================
+PHASE 19 — TESTING
+================================================================================
+
+PHASE NAME:         Testing
+PHASE OBJECTIVE:    Implement a comprehensive test suite covering unit tests,
+                    integration tests, failure simulation, recovery tests,
+                    and end-to-end pipeline tests.
+
+WHY THIS PHASE EXISTS:
+    Individual phase tests verify isolated components. This phase implements
+    cross-cutting tests that verify the entire system works together,
+    including failure modes and recovery scenarios that are critical for
+    a live trading system.
+
+    All tests MUST use mock MT5 — no live connections in automated tests.
+    Tests must be deterministic and reproducible.
+
+DEPENDENCIES:
+    - All phases 02–18 complete
+    - pytest installed
+
+INPUTS:
+    - All source modules
+    - Mock MT5 fixtures
+    - Test data (fixtures and factories)
+
+FILES EXPECTED TO BE CREATED:
+    tests/conftest.py               (shared fixtures)
+    tests/fixtures/mt5_mock.py      (MT5 mock)
+    tests/fixtures/test_data.py     (trade/signal factories)
+    tests/integration/
+    tests/integration/test_full_pipeline.py
+    tests/integration/test_risk_pipeline.py
+    tests/integration/test_execution_pipeline.py
+    tests/failure/test_mt5_failure.py
+    tests/failure/test_data_failure.py
+    tests/recovery/test_crash_recovery.py
+    tests/recovery/test_connection_recovery.py
+    tests/e2e/test_dry_run.py
+
+TASK ORDER:
+    1. 01_TASK_UNIT_TESTS.txt
+    2. 02_TASK_INTEGRATION_TESTS.txt
+    3. 03_TASK_FAILURE_TESTS.txt
+    4. 04_TASK_RECOVERY_TESTS.txt
+    5. 05_TASK_END_TO_END_TESTS.txt
+
+ACCEPTANCE CRITERIA:
+    [ ] All unit tests from phases 02–18 pass
+    [ ] Integration test: signal → confluence → risk → execution pipeline
+    [ ] Failure test: MT5 disconnection handled without crash
+    [ ] Recovery test: orphan positions adopted on startup
+    [ ] E2E dry run: full loop runs 10 iterations without error
+    [ ] Minimum 80% code coverage on core modules
+    [ ] All tests run in < 5 minutes
+    [ ] No live MT5 connections in any automated test
+
+KNOWN RISKS:
+    - MT5 mock must accurately simulate all retcodes used in execution
+    - Test isolation: each test must clean up database state
+    - Flaky tests (time-dependent) must use monkeypatching
+
+HANDOFF REQUIREMENTS:
+    Before Phase 20 (Security):
+    - All test categories implemented
+    - Test coverage report generated
+    - Zero failing tests
+================================================================================

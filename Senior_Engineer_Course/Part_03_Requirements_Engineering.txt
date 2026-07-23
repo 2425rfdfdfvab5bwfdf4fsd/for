@@ -1,0 +1,425 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 3: REQUIREMENTS ENGINEERING
+(Vague Ideas ko Precise Engineering Requirements mein Badalna)
+================================================================
+
+SEEKHNE KE MAQASID:
+- Functional aur Non-functional requirements ka farq samajhna
+- User stories aur acceptance criteria likhna
+- Edge cases aur risks identify karna
+- Vague PM requests ko engineering specs mein convert karna
+
+================================================================
+SECTION 1: REQUIREMENTS KYA HOTE HAIN?
+================================================================
+
+Requirements = Woh sab kuch jo system ko karna chahiye
+               aur kaise karna chahiye.
+
+Bina clear requirements ke:
+- Engineers galat cheez banate hain
+- Scope creep hoti hai (kaam badhta jaata hai)
+- Tests likhna mushkil hota hai
+- Launch ke baad surprises aate hain
+
+Senior engineer ka kaam:
+  "Ambiguity ko eliminate karna BEFORE coding starts."
+
+================================================================
+SECTION 2: DO TYPES KI REQUIREMENTS
+================================================================
+
+--- TYPE 1: FUNCTIONAL REQUIREMENTS ---
+Kya karna chahiye system ko?
+
+Examples:
+  - User email aur password se login kar sakta hai
+  - User apna profile edit kar sakta hai
+  - System order confirmation email bhejta hai
+  - Admin users ko ban kar sakta hai
+
+Format: "System [kya karta hai] jab [condition] ho"
+
+--- TYPE 2: NON-FUNCTIONAL REQUIREMENTS (NFRs) ---
+Kaise karna chahiye?
+
+Categories:
+
+PERFORMANCE:
+  - Page 2 seconds se kam mein load ho
+  - API response 200ms se kam
+  - System 10,000 concurrent users handle kare
+
+AVAILABILITY:
+  - System 99.9% uptime (sirf 8.7 hours downtime/year allowed)
+  - Zero downtime deployments
+
+SCALABILITY:
+  - 1 million users tak scale kare without architecture change
+  - Database reads horizontal scale ho sakein
+
+SECURITY:
+  - Passwords hashed rahen (bcrypt)
+  - HTTPS required
+  - Input sanitized ho
+
+MAINTAINABILITY:
+  - Code test coverage 80%+
+  - Documentation up to date
+  - New developer 1 din mein onboard ho sake
+
+RELIABILITY:
+  - Payments kabhi fail nahi honay chahiye silently
+  - Data loss zero tolerance
+
+COMPLIANCE:
+  - GDPR compliant
+  - User data delete request 30 din mein process ho
+
+================================================================
+SECTION 3: USER STORIES
+================================================================
+
+Format: "As a [user type], I want [goal] so that [reason]"
+
+Examples:
+
+Good User Story:
+  "As a registered user, I want to reset my password via email
+   so that I can access my account if I forget my password."
+
+Bad User Story:
+  "Password reset karo" — (koi context nahi, incomplete)
+
+Components of a Good User Story:
+  1. WHO is the user?
+  2. WHAT do they want?
+  3. WHY do they want it?
+
+================================================================
+SECTION 4: ACCEPTANCE CRITERIA
+================================================================
+
+Acceptance Criteria = Kaise pata chalega ke feature done hai?
+
+Format: GIVEN [condition] WHEN [action] THEN [result]
+
+Example — Password Reset:
+
+GIVEN user "forget password" click karta hai
+WHEN woh apna registered email enter karta hai
+THEN:
+  - System ek reset link bhejta hai (10 min valid)
+  - Email 2 minute ke andar aata hai
+  - Link ek baar use hone ke baad expire ho jaata hai
+  - Galat email pe bhi success message (security ke liye)
+  - Link expire hone ke baad clear error message
+
+GIVEN user expired link use karta hai
+WHEN link click hoti hai
+THEN: "Link expire ho gayi hai, dobara try karo" message aata hai
+
+================================================================
+SECTION 5: EDGE CASES IDENTIFY KARNA
+================================================================
+
+Senior engineer "happy path" se aage sochta hai.
+
+Happy Path: Sab kuch theek se kaam karta hai
+Edge Cases: Jab kuch unexpected ho
+
+Technique: "WHAT IF" questions poochho
+
+Example — File Upload Feature:
+
+Happy Path: User valid image upload karta hai → Success
+
+Edge Cases:
+  WHAT IF user:
+  - 100GB file upload kare? (max size limit)
+  - Executable file (.exe) upload kare? (security)
+  - 1000 files ek baar upload kare? (rate limiting)
+  - Upload ke dauraan internet disconnect ho? (resume upload)
+  - Duplicate file upload kare? (deduplication)
+  - Corrupt file upload kare? (validation)
+  - Ek aur tab mein same file upload kare? (concurrent)
+
+System:
+  WHAT IF:
+  - Storage full ho jaaye?
+  - Virus scan service down ho?
+  - Database write fail ho lekin file upload ho jaaye?
+
+================================================================
+SECTION 6: CONSTRAINTS, ASSUMPTIONS, DEPENDENCIES
+================================================================
+
+CONSTRAINTS (cheezein jo fix hain):
+  - Tech stack: Node.js + PostgreSQL (existing system)
+  - Timeline: 2 weeks
+  - Budget: Existing AWS infrastructure
+  - Team: 2 engineers
+
+ASSUMPTIONS (jo aap assume kar rahe ho):
+  - Users modern browsers use karte hain
+  - Mobile support is not required (v1)
+  - Third-party email service reliable hai
+
+  ⚠️ IMPORTANT: Assumptions explicitly document karo.
+  Agar assumption galat nikli, requirements change hogi.
+
+DEPENDENCIES:
+  - Email feature SendGrid pe dependent hai
+  - Payment feature Stripe API pe dependent
+  - Auth feature Okta ke baad implement hogi
+
+================================================================
+SECTION 7: RISKS
+================================================================
+
+Risk = Kuch jo project ko affect kar sakta hai
+
+Risk Matrix:
+  RISK                    | PROBABILITY | IMPACT | MITIGATION
+  Stripe API down ho      | Low         | High   | Retry + queue
+  Email delivery fail     | Medium      | Medium | Fallback SMTP
+  DB performance issues   | Medium      | High   | Load test pehle
+  Scope creep             | High        | Medium | Clear requirements
+
+================================================================
+SECTION 8: OUT OF SCOPE DEFINE KARNA
+================================================================
+
+YEH BAHUT ZAROORI HAI.
+
+Out of scope = Jo is release mein nahi banana
+
+Example — User Authentication Feature v1:
+  IN SCOPE:
+  - Email/password login
+  - Password reset
+  - Session management
+  - Basic RBAC (admin/user)
+
+  OUT OF SCOPE (v1):
+  - Social login (Google, GitHub)
+  - Two-factor authentication
+  - SSO
+  - Login history
+  - Device management
+
+Kyun zaroori hai:
+  - Scope creep rokta hai
+  - PM aur stakeholders ke expectations set karta hai
+  - Engineers focus rakhte hain
+  - Future roadmap clear hoti hai
+
+================================================================
+SECTION 9: SUCCESS METRICS
+================================================================
+
+Kaise pata chalega ke feature successful hai?
+
+Examples:
+
+Business Metrics:
+  - Conversion rate 5% se 8% ho jaaye
+  - Password reset emails 30% se kam complaints
+
+Technical Metrics:
+  - API response time < 200ms (p99)
+  - Error rate < 0.1%
+  - Uptime 99.9%
+
+User Metrics:
+  - Task completion rate 90%+
+  - User satisfaction score 4/5+
+
+================================================================
+SECTION 10: REAL WORLD EXERCISE
+================================================================
+
+SCENARIO:
+  Your startup is building a food delivery app.
+  PM ne kaha: "Hamen order tracking feature banana hai."
+
+TASK: Poori requirements likhni hain.
+
+---
+
+FUNCTIONAL REQUIREMENTS (kuch examples — aur likhne ki koshish karo):
+
+1. Customer real-time order status dekh sake:
+   Placed → Confirmed → Preparing → Out for Delivery → Delivered
+
+2. Customer estimated delivery time dekh sake
+
+3. Delivery driver ki live location map pe dikhe
+
+4. Customer notification receive kare jab:
+   - Order confirm ho
+   - Restaurant ne prepare karna shuru kiya
+   - Driver ne pick up kiya
+   - Driver 5 min door hai
+   - Order deliver ho gaya
+
+5. Customer restaurant ko call kar sake order page se
+
+---
+
+NON-FUNCTIONAL REQUIREMENTS:
+
+Performance:
+  - Location update har 10 second mein refresh ho
+  - Map load 3 second se kam mein
+
+Availability:
+  - 99.9% uptime (log order karte waqt down nahi hona chahiye)
+
+---
+
+USER STORY:
+  As a customer who has placed an order,
+  I want to track my delivery in real-time on a map,
+  so that I know when to be ready to receive my food.
+
+---
+
+ACCEPTANCE CRITERIA:
+
+GIVEN customer ne order place kiya
+WHEN woh "Track Order" click karta hai
+THEN:
+  - Map dikhta hai with driver's current location
+  - Estimated arrival time dikhta hai
+  - Order status bar dikhti hai
+  - Location har 10 second update hoti hai
+
+GIVEN driver ne order deliver kiya
+WHEN delivery marked as complete
+THEN:
+  - Customer ko "Delivered" notification aati hai
+  - Rating prompt aata hai
+
+---
+
+EDGE CASES:
+  - Driver ka GPS off ho jaaye?
+  - Internet connectivity weak ho?
+  - Order cancel ho delivery ke dauraan?
+  - Wrong address?
+  - Driver multiple orders deliver kar raha ho?
+
+---
+
+OUT OF SCOPE (v1):
+  - Live chat with driver
+  - Video call
+  - Order modification after placement
+  - Multiple drop-off locations
+
+================================================================
+SECTION 11: REQUIREMENTS DOCUMENT TEMPLATE
+================================================================
+
+=== PROJECT: [Feature Name] ===
+Date: [Date]
+Author: [Name]
+Status: Draft / Review / Approved
+
+OVERVIEW:
+  [1-2 line summary]
+
+GOALS:
+  - [Goal 1]
+  - [Goal 2]
+
+SUCCESS METRICS:
+  - [Metric 1]
+  - [Metric 2]
+
+FUNCTIONAL REQUIREMENTS:
+  FR-001: [Requirement]
+  FR-002: [Requirement]
+
+NON-FUNCTIONAL REQUIREMENTS:
+  NFR-001: Performance — [spec]
+  NFR-002: Security — [spec]
+
+USER STORIES:
+  US-001: As a [user], I want [goal] so that [reason]
+
+ACCEPTANCE CRITERIA:
+  [For each story]
+
+EDGE CASES:
+  - [Edge case 1]
+  - [Edge case 2]
+
+OUT OF SCOPE:
+  - [Item 1]
+  - [Item 2]
+
+ASSUMPTIONS:
+  - [Assumption 1]
+
+RISKS:
+  - [Risk] | [Probability] | [Impact] | [Mitigation]
+
+DEPENDENCIES:
+  - [Dependency 1]
+
+================================================================
+QUIZ — PART 3
+================================================================
+
+Q1: Non-functional requirement ka example kaunsa hai?
+    (a) User login kar sakta hai
+    (b) API 200ms se kam mein respond kare
+    (c) Admin users delete kar sakta hai
+    (d) User cart mein item add kar sakta hai
+
+Jawab: (b)
+
+Q2: "Out of Scope" define karna kyun zaroori hai?
+    (a) Engineers ko zyada kaam se bachane ke liye
+    (b) Scope creep rokne aur expectations set karne ke liye
+    (c) PM ko confuse karne ke liye
+    (d) Timeline badhane ke liye
+
+Jawab: (b)
+
+Q3: Acceptance criteria ka sahi format kya hai?
+    (a) "Feature kaam karega"
+    (b) "GIVEN [condition] WHEN [action] THEN [result]"
+    (c) "User satisfied hoga"
+    (d) "Developer approve karega"
+
+Jawab: (b)
+
+Q4: "Happy path" ke alawa senior engineer kya sochta hai?
+    (a) Nothing, happy path enough hai
+    (b) Edge cases aur failure modes
+    (c) UI design
+    (d) Marketing strategy
+
+Jawab: (b)
+
+================================================================
+SENIOR ENGINEER READINESS SCORE — PART 3
+================================================================
+
+FR vs NFR samajh aaya                  → +15 points
+User stories likh sake                  → +15 points
+Acceptance criteria samajh aaya         → +15 points
+Edge cases identify kar sake            → +20 points
+Out of scope define kar sake            → +15 points
+Exercise complete kiya                  → +20 points
+
+TOTAL: ___/100
+
+================================================================
+AGLA PART: Part 4 — Architectural Thinking
+(System Design Karne Ka Tarika)
+================================================================

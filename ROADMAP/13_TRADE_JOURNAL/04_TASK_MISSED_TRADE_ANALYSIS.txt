@@ -1,0 +1,67 @@
+================================================================================
+TASK ID:     13-04
+TASK NAME:   Missed Trade Analysis
+PHASE:       13 — Trade Journal
+================================================================================
+
+OBJECTIVE:
+    Implement MissedTradeAnalyzer that identifies high-quality setups that
+    were not taken due to risk limits or other blocking conditions, so they
+    can be reviewed and used for parameter tuning.
+
+CONTEXT:
+    A "missed trade" is a signal that scored >= 8/10 but was NOT executed due to:
+    - Daily trade limit already reached
+    - Daily loss limit triggered
+    - Consecutive loss block active
+    - Correlation block
+
+    NOT missed trades: signals rejected for low confluence, bad spread, news,
+    or session — those are correct rejections, not missed opportunities.
+
+    ENABLE_MISSED_TRADE_TRACKING=true (default, configurable)
+
+DEPENDENCIES:
+    - Phase 04 database
+    - 13-02 RejectionJournal (source data)
+
+FILES TO CREATE:
+    app/journal/missed_trade_analyzer.py
+    tests/test_journal/test_missed_trade.py
+
+FILES TO MODIFY:
+    app/database/repositories.py   — add missed trade query
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class MissedTradeAnalyzer:
+        get_missed_trades(date: date) -> list[MissedTradeEntry]
+        get_summary(date_from: date, date_to: date) -> MissedTradeSummary
+
+    MissedTradeEntry fields:
+        id, timestamp_utc, symbol, direction, confluence_score,
+        quality_grade, block_reason, estimated_outcome (if determinable)
+
+TEST REQUIREMENTS:
+    - test_missed_trade_identified_from_rejection()
+    - test_correct_rejection_not_classified_as_missed()
+    - test_summary_by_block_reason()
+
+ACCEPTANCE CRITERIA:
+    [ ] Missed trades correctly identified from rejection journal
+    [ ] Correct rejections excluded from missed trade list
+    [ ] Summary queryable
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] missed_trade_analyzer.py created and tested
+    [ ] Phase 13 acceptance criteria met
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated: Phase 13 COMPLETE
+
+NEXT TASK:
+    Begin Phase 14 — Dashboard
+    Start with: ROADMAP/14_DASHBOARD/01_PHASE_OVERVIEW.txt
+================================================================================

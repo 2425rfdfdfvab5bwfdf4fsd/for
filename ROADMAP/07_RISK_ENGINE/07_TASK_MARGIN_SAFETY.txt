@@ -1,0 +1,62 @@
+================================================================================
+TASK ID:     07-07
+TASK NAME:   Margin Safety Check
+PHASE:       07 — Risk Engine
+================================================================================
+
+OBJECTIVE:
+    Implement MarginSafetyChecker that verifies sufficient free margin exists
+    before placing a trade, preventing margin calls.
+
+CONTEXT:
+    Before executing any order, verify:
+    - Free margin > required margin for the new position × MARGIN_SAFETY_FACTOR
+    - MARGIN_SAFETY_FACTOR default: 3.0 (300% buffer)
+    - If margin level < MIN_MARGIN_LEVEL_PERCENT: BLOCKED
+
+    MT5 provides: account.margin_free, account.margin_level
+
+DEPENDENCIES:
+    - Phase 03 (MT5): account info
+    - 07-01 (position sizer): lot size needed for margin estimate
+
+FILES TO CREATE:
+    app/risk/margin_safety.py
+    tests/test_risk/test_margin_safety.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/strategy/
+    app/confluence/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class MarginSafetyChecker:
+        check(
+            account_info: AccountInfo,
+            required_margin: float
+        ) -> MarginCheckResult
+
+    Logic:
+        if account_info.margin_free < required_margin * MARGIN_SAFETY_FACTOR:
+            BLOCKED (reason: "INSUFFICIENT_FREE_MARGIN")
+        if account_info.margin_level < MIN_MARGIN_LEVEL_PERCENT:
+            BLOCKED (reason: "MARGIN_LEVEL_TOO_LOW")
+
+TEST REQUIREMENTS:
+    - test_sufficient_margin_allowed()
+    - test_insufficient_margin_blocked()
+    - test_margin_level_too_low_blocked()
+    - test_zero_required_margin_allowed()
+
+ACCEPTANCE CRITERIA:
+    [ ] Low free margin blocks trade
+    [ ] Sufficient margin allows trade
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] margin_safety.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 07-08 — TASK_RISK_MANAGER.txt
+================================================================================

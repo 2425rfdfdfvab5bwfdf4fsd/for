@@ -1,0 +1,66 @@
+================================================================================
+PHASE 01 — PROJECT DISCOVERY
+================================================================================
+PHASE NAME:       Project Discovery
+PHASE OBJECTIVE:  Audit the entire workspace, catalog all existing files,
+                  analyze any existing code, and create a requirements
+                  traceability matrix before any implementation begins.
+
+WHY THIS PHASE EXISTS:
+  The reference documents explicitly require inspecting the entire project
+  before writing or modifying code. This prevents blindly overwriting useful
+  existing work, identifies architectural conflicts early, and establishes
+  a baseline understanding of the current state.
+
+DEPENDENCIES:     None — this is always the first phase.
+
+INPUTS:
+  - All files currently in the Replit workspace
+  - ROADMAP/00_MASTER_ROADMAP.txt
+  - ROADMAP/00_REQUIREMENT_DECISIONS.txt
+  - All reference .txt files in the project root
+
+OUTPUTS:
+  - Complete file inventory (documented in task output)
+  - Understanding of any existing code
+  - Confirmed requirements traceability
+  - Clear starting point for Phase 02
+
+FILES EXPECTED TO BE CREATED:
+  - None (discovery is read-only)
+
+FILES EXPECTED TO BE MODIFIED:
+  - ROADMAP/00_PROJECT_STATUS.txt (update phase status)
+
+FILES THAT MUST NOT BE MODIFIED:
+  - Any existing Python source files
+  - Any existing configuration files
+  - Any reference .txt files
+
+TASK ORDER:
+  01_TASK_PROJECT_AUDIT.txt        → Run first
+  02_TASK_EXISTING_CODE_ANALYSIS.txt → Run second (if existing code found)
+  03_TASK_REQUIREMENTS_TRACEABILITY.txt → Run third
+
+TESTING REQUIREMENTS:
+  None — this phase is read-only analysis.
+
+ACCEPTANCE CRITERIA:
+  □ Every file in the workspace is cataloged
+  □ Existing code (if any) is understood
+  □ Requirements are mapped to phases
+  □ No code has been modified
+
+KNOWN RISKS:
+  - Existing code may conflict with the planned architecture
+  - Existing code may have bugs that need to be understood before working around them
+
+ROLLBACK STRATEGY:
+  Not applicable — no code changes in this phase.
+
+HANDOFF REQUIREMENTS:
+  Before starting Phase 02, confirm:
+  □ Project audit is complete
+  □ No blocking conflicts found
+  □ Requirements traceability is clear
+================================================================================

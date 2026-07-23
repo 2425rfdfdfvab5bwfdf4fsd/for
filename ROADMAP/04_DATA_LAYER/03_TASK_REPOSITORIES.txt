@@ -1,0 +1,107 @@
+================================================================================
+TASK: 04-03 — REPOSITORIES
+================================================================================
+TASK ID:        04-03
+TASK NAME:      CRUD Repositories
+PHASE:          04 — Data Layer
+OBJECTIVE:      Create app/database/repositories.py with repository classes
+                that provide all CRUD operations needed by the trading bot.
+                Business logic modules must ONLY access the database through
+                these repositories — never with direct SQL calls.
+
+CONTEXT:
+  The repository pattern keeps SQL isolated from business logic.
+  This makes testing easier (mock the repo) and keeps SQL maintainable.
+  Each repository handles one table/domain.
+
+DEPENDENCIES:   Task 04-02 complete
+PREVIOUS TASKS: 04-02 SQLITE DATABASE
+
+FILES TO INSPECT:   app/database/database.py, app/database/models.py
+FILES TO CREATE:
+  app/database/repositories.py
+  tests/unit/test_repositories.py
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: app/database/database.py, app/database/models.py
+
+================================================================================
+DETAILED REQUIREMENTS
+================================================================================
+
+class TradeRepository:
+    def create(self, trade: Trade) -> None
+    def get_by_id(self, trade_id: str) -> Optional[Trade]
+    def get_open_trades(self) -> list[Trade]
+    def get_by_symbol(self, symbol: str) -> list[Trade]
+    def get_by_date(self, date: str) -> list[Trade]
+    def update_status(self, trade_id: str, status: str) -> None
+    def close_trade(self, trade_id: str, exit_time: str,
+                    exit_reason: str, profit_loss: float,
+                    r_multiple: float) -> None
+    def get_all_closed(self) -> list[Trade]
+    def count_trades_today(self, date: str) -> int
+    def get_recent_trades(self, limit: int = 20) -> list[Trade]
+
+class RejectedSignalRepository:
+    def create(self, signal: RejectedSignal) -> None
+    def get_by_date(self, date: str) -> list[RejectedSignal]
+    def get_recent(self, limit: int = 50) -> list[RejectedSignal]
+
+class DailyRiskRepository:
+    def get_or_create(self, date: str,
+                      starting_balance: float) -> DailyRiskState
+    def update(self, state: DailyRiskState) -> None
+    def get(self, date: str) -> Optional[DailyRiskState]
+    def increment_trade_count(self, date: str) -> None
+    def increment_consecutive_losses(self, date: str) -> None
+    def reset_consecutive_losses(self, date: str) -> None
+    def set_trading_blocked(self, date: str, reason: str) -> None
+
+class SystemEventRepository:
+    def log_event(self, event_type: str, message: str,
+                  severity: str = "INFO") -> None
+    def get_recent(self, limit: int = 100) -> list[dict]
+    def get_by_type(self, event_type: str,
+                    limit: int = 50) -> list[dict]
+
+class PerformanceRepository:
+    def save_snapshot(self, snapshot: PerformanceSnapshot) -> None
+    def get_snapshots(self, snapshot_type: str,
+                      limit: int = 30) -> list[PerformanceSnapshot]
+    def get_latest(self, snapshot_type: str) -> Optional[PerformanceSnapshot]
+
+class Repositories:
+    """Facade providing access to all repositories."""
+    def __init__(self, db: DatabaseManager):
+        self.trades = TradeRepository(db)
+        self.rejected_signals = RejectedSignalRepository(db)
+        self.daily_risk = DailyRiskRepository(db)
+        self.system_events = SystemEventRepository(db)
+        self.performance = PerformanceRepository(db)
+
+RULES:
+  - All repository methods log errors and re-raise or return None
+  - Never expose raw SQL outside of repositories.py
+  - Use parameterized queries (no f-string SQL ever)
+  - All queries tested with in-memory SQLite
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+python -m py_compile app/database/repositories.py
+pytest tests/unit/test_repositories.py -v
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ All repository classes implemented
+□ All CRUD operations work with in-memory SQLite
+□ Repositories facade works
+□ All tests pass
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/04_DATA_LAYER/04_TASK_PERSISTENCE_RECOVERY.txt
+================================================================================

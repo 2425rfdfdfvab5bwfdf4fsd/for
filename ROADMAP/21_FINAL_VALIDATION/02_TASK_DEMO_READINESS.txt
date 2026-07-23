@@ -1,0 +1,66 @@
+================================================================================
+TASK ID:     21-02
+TASK NAME:   Demo Trading Readiness
+PHASE:       21 — Final Validation
+================================================================================
+
+OBJECTIVE:
+    Define and implement the demo trading validation protocol that must be
+    completed before live trading is considered.
+
+CONTEXT:
+    Demo trading is MANDATORY before live trading.
+    Minimum period: 4 weeks (ideally 8+ weeks).
+    Purpose: verify the bot behaves correctly in real market conditions
+    (real price data, real execution times) before risking real capital.
+
+    DEMO VALIDATION CRITERIA:
+    1. Bot runs continuously for >= 4 weeks without critical failures
+    2. At least 20 trades executed in demo
+    3. Risk management behaves exactly as expected
+    4. All Telegram notifications work correctly
+    5. Dashboard displays accurate data
+    6. No duplicate orders observed
+    7. Position management (BE, trailing, partial) works correctly
+    8. EOD and Friday closure works correctly
+    9. MT5 reconnection tested (manually disconnect MT5, verify auto-reconnect)
+    10. Watchdog tested (manually kill bot, verify watchdog restarts it)
+
+DEPENDENCIES:
+    - 21-01 ProductionReadinessChecker: READY verdict required
+
+FILES TO CREATE:
+    docs/DEMO_TRADING_LOG.md       (template for user to fill in)
+    scripts/demo_monitor.py        (daily demo monitoring report)
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    docs/DEMO_TRADING_LOG.md is a template with:
+    - Week-by-week observation journal
+    - Trade performance tracking
+    - Issue log
+    - Criteria checklist (to be completed manually by user)
+
+    scripts/demo_monitor.py:
+        Generates daily demo trading summary from database.
+        Reports: trades today, P&L, issues detected, open positions.
+        Intended for daily review during demo period.
+
+ACCEPTANCE CRITERIA:
+    [ ] DEMO_TRADING_LOG.md template created
+    [ ] demo_monitor.py generates useful daily report
+    [ ] Demo criteria checklist documented
+
+DEFINITION OF DONE:
+    [ ] Demo trading documentation created
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+*** NOTE: This task creates the PROCESS for demo trading.
+    The actual 4-week demo trading period happens OUTSIDE the build roadmap.
+    Do not mark Phase 21 complete until demo period is finished. ***
+
+NEXT TASK: 21-03 — TASK_LIVE_READINESS.txt
+================================================================================

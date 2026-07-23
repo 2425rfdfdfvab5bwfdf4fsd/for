@@ -1,0 +1,192 @@
+================================================================================
+TASK: 05-08 — MARKET REGIME DETECTION
+================================================================================
+TASK ID:        05-08
+TASK NAME:      Market Regime Classifier
+PHASE:          05 — Strategy Engine
+OBJECTIVE:      Implement market regime classification in
+                app/strategy/market_regime.py to help the strategy
+                adapt its behavior to different market conditions.
+
+CONTEXT:
+  Trading in a strong trend is different from trading in a range.
+  The bot should require stronger confirmation in choppy/unclear markets.
+  Market regime helps avoid poor-quality trades when conditions are unfavorable.
+
+DEPENDENCIES:   Task 05-07 complete
+PREVIOUS TASKS: 05-07 EMA/ATR
+
+FILES TO INSPECT:
+  app/strategy/market_structure.py
+  app/strategy/indicators.py
+FILES TO CREATE:
+  app/strategy/market_regime.py
+  tests/unit/test_market_regime.py
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: app/strategy/indicators.py
+
+
+================================================================================
+REGIME_CLASSIFICATION_THRESHOLDS — REQUIRED (CHG-014, DECISION-021)
+================================================================================
+
+The regime classifier must use these exact thresholds. All are configurable
+in app/config.py. Without explicit numbers, agents will choose arbitrary values.
+
+EMA SLOPE THRESHOLD METHOD:
+  ema_slope_pct_per_bar = (ema[i] - ema[i-1]) / ema[i-1] * 100
+  Measures percentage change per bar (e.g., per H4 bar)
+
+EXACT CLASSIFICATION RULES (check in this priority order):
+
+  1. HIGH_VOLATILITY (check first — overrides trend assessment):
+     current_ATR > ATR_50_period_average * VOLATILITY_HIGH_MULT
+     Default: VOLATILITY_HIGH_MULT = 2.5
+     Config: REGIME_VOLATILITY_HIGH_MULT = 2.5
+     → trading_recommended = False (avoid — spreads widen, stops get hit)
+
+  2. LOW_VOLATILITY:
+     current_ATR < ATR_50_period_average * VOLATILITY_LOW_MULT
+     Default: VOLATILITY_LOW_MULT = 0.4
+     Config: REGIME_VOLATILITY_LOW_MULT = 0.4
+     → trading_recommended = False (insufficient range for 1:2 R:R)
+
+  3. STRONG_TREND_BULLISH:
+     abs(ema_slope_pct_per_bar) > REGIME_TREND_SLOPE_THRESHOLD  (0.05%)
+     AND price > EMA_SLOW AND EMA_FAST > EMA_SLOW
+     AND ATR within normal range (between LOW and HIGH thresholds)
+     Config: REGIME_TREND_SLOPE_THRESHOLD = 0.05
+     → trading_recommended = True, min_score_adjustment = 0
+
+  4. STRONG_TREND_BEARISH: same but inverse (price < EMA_SLOW, EMA_FAST < EMA_SLOW)
+
+  5. RANGING:
+     abs(ema_slope_pct_per_bar) < REGIME_RANGE_SLOPE_THRESHOLD  (0.01%)
+     AND price oscillates across EMA (alternates above/below in last 10 bars)
+     Config: REGIME_RANGE_SLOPE_THRESHOLD = 0.01
+     → min_score_adjustment = +1 (require 9/10 instead of 8/10)
+
+  6. WEAK_TREND_BULLISH / WEAK_TREND_BEARISH:
+     slope between RANGE and TREND thresholds, or EMA not fully aligned
+     → min_score_adjustment = 0 (base requirements apply)
+
+  7. UNCLEAR (default): none of the above conditions clearly met
+     → min_score_adjustment = +1 (require higher confluence)
+
+ALL CONFIG PARAMETERS (add to app/config.py):
+  REGIME_VOLATILITY_HIGH_MULT = 2.5
+  REGIME_VOLATILITY_LOW_MULT = 0.4
+  REGIME_TREND_SLOPE_THRESHOLD = 0.05
+  REGIME_RANGE_SLOPE_THRESHOLD = 0.01
+  REGIME_ATR_AVERAGE_PERIOD = 50
+
+================================================================================
+================================================================================
+ALGORITHMIC DEFINITIONS — MARKET REGIMES
+================================================================================
+
+STRONG_TREND_BULLISH:
+  - Trend == "BULLISH" (higher highs + higher lows)
+  - EMA aligned bullish (price > EMA_SLOW, EMA_FAST > EMA_SLOW)
+  - ATR >= 0.8 * avg_atr (normal or above-normal volatility)
+
+STRONG_TREND_BEARISH:
+  - Trend == "BEARISH" (lower highs + lower lows)
+  - EMA aligned bearish
+  - ATR >= 0.8 * avg_atr
+
+WEAK_TREND_BULLISH:
+  - Trend == "BULLISH" but EMA not fully aligned
+  - OR trend bullish but ATR < 0.8 * avg_atr
+
+WEAK_TREND_BEARISH:
+  - Same for bearish
+
+RANGING:
+  - Trend == "RANGING"
+  - Price oscillating between identifiable support and resistance
+  - ATR relatively low compared to average
+
+HIGH_VOLATILITY:
+  - ATR >= 2.5 * avg_atr (abnormally high volatility)
+  - Regardless of trend direction
+  - AVOID TRADING in this regime
+
+LOW_VOLATILITY:
+  - ATR <= 0.4 * avg_atr (abnormally low volatility)
+  - Setups likely have insufficient range for good R:R
+  - AVOID TRADING or require stronger confirmation
+
+UNCLEAR:
+  - None of the above clearly apply
+  - Mixed signals
+  - Require highest confluence (consider raising minimum score)
+
+================================================================================
+DETAILED REQUIREMENTS
+================================================================================
+
+MARKET_REGIME_LABELS = {
+    "STRONG_TREND_BULLISH",
+    "STRONG_TREND_BEARISH",
+    "WEAK_TREND_BULLISH",
+    "WEAK_TREND_BEARISH",
+    "RANGING",
+    "HIGH_VOLATILITY",
+    "LOW_VOLATILITY",
+    "UNCLEAR"
+}
+
+@dataclass
+class MarketRegime:
+    regime: str           # One of MARKET_REGIME_LABELS
+    trend: str            # From market_structure
+    ema_aligned: bool
+    atr_current: float
+    atr_average: float
+    atr_ratio: float      # current/average
+    trading_recommended: bool  # False for HIGH_VOLATILITY, LOW_VOLATILITY, UNCLEAR
+    min_score_adjustment: int  # Extra confluence points required (0, 1, or 2)
+
+def classify_market_regime(data: pd.DataFrame,
+                            market_structure: dict,
+                            ema_alignment: dict,
+                            atr: float,
+                            avg_atr: float) -> MarketRegime:
+    """
+    Classifies current market regime using all available signals.
+    Returns MarketRegime with trading recommendation.
+    """
+
+TRADING ADJUSTMENT RULES:
+  HIGH_VOLATILITY → trading_recommended = False
+  LOW_VOLATILITY → trading_recommended = False (or min_score_adjustment += 1)
+  UNCLEAR → min_score_adjustment += 1 (require 9/10 instead of 8/10)
+  RANGING → min_score_adjustment += 1
+  STRONG_TREND → min_score_adjustment = 0
+  WEAK_TREND → min_score_adjustment = 0 (base requirements apply)
+
+NOTE: The bot NEVER changes core parameters. It applies score adjustments
+that make it harder to trade in poor conditions. Human must approve
+any permanent parameter change.
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+python -m py_compile app/strategy/market_regime.py
+pytest tests/unit/test_market_regime.py -v
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ All 8 regime labels implementable
+□ Trading recommendation correctly FALSE for dangerous regimes
+□ Score adjustment applied correctly
+□ All tests pass with synthetic data
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/05_STRATEGY_ENGINE/09_TASK_SIGNAL_ENGINE.txt
+================================================================================

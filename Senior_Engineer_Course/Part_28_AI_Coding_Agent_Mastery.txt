@@ -1,0 +1,839 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 28: AI CODING AGENT MASTERY
+(Replit Agent, Cursor, Claude Code — Expert Level)
+================================================================
+
+SEEKHNE KE MAQASID:
+- AI coding agents ki inner workings deeply samajhna
+- Agent-specific advanced patterns master karna
+- Multi-agent workflows design karna
+- Agent limitations aur failure modes predict karna
+- Production-grade agent setup karna
+- Memory systems, tool use, agentic loops samajhna
+
+================================================================
+SECTION 1: AI CODING AGENTS — DEEP ARCHITECTURE
+================================================================
+
+Ek AI coding agent andar se kaise kaam karta hai, yeh samajhna
+zaroori hai taake aap usse effectively use kar sako.
+
+─── AGENT ANATOMY ───
+
+  ┌────────────────────────────────────────────────────┐
+  │                    AI CODING AGENT                  │
+  │                                                    │
+  │  ┌──────────┐    ┌──────────┐    ┌──────────────┐ │
+  │  │   LLM    │←──→│  Tools   │    │   Memory     │ │
+  │  │ (Brain)  │    │          │    │              │ │
+  │  └──────────┘    │ read_file│    │ - Context    │ │
+  │       ↑          │write_file│    │   window     │ │
+  │       │          │run_shell │    │ - Files      │ │
+  │  Instructions    │web_search│    │ - History    │ │
+  │  + Context       │search_   │    └──────────────┘ │
+  │                  │codebase  │                      │
+  │                  └──────────┘                      │
+  └────────────────────────────────────────────────────┘
+
+─── THE AGENTIC LOOP (Detailed) ───
+
+  OBSERVE:
+    Agent apna context padhta hai:
+    - Aapki instruction
+    - Context window mein jo files hain
+    - Previous tool call results
+    - Memory files (ARCHITECTURE.md, AI_RULES.md)
+  
+  THINK:
+    Agent plan banata hai:
+    - "Task complete karne ke liye mujhe kya steps chahiye?"
+    - "Pehle kaunsa tool call karoon?"
+    - "Mujhe kya information chahiye jo abhi nahi hai?"
+  
+  ACT:
+    Agent tool call karta hai:
+    - read_file("src/modules/auth/auth.service.ts")
+    - write_file("src/modules/orders/order.schema.ts", content)
+    - run_command("npm test")
+    - search_codebase("AppError")
+  
+  OBSERVE (results):
+    - File content dekha
+    - Test results dekhe
+    - Error messages dekhe
+  
+  THINK (again):
+    - "Tests fail kar rahe hain — kya fix karna hai?"
+    - "Yeh pattern galat tha — theek karta hoon"
+  
+  LOOP until: Task complete ya max iterations reached
+
+─── WHY AGENTS FAIL ───
+
+  1. CONTEXT WINDOW OVERFLOW
+     Too many files read → old instructions pushed out
+     Fix: Smaller tasks, focused context
+  
+  2. HALLUCINATED METHODS
+     Agent calls Library.method() jo exist nahi karta
+     Fix: Paste actual type definitions
+  
+  3. PATTERN DRIFT
+     Long conversations mein agent apna style banaata hai
+     Fix: New conversation per task
+  
+  4. SCOPE CREEP
+     Agent "helpful" banna chahta hai → extra changes
+     Fix: FORBIDDEN list explicit rakho
+  
+  5. WRONG ASSUMPTION CHAINS
+     Agent ek galat assumption pe build karta jaata hai
+     Fix: Check at each step, don't let errors compound
+  
+  6. STALE KNOWLEDGE
+     Agent ki training cutoff ke baad libraries change ho gayi
+     Fix: Paste current docs / types
+
+================================================================
+SECTION 2: REPLIT AGENT — SPECIFIC PATTERNS
+================================================================
+
+─── HOW REPLIT AGENT WORKS ───
+
+  Replit Agent:
+  - Apna khud workspace hai (your repl)
+  - Files read/write kar sakta hai
+  - Shell commands run kar sakta hai (npm install, etc.)
+  - replit.md ko PROJECT CONTEXT ke liye padhta hai
+  - Checkpoints create karta hai (safe rollback)
+  - Browser preview dekh sakta hai
+
+─── REPLIT.MD OPTIMIZATION ───
+
+  Replit Agent replit.md ko apna "starting bible" maanta hai.
+  
+  OPTIMIZED replit.md for Agent:
+  ────────────────────────────────────────
+  # [ProjectName]
+  
+  ## Project Summary
+  [2-3 lines: kya hai, kiske liye hai]
+  
+  ## Tech Stack
+  - Frontend: [framework + version]
+  - Backend: [framework + version]
+  - Database: [DB + ORM]
+  - Auth: [method]
+  - Package manager: [npm/pnpm/yarn]
+  
+  ## Architecture Pattern
+  [Your pattern — e.g., "Controller → Service → Repository"]
+  [File structure — tree format, 2 levels deep]
+  
+  ## How to Run
+  npm run dev         ← Development
+  npm test            ← Tests
+  npm run typecheck   ← TypeScript check
+  
+  ## Critical Rules for Agent
+  1. Never modify files outside stated scope
+  2. Never add npm packages without asking
+  3. Use [your error class] for all errors
+  4. Use [your logger] not console.log
+  5. [Your most important rule]
+  6. [Your most important rule]
+  
+  ## Code Patterns (follow exactly)
+  [Paste 1 key example — e.g., service method pattern]
+  ────────────────────────────────────────
+
+─── REPLIT AGENT EFFECTIVE WORKFLOW ───
+
+  DO:
+  ✅ Task start se pehle replit.md update karo
+  ✅ Specific file paths batao
+  ✅ "Do not modify" list hamesha include karo
+  ✅ Checkpoints use karo — har major task ke baad
+  ✅ git diff (ya Replit Files diff) review karo
+  
+  DON'T:
+  ❌ Agent ko open-ended task mat do ("make it better")
+  ❌ Multiple features ek saath mat chhuao
+  ❌ Agent ke changes bina review ke accept mat karo
+  ❌ Package additions blindly accept mat karo
+
+================================================================
+SECTION 3: CURSOR AGENT — SPECIFIC PATTERNS
+================================================================
+
+─── CURSOR'S AGENT MODE ───
+
+  Cursor Agent (Ctrl+I ya @workspace):
+  - .cursorrules file padhta hai (root directory)
+  - Codebase index karta hai (semantic search)
+  - Multi-file edits kar sakta hai
+  - Terminal commands run kar sakta hai
+  - Git operations kar sakta hai
+
+─── .CURSORRULES ADVANCED TEMPLATE ───
+
+  File: .cursorrules (root directory)
+  
+  ════════════════════════════════════
+  # [ProjectName] — Cursor Agent Rules
+  
+  ## Role
+  You are a Senior TypeScript Engineer on [ProjectName].
+  Stack: [your stack]
+  Architecture: [your pattern]
+  
+  ## Core Principles
+  1. ALWAYS read context before acting
+  2. NEVER modify files not listed in the task
+  3. ALWAYS follow existing code patterns (don't invent new ones)
+  4. ALWAYS write tests for new business logic
+  5. If unsure → ASK, don't assume
+  
+  ## Code Standards
+  - TypeScript strict mode (no 'any', no '!')
+  - [your formatter: Prettier/ESLint config]
+  - [naming conventions]
+  - [import order]
+  
+  ## Error Handling
+  [Your exact pattern with code example]
+  
+  ## API Response Format
+  [Your exact format with code example]
+  
+  ## Testing
+  Framework: [Vitest/Jest]
+  Pattern: AAA (Arrange, Act, Assert)
+  Location: __tests__/ next to source
+  Mock location: __mocks__/
+  
+  ## FORBIDDEN ACTIONS
+  - Adding npm packages without permission
+  - Modifying database schema unexpectedly
+  - Using console.log (use logger)
+  - Using 'any' TypeScript type
+  - Modifying .env files
+  - Changing CI/CD config files
+  - Changing authentication/security critical files
+    without explicit instruction
+  
+  ## File Structure
+  [Paste your project tree — 3 levels]
+  
+  ## When to Stop and Ask
+  - If task requires modifying >5 files
+  - If task requires new npm package
+  - If task changes database schema
+  - If requirements are ambiguous
+  ════════════════════════════════════
+
+─── CURSOR COMPOSER VS CHAT ───
+
+  Chat (@codebase):
+  → Questions poochhna
+  → Code explain karwana
+  → Architecture discuss karna
+  → "How does X work?"
+  
+  Composer (Ctrl+I):
+  → Actual code changes karna
+  → Files create/modify karna
+  → One focused task
+  → Always use .cursorrules
+
+================================================================
+SECTION 4: CLAUDE CODE — SPECIFIC PATTERNS
+================================================================
+
+─── CLAUDE CODE WORKFLOW ───
+
+  Claude Code = CLI tool, bahut powerful agent
+  
+  Setup:
+  CLAUDE.md file → project root mein → agent automatically padhta hai
+  
+  Run:
+  claude (interactive mode)
+  claude "do this specific task"
+  
+─── CLAUDE.MD TEMPLATE ───
+
+  File: CLAUDE.md
+  
+  ════════════════════════════════════
+  # [ProjectName] — Claude Agent Instructions
+  
+  ## Project Overview
+  [What is being built — 2-3 lines]
+  
+  ## Architecture
+  [Pattern + stack + key decisions]
+  
+  ## Working with this Codebase
+  
+  ### ALWAYS
+  - Read src/modules/ to understand existing patterns
+  - Follow the Controller→Service→Repository structure
+  - Check existing types in src/types/ before creating new ones
+  - Run `npm test` after any change
+  - Run `npm run typecheck` after any change
+  
+  ### NEVER
+  - Modify files outside task scope
+  - Add npm packages without asking
+  - Change prisma/schema.prisma without explicit instruction
+  - Use console.log — use `import { logger } from '@/utils/logger'`
+  - Use TypeScript 'any'
+  
+  ### Common Commands
+  npm run dev        — start dev server
+  npm test           — run tests
+  npm run typecheck  — TypeScript check
+  npm run lint       — ESLint
+  npx prisma migrate dev  — run migrations
+  
+  ### Key Patterns
+  [Error handling example]
+  [API response example]
+  [Repository method example]
+  [Service method example]
+  
+  ### Critical Files
+  - src/utils/appError.ts — error handling
+  - src/utils/logger.ts — logging
+  - src/middleware/ — auth, rate limiting
+  - prisma/schema.prisma — database schema
+  ════════════════════════════════════
+
+─── CLAUDE CODE ADVANCED USAGE ───
+
+  Slash commands:
+  /compact  — Summarize conversation (context manage karo)
+  /clear    — Fresh context start
+  /review   — Claude reviews its own work
+  
+  Files attach karna:
+  "Read @src/modules/auth/auth.service.ts and follow its pattern"
+  
+  Git integration:
+  "Review the diff since last commit and check for issues"
+  "Write a commit message for the staged changes"
+
+================================================================
+SECTION 5: ADVANCED CONTEXT ENGINEERING
+================================================================
+
+─── CONTEXT HIERARCHY ───
+
+  Priority 1 (Agent hamesha padhta hai):
+    - replit.md / .cursorrules / CLAUDE.md
+    - Your task instruction
+  
+  Priority 2 (Task-specific):
+    - Relevant existing code (patterns to follow)
+    - Feature spec
+    - TypeScript types
+  
+  Priority 3 (Reference):
+    - ARCHITECTURE.md
+    - DATABASE.md
+    - API.md
+
+─── CONTEXT COMPRESSION TECHNIQUES ───
+
+  Problem: Poori file paste karna → too many tokens
+
+  Solution 1: Summary + Key Example
+  Instead of: [paste 200 line file]
+  Use: "Auth service pattern: [paste 20 key lines showing the pattern]"
+  
+  Solution 2: Types Only
+  Instead of: [paste full service file]
+  Use: [paste TypeScript interface only]
+  
+  Solution 3: Inline Documentation
+  Write comments in code like:
+  // PATTERN: All service methods follow this structure
+  // RULE: Never throw raw Error — use AppError
+  // EXAMPLE: See getUserById for reference
+  
+  These comments become agent instructions.
+
+─── CONTEXT FILES MAINTENANCE ───
+
+  Context files stale ho jaate hain.
+  Quarterly review schedule:
+  
+  Weekly: AI_RULES.md
+    → Agent ne koi naya mistake kiya?
+    → NEVER list mein add karo
+  
+  Monthly: CODE_STANDARDS.md
+    → New patterns adopt kiye?
+    → Document karo
+  
+  Per-Feature: docs/features/
+    → Feature complete? Mark it done
+    → Next feature ka spec likho
+
+================================================================
+SECTION 6: MULTI-FILE AND MULTI-AGENT PATTERNS
+================================================================
+
+─── MULTI-FILE COORDINATION ───
+
+  Kab multiple files chahiye:
+  When implementing a complete endpoint (schema + service + controller + routes)
+  
+  Strategy: STILL one task, but explicit about each file:
+  
+  "Implement POST /api/v1/reviews endpoint.
+  
+  Files to create (in this exact order):
+  
+  File 1: src/modules/reviews/review.schema.ts
+  Purpose: Zod validation schema
+  [details]
+  
+  File 2: src/modules/reviews/review.service.ts
+  Purpose: createReview business logic
+  [details]
+  
+  File 3: src/modules/reviews/review.controller.ts
+  Purpose: HTTP handler
+  [details]
+  
+  File 4: src/modules/reviews/review.routes.ts
+  Purpose: Route definitions
+  [details]
+  
+  Create in order. Each file should be correct before next.
+  After all 4 files, run: npm test && npm run typecheck"
+  
+  Note: This is OK because all 4 files are ONE logical unit.
+  Don't mix review feature files with user feature files.
+
+─── PARALLEL AGENT PATTERN ───
+
+  Kab parallel agents use karo:
+  → Completely independent features
+  → Frontend + Backend simultaneously
+  → Tests + Implementation simultaneously (different modules)
+  
+  HOW:
+  1. Feature A agent alag branch pe kaam kare
+  2. Feature B agent alag branch pe kaam kare
+  3. Dono review karo
+  4. Main mein merge karo
+  5. Conflicts resolve karo (manually — agent pe mat chhoRo)
+  
+  CRITICAL: Parallel agents ko overlapping files mat do.
+  Agar File X dono ko chahiye → sequential karo, parallel nahi.
+
+─── AGENT HANDOFF PATTERN ───
+
+  Complex features mein:
+  
+  Agent 1: "Architecture + Schema design"
+  → Output: schema.prisma changes + types file
+  → Review: aap manually check karo
+  
+  Agent 2: "Repository layer" (depends on Agent 1 output)
+  → Input: Agent 1 ke files + your review notes
+  → Review: aap manually check karo
+  
+  Agent 3: "Service layer" (depends on Agent 2 output)
+  → Input: Agent 2 ke files + your review notes
+  
+  Each agent: Clean slate. Fresh context. AI_RULES.md + task.
+
+================================================================
+SECTION 7: DEBUGGING WITH AI AGENTS
+================================================================
+
+─── SYSTEMATIC AI DEBUGGING ───
+
+  STEP 1: REPRODUCE FIRST (aap khud karo)
+  □ Exact steps jo error reproduce karte hain
+  □ Error message complete (stack trace)
+  □ Environment (dev/staging/prod)
+  □ Kab se ho raha hai? Kya change hua?
+  
+  STEP 2: FORM HYPOTHESIS (agent se pehle)
+  □ Apna best guess kya hai?
+  → "Auth middleware mein user attach nahi ho raha"
+  → "Database connection pool exhausted ho gayi"
+  → "Race condition in concurrent requests"
+  
+  STEP 3: AGENT DEBUGGING PROMPT
+
+  "Debug this error. Systematic analysis chahiye.
+  
+  Error:
+  ```
+  [exact error + stack trace]
+  ```
+  
+  Context:
+  - What the code should do: [describe]
+  - When it fails: [describe]
+  - Recent changes: [git log -5 output]
+  
+  Relevant code:
+  ```typescript
+  [ONLY the 30-50 lines around the error]
+  ```
+  
+  My hypothesis: [your best guess]
+  What I've already tried: [your attempts]
+  
+  Please:
+  1. Identify root cause (not just symptoms)
+  2. Explain WHY this error occurs
+  3. Provide fix (minimal change)
+  4. Explain how to prevent this class of bug
+  
+  Only modify: [specific file]
+  Do NOT make unrelated changes."
+  
+  STEP 4: VERIFY THE FIX
+  □ Does it fix the original error?
+  □ Does it introduce new issues?
+  □ Tests still pass?
+  □ Was the root cause actually addressed?
+
+─── COMMON ERROR PATTERNS ───
+
+  "Cannot read property X of undefined/null"
+  → Missing null check
+  → Async data not awaited
+  → Object shape mismatch (AI response format assumption)
+  
+  "Unauthorized / 401 in tests"
+  → Mock not set up correctly
+  → JWT not included in test request
+  → Auth middleware bypassed incorrectly in tests
+  
+  "TypeScript error: Property does not exist"
+  → Type definition outdated
+  → Interface mismatch between layers
+  → 'any' type hiding actual issue
+  
+  "N+1 queries"
+  → Loop mein DB call
+  → Prisma include missing
+  → findAll then loop to findById
+
+================================================================
+SECTION 8: PRODUCTION-GRADE AGENT SETUP
+================================================================
+
+─── COMPLETE PROJECT STRUCTURE FOR AGENT SUCCESS ───
+
+  project-root/
+  ├── docs/
+  │   ├── PROJECT_OVERVIEW.md     ← What, who, why
+  │   ├── ARCHITECTURE.md         ← How it's built
+  │   ├── CODE_STANDARDS.md       ← How to write code
+  │   ├── DATABASE.md             ← Schema + patterns
+  │   ├── API.md                  ← Endpoint conventions
+  │   ├── TESTING.md              ← How to test
+  │   ├── SECURITY.md             ← Security requirements
+  │   ├── AI_RULES.md             ← Agent constitution
+  │   └── decisions/
+  │       ├── 001-database.md
+  │       └── 002-auth-strategy.md
+  ├── .cursorrules                ← Cursor-specific rules
+  ├── CLAUDE.md                   ← Claude Code rules
+  ├── replit.md                   ← Replit Agent context
+  └── src/
+      └── modules/
+          └── [feature]/
+              ├── [feature].controller.ts
+              ├── [feature].service.ts
+              ├── [feature].repository.ts
+              ├── [feature].schema.ts
+              ├── [feature].types.ts
+              ├── [feature].routes.ts
+              └── __tests__/
+                  ├── [feature].service.test.ts
+                  └── [feature].controller.test.ts
+
+─── AGENT QUALITY GATES ───
+
+  CI pipeline mein include karo (agent ke output ke liye):
+  
+  Gate 1: TypeScript
+    npx tsc --noEmit
+    → Fail on any type error
+  
+  Gate 2: Linting
+    npx eslint src/ --max-warnings 0
+    → Fail on any warning
+  
+  Gate 3: Tests
+    npm test -- --coverage
+    → Fail if coverage < threshold
+    → Fail if any test fails
+  
+  Gate 4: Audit
+    npm audit --audit-level high
+    → Fail if high/critical vulnerabilities
+
+  These gates automatically catch agent mistakes.
+
+─── SECRETS AND SECURITY WITH AGENTS ───
+
+  NEVER:
+  ❌ Paste API keys in agent conversation
+  ❌ Paste database connection strings
+  ❌ Paste JWT secrets or encryption keys
+  ❌ Let agent read .env files
+  
+  ALWAYS:
+  ✅ Use environment variable names only: "DATABASE_URL" not the actual value
+  ✅ .env in .gitignore (always)
+  ✅ .env.example with placeholder values
+  ✅ Agent instructions mein: "Use process.env.SECRET_KEY — don't hardcode"
+  ✅ Review agent output for accidental secret logging
+
+================================================================
+SECTION 9: MEASURING AGENT EFFECTIVENESS
+================================================================
+
+─── AGENT PRODUCTIVITY METRICS ───
+
+  Track over time:
+  
+  1. ACCEPT RATE
+     % of agent tasks accepted without major rework
+     Target: > 70%
+     Low → improve your prompts, smaller tasks
+  
+  2. REVIEW TIME
+     Average time to review one agent task
+     Target: < 10 minutes per task
+     High → tasks too large, context insufficient
+  
+  3. ITERATION COUNT
+     Average iterations per task
+     Target: 1-2
+     High → context poor, task too vague
+  
+  4. SCOPE VIOLATIONS
+     % of tasks where agent touched unexpected files
+     Target: < 5%
+     High → FORBIDDEN list needs work
+
+─── IMPROVING YOUR AGENT WORKFLOW ───
+
+  After every 10 tasks, reflect:
+  
+  "Agent ne kya consistently galat kiya?"
+  → AI_RULES.md mein add karo
+  
+  "Kaunsa pattern agent ne best follow kiya?"
+  → CODE_STANDARDS.md mein better document karo
+  
+  "Kahan mujhe zyada detail dena tha?"
+  → Prompt template improve karo
+  
+  "Kahan task too large tha?"
+  → Decomposition refine karo
+
+================================================================
+SECTION 10: THE FUTURE OF AGENTIC DEVELOPMENT (2026 onwards)
+================================================================
+
+─── WHERE WE ARE IN 2026 ───
+
+  ✅ Agents can: Write production-quality code with proper guidance
+  ✅ Agents can: Follow patterns with excellent context
+  ✅ Agents can: Fix bugs with proper error context
+  ✅ Agents can: Generate comprehensive tests
+  ✅ Agents can: Run and fix their own test failures
+  
+  ⚠️ Agents struggle with:
+  - Novel architecture design (options → yes, final decision → no)
+  - Business domain expertise (they don't know YOUR business)
+  - Security edge cases (miss subtle auth issues)
+  - Cross-cutting concerns (performance at scale)
+  - Long-horizon planning (what breaks in 6 months)
+
+─── WHAT SENIOR ENGINEERS DO THAT AGENTS CAN'T ───
+
+  1. UNDERSTAND BUSINESS CONTEXT
+     "Is feature bilkul zaroori hai kya?"
+     "User actually yahi chahta hai kya?"
+     Agent: Always says yes aur implement karta hai.
+  
+  2. MAKE TRADEOFF DECISIONS
+     "Speed lena hai ya correctness?"
+     "Consistency chahiye ya availability?"
+     Agent: Options bata sakta hai — judgment aapka
+  
+  3. PREDICT FUTURE PROBLEMS
+     "Yeh code 6 mahine baad technical debt banega"
+     "Yeh pattern scale nahi karega"
+     Agent: Limited foresight
+  
+  4. KNOW WHAT NOT TO BUILD
+     "Yeh feature waste of time hai"
+     "Simpler solution available hai"
+     Agent: Jo kaha woh build karta hai
+  
+  5. NAVIGATE AMBIGUITY
+     Incomplete requirements mein sahi decisions lena
+     Stakeholders se clarification lena
+     Agent: Hallucinate karta hai ambiguity mein
+
+─── THE IDEAL ENGINEER + AGENT RELATIONSHIP ───
+
+  Think of agent as:
+  "Bahut fast, tirelessly hardworking junior engineer
+   jo follow karta hai instructions perfectly
+   lekin judgment nahi rakhta
+   aur kabhi thakta nahi"
+  
+  Your job:
+  → Clear requirements dena
+  → Architectural vision rakhna
+  → Output verify karna
+  → Production decisions lena
+  → Business judgment apply karna
+  
+  Agent ka job:
+  → Fast code generation
+  → Pattern replication
+  → Boilerplate elimination
+  → Test generation
+  → Refactoring execution
+
+================================================================
+EXERCISE — PART 28
+================================================================
+
+TASK 1: Production Setup
+  Apne current project ke liye complete agent setup karo:
+  - docs/AI_RULES.md likho
+  - replit.md ko agent-optimized banao
+  - (Optional) .cursorrules likho
+  Minimum: AI_RULES.md + replit.md update
+
+TASK 2: Agent Workflow Practice
+  Ek feature lo (e.g., "add email notification on order")
+  - 5 tasks mein break karo
+  - Task 1 ka complete prompt likho (agent-ready format)
+  - Task 1 ke baad kya verify karoge woh list karo
+
+TASK 3: Agent Failure Analysis
+  Yeh scenario: Agent "POST /orders endpoint" implement kar raha hai.
+  Agent ne kiya:
+  - order.controller.ts ✓
+  - order.service.ts ✓
+  - order.routes.ts ✓
+  - user.service.ts ✗ (modified unexpectedly)
+  - product.service.ts ✗ (modified unexpectedly)
+  - New npm package added: "order-validator" ✗
+  
+  Batao:
+  1. Kya karna chahiye pehle?
+  2. Kaise recover karein?
+  3. AI_RULES.md mein kya add karein?
+  4. Prompt mein kya improve karna tha?
+
+TASK 4: Context Engineering
+  Apne project ke ek existing service file ke liye
+  ek "compressed context" banao (max 30 lines)
+  jo agent ko sahi pattern follow karne ke liye kaafi ho.
+
+================================================================
+QUIZ — PART 28
+================================================================
+
+Q1: Agent ka context window "overflow" ho jaaye toh kya hota hai?
+    (a) Agent crash ho jaata hai
+    (b) Purani instructions "forget" ho jaati hain — consistency khatam
+    (c) Agent slow ho jaata hai
+    (d) Agent error throw karta hai
+
+    Jawab: (b)
+
+Q2: .cursorrules / CLAUDE.md / AI_RULES.md ka main purpose kya hai?
+    (a) Project documentation for humans
+    (b) Agent ko project rules, patterns, forbidden actions samjhaana
+    (c) Build configuration
+    (d) API documentation
+
+    Jawab: (b)
+
+Q3: Multi-file task mein agent ke saath sabse bada risk kya hai?
+    (a) Task too slow hai
+    (b) Scope creep — agent unrelated files bhi modify kar sakta hai
+    (c) Tests fail ho jaate hain
+    (d) TypeScript errors aate hain
+
+    Jawab: (b)
+
+Q4: Agent ne unexpected files modify kiye — pehla step kya hai?
+    (a) Accept karo, baad mein fix karein
+    (b) git checkout -- . (discard changes) aur fresh prompt ke saath retry
+    (c) Agent ko explain karo same conversation mein
+    (d) Deploy karo aur check karo
+
+    Jawab: (b)
+
+Q5: Senior Engineer ki sabse important quality jo agent replace nahi kar sakta?
+    (a) Code likhna fast
+    (b) Tests likhna
+    (c) Business judgment, tradeoff decisions, aur "kya nahi banana" jaanna
+    (d) Boilerplate generate karna
+
+    Jawab: (c)
+
+Q6: "Parallel agents" kab safe hain?
+    (a) Hamesha — jitne zyada agents utna better
+    (b) Sirf jab dono agents ke kaam mein koi overlapping files nahi hain
+    (c) Sirf ek agent per project
+    (d) Sirf frontend development mein
+
+    Jawab: (b)
+
+================================================================
+COURSE COMPLETE — CONGRATULATIONS!
+================================================================
+
+Ab aap ne seekha hai:
+
+Part 01-06:   Mindset, Requirements, Architecture, Principles
+Part 07-10:   DSA, Database, Backend, Frontend
+Part 11-14:   System Design, Distributed Systems, Security, Testing
+Part 15-18:   Debugging, Performance, DevOps, Observability
+Part 19-22:   Code Review, Docs, AI Engineering, AI Workflow
+Part 23-27:   Capstone, Real-World, Decisions, Leadership, Career
+Part 28:      AI Coding Agent Mastery (Advanced)
+
+─── THE SENIOR ENGINEER WITH AI AGENTS ───
+
+  Senior Engineer 2026 definition:
+  
+  "Woh engineer jo:
+   1. Deep technical understanding rakhta hai
+   2. Business context se code ko connect karta hai
+   3. AI agents ko effectively direct karta hai
+   4. Agent output critically evaluate karta hai
+   5. Final decisions khud leta hai
+   6. Production consequences predict karta hai"
+  
+  AI agent ek powerful tool hai.
+  Aap ki expertise, judgment, aur responsibility replace nahi karta.
+  
+  Master the tool. Keep the judgment.
+
+================================================================

@@ -1,0 +1,324 @@
+================================================================================
+TASK: 02-04 — ENVIRONMENT SETUP & CONTEXT DOCUMENTS
+================================================================================
+TASK ID:        02-04
+TASK NAME:      Environment Setup + AI Agent Context Files
+PHASE:          02 — Project Foundation
+OBJECTIVE:      Create requirements.txt with all dependencies, and create
+                all AI agent context files (replit.md, AI_RULES.md,
+                ARCHITECTURE.md, CODE_STANDARDS.md, TESTING.md,
+                SECURITY.md, TRADING_RULES.md, RISK_MANAGEMENT.md).
+
+CONTEXT:
+  Context files are critical for all future agent tasks. These files are
+  the "project bible" that every agent reads before doing any work.
+  They prevent architecture drift and ensure consistency across all 22 phases.
+  requirements.txt ensures reproducible installs on Windows.
+
+DEPENDENCIES:   Tasks 02-01, 02-02, 02-03 complete
+PREVIOUS TASKS: 02-03 LOGGING
+
+FILES TO INSPECT:
+  - ROADMAP/00_MASTER_ROADMAP.txt (Technology Stack section)
+  - app/config.py, app/logger.py (for accurate documentation)
+
+FILES TO CREATE:
+  requirements.txt
+  replit.md
+  AI_RULES.md
+  ARCHITECTURE.md
+  CODE_STANDARDS.md
+  TESTING.md
+  SECURITY.md
+  TRADING_RULES.md
+  RISK_MANAGEMENT.md
+
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: app/config.py, app/logger.py, .env.example
+
+================================================================================
+DETAILED REQUIREMENTS — requirements.txt
+================================================================================
+
+Include EXACT versions for reproducibility:
+  MetaTrader5>=5.0.45           # MT5 Python API (Windows only)
+  pytest-mock>=3.11.0            # Provides 'mocker' fixture for mocking
+  pandas>=2.0.0
+  numpy>=1.24.0
+  fastapi>=0.109.0
+  uvicorn[standard]>=0.27.0
+  python-dotenv>=1.0.0
+  python-telegram-bot>=20.0
+  requests>=2.31.0              # For news filter HTTP calls
+  pytest>=7.4.0
+  pytest-cov>=4.1.0
+  pytest-mock>=3.11.0            # Provides 'mocker' fixture for mocking
+  matplotlib>=3.7.0             # For backtest charts + screenshots
+  # pystray — NOT INCLUDED: system tray is future/optional (see DECISION-001)
+  #   Only add if user explicitly requests system tray in Phase 18+
+
+Comment each line with its purpose:
+  # MetaTrader5: MT5 Python API (Windows only — will not install on Linux)
+  # pandas: OHLCV data processing
+  # numpy: Numerical calculations (indicators, position sizing)
+  # fastapi: Local web dashboard API
+  # ...
+
+================================================================================
+DETAILED REQUIREMENTS — replit.md
+================================================================================
+
+# MT5 Automated Forex Trading Bot
+
+## Project Summary
+Fully automated Forex trading system that connects to MetaTrader 5 on Windows,
+scans EURUSD/GBPUSD/USDJPY using a deterministic SMC/ICT strategy across
+H4/H1/M15/M5 timeframes, and executes 0–3 high-quality trades per day.
+$0 software cost. No LLM APIs. Runs 24/5 during London + New York sessions.
+
+## Tech Stack
+- Python 3.11+
+- MetaTrader5 (Windows Python package)
+- FastAPI + HTML/CSS/JS (local dashboard)
+- SQLite (local persistence)
+- python-dotenv (.env configuration)
+- pytest (testing)
+
+## Architecture Pattern
+Layered modules: mt5/ → strategy/ → confluence/ → risk/ → execution/ → management/
+All modules import config from app/config.py
+All modules use loggers from app/logger.py
+Database access via app/database/repositories.py only
+
+## How to Run (Windows)
+  setup.bat          — First-time setup
+  start_bot.bat      — Start the trading bot
+  run_dashboard.bat  — Start the web dashboard
+  run_tests.bat      — Run all tests
+
+## Critical Rules for Agent
+1. NEVER modify files outside the scope stated in the task
+2. NEVER add packages to requirements.txt without explicit permission
+3. NEVER hardcode values — use app/config.py
+4. NEVER use print() — use logger from app/logger.py
+5. NEVER enable live trading (LIVE_TRADING must stay false during development)
+6. ALWAYS mock MetaTrader5 in all tests (MT5 is Windows-only)
+7. ALWAYS follow patterns in CODE_STANDARDS.md
+8. ALWAYS write tests for new business logic
+
+## Default Mode
+TRADING_MODE=DEMO, LIVE_TRADING=false — NEVER change this default
+
+================================================================================
+DETAILED REQUIREMENTS — AI_RULES.md
+================================================================================
+
+# AI Agent Rules — MT5 Forex Bot
+
+## Project Identity
+Senior Python engineer on a production-grade MT5 Forex trading bot.
+Windows target, Python 3.11+, no LLM APIs, $0 cost.
+
+## ALWAYS
+- Read replit.md before ANY change
+- Read the relevant phase overview before starting
+- Follow CODE_STANDARDS.md patterns exactly
+- Use app/logger.py for all logging (never print())
+- Use app/config.py for all configuration (never os.environ directly)
+- Use app/database/repositories.py for all DB access (never raw SQL in business logic)
+- Write tests for all new business logic
+- Mock MetaTrader5 in all tests
+- Run python -m py_compile on every new file
+
+## NEVER
+- Modify files outside the stated task scope
+- Add packages to requirements.txt without being asked
+- Hardcode any numeric values (use config.py)
+- Use print() (use logger)
+- Enable LIVE_TRADING=true in any code
+- Write to .env directly from code
+- Create new directories not in the architecture
+- Change database schema without being in the Data Layer phase
+- Modify the ROADMAP/ directory structure
+- Use os.environ directly in business logic (use app/config.py)
+
+## File Structure (do not deviate)
+[paste the architecture tree from ROADMAP/00_MASTER_ROADMAP.txt]
+
+## Error Handling Pattern
+  try:
+      result = risky_operation()
+  except MT5Error as e:
+      logger.error(f"MT5 error in {context}: {e}")
+      return None  # or raise depending on criticality
+  except Exception as e:
+      logger.critical(f"Unexpected error in {context}: {e}", exc_info=True)
+      raise
+
+## Trading Safety Pattern
+  # ALWAYS check before trading
+  if not risk_manager.can_trade(signal):
+      logger.info(f"Trade blocked by risk manager: {risk_manager.block_reason}")
+      return
+  # ALWAYS verify after execution
+  if not executor.verify_execution(order_result):
+      logger.error("Execution verification failed — do not count as open trade")
+      return
+
+================================================================================
+DETAILED REQUIREMENTS — TRADING_RULES.md
+================================================================================
+
+Document ALL trading rules that must be followed:
+  - Trade only during London (07:00–16:00 UTC) or New York (12:00–21:00 UTC)
+  - Maximum 3 trades per day
+  - Minimum 0 trades — NEVER force a trade
+  - Risk 0.5% of equity per trade
+  - Minimum confluence score: 8/10
+  - Minimum R:R: 1:2
+  - Daily loss limit: 2%
+  - Consecutive loss protection: 2 losses = stop for the day
+  - No overnight positions by default
+  - No weekend exposure
+  - News blackout: 30 minutes before/after high-impact events
+  - Spread check required before every entry
+  - Correlation check required before every entry
+  - The 55–65% win rate is a PERFORMANCE TARGET, not a guarantee
+
+================================================================================
+DETAILED REQUIREMENTS — RISK_MANAGEMENT.md
+================================================================================
+
+Document the exact risk management rules:
+  - Position sizing formula: lots = (equity * risk%) / (SL_pips * pip_value)
+  - SL = structure-based + ATR buffer
+  - TP = structure/liquidity target that gives min 1:2 R:R
+  - Daily risk state persists in SQLite across restarts
+  - Daily trade count persists in SQLite across restarts
+  - Consecutive losses persist in SQLite across restarts
+
+================================================================================
+
+================================================================================
+SHARED TEST FIXTURES — REQUIRED (CHG-023)
+================================================================================
+
+A shared conftest.py with MT5 mock fixtures must be created in this task.
+Every subsequent phase's tests WILL rely on these fixtures. Without them,
+each agent will invent their own MT5 mock inconsistently.
+
+CREATE FILE: tests/conftest.py
+
+REQUIRED FIXTURES:
+
+  @pytest.fixture
+  def mock_mt5(mocker):
+      """
+      Patches the MetaTrader5 module with standard safe defaults.
+      All MT5 calls return realistic test data by default.
+      """
+      with mocker.patch('MetaTrader5') as mock:
+          # Initialize
+          mock.initialize.return_value = True
+          mock.login.return_value = True
+          # Account info
+          mock.account_info.return_value = MagicMock(
+              balance=10000.0,
+              equity=10000.0,
+              margin_level=500.0,
+              currency="USD",
+              server="TestBroker-Demo"
+          )
+          # Positions (empty by default)
+          mock.positions_get.return_value = []
+          # Orders (empty by default)
+          mock.orders_get.return_value = []
+          # Order send (success by default)
+          mock.order_send.return_value = MagicMock(
+              retcode=10009,
+              order=12345,
+              volume=0.01,
+              price=1.10000
+          )
+          yield mock
+
+  @pytest.fixture
+  def sample_ohlcv(symbol="EURUSD", bars=200):
+      """Returns a pandas DataFrame of realistic OHLCV data for testing."""
+      import pandas as pd
+      import numpy as np
+      dates = pd.date_range("2025-01-01", periods=bars, freq="h")
+      base = 1.10000
+      closes = base + np.random.randn(bars).cumsum() * 0.0001
+      df = pd.DataFrame({
+          'time': dates,
+          'open': closes - 0.0002,
+          'high': closes + 0.0005,
+          'low': closes - 0.0005,
+          'close': closes,
+          'tick_volume': np.random.randint(100, 1000, bars)
+      })
+      df['symbol'] = symbol
+      return df
+
+  @pytest.fixture
+  def test_config():
+      """Returns a Config object with safe test defaults."""
+      from app.config import Config
+      cfg = Config()
+      cfg.LIVE_TRADING = False
+      cfg.TRADING_MODE = "DEMO"
+      cfg.MIN_CONFLUENCE_SCORE = 8
+      cfg.RISK_PER_TRADE = 0.5
+      return cfg
+
+ADDITIONAL REQUIREMENT:
+  - pytest-mock must be added to requirements.txt (provides mocker fixture)
+  - All test files must import fixtures from conftest.py — NOT define their own MT5 mocks
+  - conftest.py is auto-discovered by pytest from the tests/ root directory
+
+================================================================================
+IMPLEMENTATION STEPS
+================================================================================
+
+1. Create requirements.txt
+2. Create replit.md
+3. Create AI_RULES.md
+4. Create ARCHITECTURE.md (based on ROADMAP/00_MASTER_ROADMAP.txt)
+5. Create CODE_STANDARDS.md
+6. Create TESTING.md
+7. Create SECURITY.md
+8. Create TRADING_RULES.md
+9. Create RISK_MANAGEMENT.md
+10. Update ROADMAP/00_PROJECT_STATUS.txt — mark Phase 02 [✓] COMPLETE
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+cat requirements.txt | head -20  (verify content)
+cat replit.md | head -20         (verify content)
+python -m py_compile app/config.py
+python -m py_compile app/logger.py
+python -c "from app.config import Config; from app.logger import get_logger; print('Foundation ready')"
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ requirements.txt complete with all packages + comments
+□ replit.md accurate and concise (agent will read this every task)
+□ AI_RULES.md complete with ALWAYS/NEVER sections
+□ ARCHITECTURE.md matches actual project structure
+□ CODE_STANDARDS.md defines naming + patterns
+□ TESTING.md defines testing approach + mock strategy
+□ SECURITY.md defines security requirements
+□ TRADING_RULES.md documents all trading constraints
+□ RISK_MANAGEMENT.md documents risk calculation rules
+□ Phase 02 marked [✓] in status file
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/03_MT5_INTEGRATION/01_PHASE_OVERVIEW.txt
+  (Can be started in parallel with ROADMAP/04_DATA_LAYER/01_PHASE_OVERVIEW.txt)
+================================================================================

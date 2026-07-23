@@ -1,0 +1,89 @@
+================================================================================
+PHASE 09 — EXECUTION ENGINE
+================================================================================
+
+PHASE NAME:         Execution Engine
+PHASE OBJECTIVE:    Implement the order placement, verification, and reconciliation
+                    system that converts approved TradeParameters into live MT5
+                    orders with full safety checks.
+
+WHY THIS PHASE EXISTS:
+    Passing all filters and risk checks produces a TradeParameters object. This
+    phase is responsible for submitting that to MT5, verifying it was accepted,
+    and handling failures gracefully. It also prevents duplicate orders and
+    recovers orphaned positions after restarts.
+
+DEPENDENCIES:
+    - Phase 03 (MT5 Integration): order_send, positions_get, orders_get
+    - Phase 04 (Data Layer): trade records repository
+    - Phase 07 (Risk Engine): TradeParameters
+    - Phase 08 (Filters): FilterPipeline
+
+INPUTS:
+    - TradeParameters (from RiskManager)
+    - MT5 account/connection (from MT5 layer)
+
+OUTPUTS:
+    - ExecutionResult: order ticket, fill price, execution time, status
+    - Trade record written to database
+
+FILES EXPECTED TO BE CREATED:
+    app/execution/order_validator.py
+    app/execution/order_executor.py
+    app/execution/execution_reconciler.py
+    app/execution/duplicate_protection.py
+    app/execution/orphan_recovery.py
+    app/execution/__init__.py
+    tests/test_execution/test_order_validator.py
+    tests/test_execution/test_order_executor.py
+    tests/test_execution/test_duplicate_protection.py
+    tests/test_execution/test_orphan_recovery.py
+
+FILES EXPECTED TO BE MODIFIED:
+    app/database/models.py    (add ExecutionResult, OrderRecord)
+
+FILES THAT MUST NOT BE MODIFIED:
+    app/mt5/
+    app/strategy/
+    app/risk/
+    app/confluence/
+    app/filters/
+    ROADMAP/
+
+TASK ORDER:
+    1. 01_TASK_ORDER_VALIDATION.txt
+    2. 02_TASK_ORDER_EXECUTION.txt
+    3. 03_TASK_EXECUTION_RECONCILIATION.txt
+    4. 04_TASK_DUPLICATE_TRADE_PROTECTION.txt
+    5. 05_TASK_ORPHAN_POSITION_RECOVERY.txt
+
+TESTING REQUIREMENTS:
+    - All execution tests use MT5 mock (never real MT5 in unit tests)
+    - Duplicate protection tested with concurrent signal scenarios
+    - Orphan recovery tested with simulated post-crash state
+
+ACCEPTANCE CRITERIA:
+    [ ] Orders only placed after full validation
+    [ ] Execution always verified (retcode checked)
+    [ ] Failed executions logged and never silently ignored
+    [ ] Duplicate protection prevents double-entry on same signal
+    [ ] Orphan positions detected and handled on startup
+    [ ] All tests pass
+
+KNOWN RISKS:
+    - MT5 order_send can fail with retcode != 10009; must handle all retcodes
+    - Requotes and partial fills must be detected
+    - Network interruption between order_send and confirmation must not
+      result in double-entry
+
+ROLLBACK STRATEGY:
+    If execution engine produces unexpected behavior, set
+    EXECUTION_ENABLED=false — this blocks ALL order placement safely.
+    Existing position management continues.
+
+HANDOFF REQUIREMENTS:
+    Before Phase 10 (Position Management):
+    - OrderExecutor.execute() fully functional with mock MT5
+    - Execution results written to database
+    - All 5 sub-tasks tested
+================================================================================

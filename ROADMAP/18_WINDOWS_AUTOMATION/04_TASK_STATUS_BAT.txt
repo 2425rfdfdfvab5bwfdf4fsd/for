@@ -1,0 +1,89 @@
+================================================================================
+TASK ID:     18-04
+TASK NAME:   Status Script (status.bat)
+PHASE:       18 — Windows Automation
+================================================================================
+
+OBJECTIVE:
+    Create status.bat and scripts/status_reader.py that display a
+    comprehensive real-time status report in the Windows command prompt.
+
+CONTEXT:
+    The user runs status.bat to see the current bot state.
+    Data is read from heartbeat.json (not from MT5 directly).
+    No MT5 connection required to run status.bat.
+
+FILES TO CREATE:
+    status.bat
+    scripts/status_reader.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+
+    status_reader.py reads heartbeat.json and prints:
+
+    ================================================================
+    MT5 TRADING BOT — STATUS REPORT
+    ================================================================
+    Generated: 2026-01-01 12:05:00 UTC
+    ================================================================
+
+    BOT PROCESS
+      Status:            RUNNING
+      PID:               12345
+      Started:           2026-01-01 07:00:00 UTC
+      Uptime:            5h 5m
+      Mode:              DEMO
+
+    MT5 CONNECTION
+      Connected:         YES
+      Broker:            ICMarkets-Demo
+      Account:           12345678
+      Balance:           $20,000.00
+      Equity:            $20,075.50
+      Free Margin:       $19,800.00
+
+    TODAY'S TRADING
+      Trades:            2 / 3
+      P&L Today:         +$75.50 (+0.38%)
+      Consecutive Losses: 0 / 2
+      Daily Loss Used:   0.38% / 2.00%
+      Trading Allowed:   YES
+
+    CURRENT SESSION
+      Active Session:    LONDON
+      Next Session:      NEW YORK (12:00 UTC)
+      Next News Event:   USD CPI @ 13:30 UTC (HIGH)
+
+    OPEN POSITIONS
+      EURUSD  BUY   0.02 lots  Entry: 1.08450  P&L: +$25.00  BE: Applied
+
+    LAST SIGNAL
+      GBPUSD SELL  Score: 8.5/10 (B)  Status: RISK_BLOCKED (Daily Limit)
+
+    HEARTBEAT
+      Last Update:       45 seconds ago
+      Status:            FRESH
+
+    ================================================================
+    Run run_dashboard.bat to open web dashboard
+    ================================================================
+
+    IF BOT NOT RUNNING:
+      Print "BOT IS NOT RUNNING" prominently in red.
+
+ACCEPTANCE CRITERIA:
+    [ ] status.bat reads and displays heartbeat data
+    [ ] Clear "NOT RUNNING" message when bot stopped
+    [ ] All fields populated correctly
+    [ ] No secrets exposed
+
+DEFINITION OF DONE:
+    [ ] status.bat and status_reader.py created
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 18-05 — TASK_AUTOSTART.txt
+================================================================================

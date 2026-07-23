@@ -1,0 +1,69 @@
+================================================================================
+TASK ID:     11-03
+TASK NAME:   Watchdog
+PHASE:       11 — Automation
+================================================================================
+
+OBJECTIVE:
+    Implement a watchdog script (watchdog.py) that monitors the bot's
+    heartbeat file and restarts the bot if it goes stale.
+
+CONTEXT:
+    The watchdog is a SEPARATE process started by start_bot.bat.
+    It watches the heartbeat file (data/heartbeat.txt).
+    If the heartbeat is not updated within WATCHDOG_TIMEOUT_SECONDS, the
+    watchdog kills and restarts the bot process.
+
+    RESTART POLICY:
+    - MAX_RESTARTS: 5 (configurable)
+    - RESTART_DELAY_SECONDS: 30 (configurable, increases on repeated failure)
+    - After MAX_RESTARTS exhausted: send Telegram alert, stop trying
+
+    IMPORTANT: The watchdog must NOT create a restart loop.
+    Use exponential backoff: 30s, 60s, 120s, 240s, 480s.
+
+DEPENDENCIES:
+    - 11-04 Heartbeat (heartbeat file format)
+    - Phase 02 config
+
+FILES TO CREATE:
+    watchdog.py     (at project root — separate process)
+    tests/test_automation/test_watchdog.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class Watchdog:
+        run() -> None           # runs indefinitely
+        _check_heartbeat() -> bool
+        _restart_bot() -> None
+        _is_max_restarts_reached() -> bool
+
+    Heartbeat file format (from 11-04):
+        JSON: { "timestamp": "2026-01-01T12:00:00Z", "status": "running", "pid": 12345 }
+
+    Detection logic:
+        last_heartbeat = read_heartbeat_file()
+        if (now - last_heartbeat.timestamp) > WATCHDOG_TIMEOUT_SECONDS: restart
+
+TEST REQUIREMENTS:
+    - test_fresh_heartbeat_no_restart()
+    - test_stale_heartbeat_triggers_restart()
+    - test_max_restarts_prevents_loop()
+    - test_exponential_backoff_delays()
+
+ACCEPTANCE CRITERIA:
+    [ ] Stale heartbeat triggers restart
+    [ ] MAX_RESTARTS limit respected
+    [ ] Exponential backoff implemented
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] watchdog.py created at project root
+    [ ] Tests pass
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 11-04 — TASK_HEARTBEAT.txt
+================================================================================

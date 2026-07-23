@@ -1,0 +1,101 @@
+================================================================================
+TASK: 02-01 — PROJECT STRUCTURE
+================================================================================
+TASK ID:        02-01
+TASK NAME:      Project Structure Setup
+PHASE:          02 — Project Foundation
+OBJECTIVE:      Create the complete project folder structure and all
+                __init__.py files, establishing the module hierarchy
+                that all future phases will follow.
+
+CONTEXT:
+  Read ARCHITECTURE.md (or ROADMAP/00_MASTER_ROADMAP.txt architecture section)
+  before starting. The structure must match the planned architecture exactly.
+  No trading logic is implemented in this task — only the skeleton.
+
+DEPENDENCIES:   Phase 01 complete
+PREVIOUS TASKS: 01-03
+
+FILES TO INSPECT:
+  - ROADMAP/00_MASTER_ROADMAP.txt (Architecture Overview section)
+
+FILES TO CREATE:
+  app/__init__.py
+  app/mt5/__init__.py
+  app/strategy/__init__.py
+  app/confluence/__init__.py
+  app/risk/__init__.py
+  app/filters/__init__.py
+  app/execution/__init__.py
+  app/management/__init__.py
+  app/automation/__init__.py
+  app/notifications/__init__.py
+  app/journal/__init__.py
+  app/database/__init__.py
+  app/analytics/__init__.py
+  app/dashboard/__init__.py
+  app/dashboard/static/.gitkeep
+  backtesting/__init__.py
+  validation/__init__.py
+  tests/__init__.py
+  tests/unit/__init__.py
+  tests/integration/__init__.py
+  tests/failure/__init__.py
+  tests/recovery/__init__.py
+  data/historical/.gitkeep
+  data/screenshots/.gitkeep
+  data/reports/.gitkeep
+  logs/.gitkeep
+  scripts/__init__.py
+
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: Any existing source files
+
+================================================================================
+DETAILED REQUIREMENTS
+================================================================================
+
+1. Every Python package directory must have an __init__.py file.
+   The __init__.py files should be empty or have a brief module docstring.
+
+2. The .gitkeep files ensure empty directories are tracked in git.
+
+3. The directory structure must exactly match the Architecture Overview
+   in ROADMAP/00_MASTER_ROADMAP.txt.
+
+4. Do NOT create any Python source files yet (except __init__.py).
+   Do NOT implement any logic yet.
+
+================================================================================
+IMPLEMENTATION STEPS
+================================================================================
+
+1. Create the app/ directory structure with __init__.py files
+2. Create the backtesting/ and validation/ directories
+3. Create the tests/ directory structure
+4. Create the data/ directory structure with .gitkeep files
+5. Create the logs/ directory with .gitkeep
+6. Verify the structure matches the architecture document
+7. Run: find . -type f -name "*.py" | sort (to verify structure)
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+python -c "import app" (should work with no errors)
+find . -name "__init__.py" | sort (should list all package __init__.py files)
+find . -name ".gitkeep" | sort (should list all placeholder files)
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ All directories exist
+□ All __init__.py files exist
+□ python -c "import app" works
+□ Structure matches ROADMAP/00_MASTER_ROADMAP.txt architecture
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/02_PROJECT_FOUNDATION/02_TASK_CONFIGURATION.txt
+================================================================================

@@ -1,0 +1,441 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 27: CAREER PREPARATION
+(Senior Engineer Roles Ke Liye Tayyari)
+================================================================
+
+SEEKHNE KE MAQASID:
+- Senior-level interviews prepare karna
+- System design interviews
+- Behavioral interviews
+- Portfolio build karna
+
+================================================================
+SECTION 1: SENIOR ENGINEER INTERVIEW OVERVIEW
+================================================================
+
+Senior engineer interview usually 4-6 rounds:
+
+1. Recruiter Screen (30 min)
+   - Background, experience, motivations
+   - Compensation expectations
+
+2. Technical Screen / Coding (60 min)
+   - Coding problem (DSA)
+   - Sometimes take-home assignment
+
+3. System Design (60 min)
+   - Design a large-scale system
+   - Architecture, trade-offs, scaling
+
+4. Behavioral / Leadership (60 min)
+   - STAR format stories
+   - Leadership, conflict, failures
+
+5. Domain / Architecture (60 min)
+   - Deep dive on past project
+   - Technical decisions you made
+
+6. Team Fit / Bar Raiser
+   - Culture fit
+   - Senior engineers evaluate
+
+================================================================
+SECTION 2: CODING INTERVIEWS
+================================================================
+
+Topics:
+  - Arrays, Hash Maps, Strings (most common)
+  - Trees, Graphs (medium)
+  - Dynamic Programming (less frequent for senior)
+  - System + API design embedded in problems
+
+Senior coding interview difference:
+  - Code quality matters (not just working solution)
+  - Communication critical ("I'm thinking...")
+  - Trade-offs explain karo
+  - Edge cases proactively identify karo
+  - Test your solution
+
+PROCESS (follow this every time):
+
+  1. UNDERSTAND (2-3 min):
+     - Example ke through problem samjho
+     - Edge cases clarify karo
+     - Input/output constraints poochho
+  
+  2. PLAN (3-5 min):
+     - Brute force approach bolo
+     - Optimize karo
+     - Complexity bolo
+     - "Does this approach make sense before I code?"
+  
+  3. CODE (15-20 min):
+     - Clean, readable code
+     - Meaningful variable names
+     - Talk while you code
+  
+  4. TEST (5 min):
+     - Example test case
+     - Edge cases (empty, one element, duplicates)
+     - Trace through code
+
+Common Senior Interview Problems:
+
+LRU Cache:
+  Design + implement
+  Solution: HashMap + Doubly Linked List
+  O(1) get and put
+
+Rate Limiter:
+  Design a rate limiter
+  Solution: Sliding window counter with Redis
+
+Two Sum / variants:
+  Array + HashMap approach
+
+Word Search in grid:
+  DFS + backtracking
+
+================================================================
+SECTION 3: SYSTEM DESIGN INTERVIEWS
+================================================================
+
+FORMAT (60 min):
+
+  5 min: Requirements clarify karo
+  10 min: High-level design
+  20 min: Deep dive (specific components)
+  10 min: Scale aur bottlenecks
+  5 min: Trade-offs aur alternatives
+  10 min: Questions
+
+APPROACH:
+
+Step 1: Requirements (ALWAYS clarify first)
+  "Before I design, let me clarify requirements:
+   - How many users? Daily active? Requests per second?
+   - What are the core features? What's out of scope?
+   - Read vs write ratio?
+   - Consistency vs availability priority?
+   - Any specific constraints?"
+
+Step 2: Estimation (back-of-envelope)
+  Show your math:
+  "100 million users × 10 requests/day = 1 billion requests/day
+   = 12,000 RPS average, 40,000 RPS peak
+   Storage: 100M users × 1KB profile = 100GB"
+
+Step 3: High-level design
+  "I'll start with a simple design and evolve it:
+   [Draw: Client → Load Balancer → App Servers → DB]"
+
+Step 4: Component deep dive
+  Pick the most interesting/challenging component
+  Go deep — this is where senior candidates shine
+
+Step 5: Scale
+  "Now let's think about scaling:
+   - Read replicas for DB
+   - Cache layer with Redis
+   - CDN for static content
+   - Horizontal scaling for app tier"
+
+Step 6: Failure modes
+  "What happens when:
+   - DB goes down?
+   - Cache goes down?
+   - One region fails?"
+
+COMMON SYSTEM DESIGN QUESTIONS:
+
+  Design Twitter/X
+  Design Instagram
+  Design YouTube
+  Design Uber
+  Design WhatsApp
+  Design URL shortener (bit.ly)
+  Design notification system
+  Design rate limiter
+  Design search autocomplete
+  Design distributed cache
+
+TIPS:
+  - Always clarify before designing
+  - Start simple, evolve
+  - Justify every decision
+  - Know trade-offs
+  - Mention what you'd monitor
+
+================================================================
+SECTION 4: BEHAVIORAL INTERVIEWS
+================================================================
+
+STAR Format:
+  S — Situation (context)
+  T — Task (what you needed to do)
+  A — Action (what YOU specifically did)
+  R — Result (outcome, measurable)
+
+PREPARE STORIES FOR:
+
+1. Led a complex technical project
+2. Disagreed with a technical decision
+3. Mentored a junior engineer
+4. Dealt with a production incident
+5. Made a mistake and how you handled it
+6. Influenced without authority
+7. Dealt with a difficult colleague
+8. Made a decision with incomplete information
+
+Example Story — Production Incident:
+
+Situation: "Our payment service went down during Black Friday.
+            Orders were failing, costing $50K/hour."
+
+Task: "I was the senior engineer on call that night.
+       I needed to identify root cause and restore service ASAP."
+
+Action: "I immediately pulled metrics and identified DB connection
+         pool exhaustion. I:
+         1. First checked if users were being double-charged
+         2. Identified the root cause (a slow query from new feature)
+         3. Rolled back the feature flag for new checkout flow
+         4. Service restored in 23 minutes
+         5. Communicated status updates every 5 minutes to stakeholders
+         6. Next day: Proper fix with index + postmortem"
+
+Result: "Service restored in 23 minutes. Total revenue impact: $200K
+         vs estimated $2M if issue persisted through night.
+         Postmortem resulted in: better DB monitoring, index review
+         process for new features, improved on-call runbooks."
+
+================================================================
+SECTION 5: ARCHITECTURE INTERVIEWS
+================================================================
+
+Format: Deep dive on a past project
+
+Prepare to discuss:
+  - What you built and why
+  - Technical decisions you made
+  - Trade-offs you considered
+  - Challenges you faced
+  - What you'd do differently
+
+Questions to expect:
+  "Tell me about the most complex system you've built."
+  "Why did you choose X over Y?"
+  "How did you ensure reliability?"
+  "How did you handle scaling?"
+  "If you could redo it, what would you change?"
+
+Preparation:
+  - Choose your best/most complex project
+  - Diagram prepare karo
+  - 5 key technical decisions list karo + reasoning
+  - 3 things you'd do differently (shows growth)
+
+================================================================
+SECTION 6: INTERVIEW QUESTIONS BANK
+================================================================
+
+CODING:
+  1. Implement LRU Cache
+  2. Two Sum variants
+  3. Valid parentheses
+  4. Maximum subarray sum
+  5. Find shortest path (BFS)
+  6. Binary search variants
+  7. Rate limiter implementation
+  8. Serialize/deserialize tree
+
+SYSTEM DESIGN:
+  1. Design URL shortener
+  2. Design notification system
+  3. Design chat application
+  4. Design e-commerce feed
+  5. Design distributed cache
+  6. Design rate limiter at scale
+
+BEHAVIORAL:
+  1. Tell me about a time you disagreed with your manager.
+  2. How do you handle conflicts on your team?
+  3. Tell me about your biggest technical failure.
+  4. How do you mentor junior developers?
+  5. Tell me about a time you had to influence without authority.
+  6. Describe a time when you had to make a decision with incomplete information.
+
+TECHNICAL DEPTH:
+  1. Explain ACID transactions.
+  2. What's the difference between SQL and NoSQL? When would you use each?
+  3. How does JWT authentication work?
+  4. What is eventual consistency?
+  5. How would you design a rate limiter?
+  6. Explain the CAP theorem.
+  7. What is the N+1 query problem?
+  8. How does a CDN work?
+  9. What's the difference between horizontal and vertical scaling?
+  10. How do you handle database migrations safely?
+
+================================================================
+SECTION 7: PORTFOLIO BUILDING
+================================================================
+
+Senior engineer portfolio:
+
+GitHub Profile:
+  - Pinned: 3-4 best projects
+  - README: Clear description of each project
+  - Consistent commits (shows activity)
+
+Projects to include:
+  - Capstone project (from this course)
+  - Open source contributions
+  - Personal projects with real users
+  - Technical blog posts
+
+Technical Blog:
+  Effective topics:
+  - "How I fixed N+1 queries in our API"
+  - "Building a rate limiter with Redis"
+  - "What I learned from a production incident"
+  - System design deep dives
+
+LinkedIn:
+  - Complete profile
+  - Specific achievements (numbers!)
+  - Technical skills listed
+  - Recommendations from colleagues
+
+================================================================
+SECTION 8: SALARY NEGOTIATION
+================================================================
+
+Research:
+  - levels.fyi (compensation database)
+  - Glassdoor
+  - Blind (anonymous)
+  - LinkedIn Salary
+
+Negotiation tips:
+  1. Always negotiate — first offer rarely best
+  2. Total compensation = Base + Bonus + Equity + Benefits
+  3. Use competing offers (even if you prefer this company)
+  4. Be specific: "Based on my research and experience, I'm targeting X"
+  5. Negotiation is expected — not rude
+
+BATNA (Best Alternative To Negotiated Agreement):
+  Know your walkaway point.
+  Competing offer = strong leverage.
+
+================================================================
+SECTION 9: INTERVIEW MINDSET
+================================================================
+
+Nervousness ka antidote:
+
+  Remember:
+  - Interviews are conversations, not tests
+  - It's mutual evaluation — you're evaluating them too
+  - You don't need to know everything
+  - "I don't know, but here's how I'd approach finding out" is valid
+  - Ask clarifying questions — senior engineers do this
+
+Questions TO ASK in interviews:
+  "What does success look like in this role at 6 months?"
+  "What's the engineering team's biggest challenge right now?"
+  "How does the team make technical decisions?"
+  "What's the deployment process?"
+  "How does the team handle incidents?"
+  "What's the on-call culture?"
+  "Why is this role open?"
+
+================================================================
+SECTION 10: FINAL ASSESSMENT — SENIOR ENGINEER READINESS
+================================================================
+
+Rate yourself 1-5 in each area:
+
+TECHNICAL:
+  □ Problem Decomposition (/5)
+  □ Requirements Engineering (/5)
+  □ System Design (/5)
+  □ Architecture Patterns (/5)
+  □ Data Structures & Algorithms (/5)
+  □ Database Engineering (/5)
+  □ Backend Engineering (/5)
+  □ Frontend Engineering (/5)
+  □ Security Engineering (/5)
+  □ Testing Strategy (/5)
+  □ Debugging Methodology (/5)
+  □ Performance Engineering (/5)
+  □ DevOps/Cloud (/5)
+  □ Distributed Systems (/5)
+
+NON-TECHNICAL:
+  □ Technical Communication (/5)
+  □ Code Review (/5)
+  □ Documentation (/5)
+  □ Mentoring (/5)
+  □ Engineering Leadership (/5)
+  □ AI-Assisted Development (/5)
+  □ Decision Making (/5)
+
+TOTAL: ___/105
+
+Score Interpretation:
+  85-105: Senior Engineer Ready
+  70-85:  Near Senior — focus on weak areas
+  55-70:  Mid-Level — 6-12 months more growth needed
+  Below 55: Junior-Mid — keep learning!
+
+================================================================
+COURSE COMPLETION — FINAL MESSAGE
+================================================================
+
+Mubarak ho! Aapne poora course complete kiya.
+
+Is course ne aapko yeh skills di hain:
+
+✅ Senior engineer ki tarah sochna
+✅ Requirements engineering
+✅ Architecture design karna
+✅ Production-grade backend aur frontend build karna
+✅ Database deeply samajhna
+✅ System design karna
+✅ Distributed systems handle karna
+✅ Security by design
+✅ Testing strategy
+✅ Debugging methodically
+✅ Performance optimize karna
+✅ DevOps aur cloud deployment
+✅ Observability aur monitoring
+✅ Code review professionally karna
+✅ Technical documentation likhna
+✅ AI tools effectively use karna
+✅ Real-world production problems solve karna
+✅ Technical decisions make aur communicate karna
+✅ Junior engineers mentor karna
+✅ Career ke liye prepare karna
+
+NEXT STEPS:
+  1. Capstone project complete karo (Part 23)
+  2. All 27 parts revisit karo — weak areas pe focus
+  3. Real projects pe yeh knowledge apply karo
+  4. Technical blog likhna shuru karo
+  5. Open source contribute karo
+  6. Interview practice karo
+
+Remember:
+  "Senior engineer sirf ek title nahi hai.
+   Yeh ek mindset hai — problem-first, trade-off-aware,
+   communication-driven, production-responsible thinking.
+   
+   Code generate karna AI kar sakta hai.
+   THINK karna aur RIGHT DECISIONS lena — yeh aap karte ho."
+
+================================================================
+SENIOR ENGINEER COURSE — COMPLETE
+27 Parts | Roman Urdu | 2026
+================================================================

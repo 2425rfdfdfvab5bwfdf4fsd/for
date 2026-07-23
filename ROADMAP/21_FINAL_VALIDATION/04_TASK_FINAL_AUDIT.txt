@@ -1,0 +1,85 @@
+================================================================================
+TASK ID:     21-04
+TASK NAME:   Final System Audit
+PHASE:       21 — Final Validation
+================================================================================
+
+OBJECTIVE:
+    Perform a final comprehensive audit of the complete system and generate
+    a Final Audit Report documenting the system's state, validated capabilities,
+    and known limitations before any live deployment.
+
+CONTEXT:
+    This is the last task in the build roadmap.
+    The final audit is a human-readable document summarizing everything.
+    It is the definitive handoff document from "build phase" to "operate phase".
+
+DEPENDENCIES:
+    - All phases 02–21 complete (except demo period)
+    - Production readiness check: READY verdict
+
+FILES TO CREATE:
+    docs/FINAL_AUDIT_REPORT.md
+    docs/KNOWN_LIMITATIONS.md
+
+FILES FORBIDDEN TO MODIFY:
+    app/
+    ROADMAP/
+
+FINAL AUDIT REPORT CONTENT:
+
+    1. SYSTEM OVERVIEW
+       Version, build date, phases completed, total tests, coverage
+
+    2. ARCHITECTURE SUMMARY
+       Component diagram (text-based), key design decisions
+
+    3. CAPABILITIES CONFIRMED
+       List each validated capability with evidence (test name or backtest result)
+
+    4. VALIDATED PERFORMANCE (from backtesting)
+       Include DISCLAIMER about past performance
+
+    5. RISK MANAGEMENT VERIFICATION
+       Evidence each risk control works (test reference)
+
+    6. AUTOMATION VERIFICATION
+       Evidence each automation feature works
+
+    7. SECURITY CONTROLS
+       Summary of security audit findings and resolutions
+
+    8. KNOWN LIMITATIONS
+       Honest list of limitations and areas for future improvement
+
+    9. FUTURE IMPROVEMENTS
+       Prioritized list of potential enhancements (not commitments)
+
+    10. SIGN-OFF
+        [ ] Technical validation: complete
+        [ ] Demo trading: complete (date: _______)
+        [ ] Live readiness checklist: signed off
+        [ ] System approved for live trading: YES / NO
+
+docs/KNOWN_LIMITATIONS.md:
+    Document all known limitations honestly:
+    - MT5 dependency: requires Windows
+    - No mobile notifications beyond Telegram
+    - News filter relies on ForexFactory (external dependency)
+    - Backtesting limitations (spread, slippage simulations are approximations)
+    - Strategy limitation: only 3 pairs, 2 sessions
+    - Win rate is a target, not a guarantee
+
+ACCEPTANCE CRITERIA:
+    [ ] Final audit report created and complete
+    [ ] Known limitations documented honestly
+    [ ] Phase 21 acceptance criteria met
+
+DEFINITION OF DONE:
+    [ ] FINAL_AUDIT_REPORT.md created
+    [ ] KNOWN_LIMITATIONS.md created
+    [ ] Phase 21 COMPLETE in ROADMAP/00_PROJECT_STATUS.txt
+
+    *** CONGRATULATIONS: BUILD ROADMAP COMPLETE ***
+    Proceed to Phase 22 for documentation, then begin demo trading.
+================================================================================

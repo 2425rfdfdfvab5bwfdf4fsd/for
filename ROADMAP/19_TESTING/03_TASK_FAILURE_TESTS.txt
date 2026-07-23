@@ -1,0 +1,105 @@
+================================================================================
+TASK ID:     19-03
+TASK NAME:   Failure Simulation Tests
+PHASE:       19 — Testing
+================================================================================
+
+OBJECTIVE:
+    Implement tests that simulate various failure conditions and verify
+    the bot handles them gracefully without crashing or corrupting data.
+
+DEPENDENCIES:
+    - 19-01 fixtures complete
+
+FILES TO CREATE:
+    tests/failure/test_mt5_failure.py
+    tests/failure/test_data_failure.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/
+    ROADMAP/
+
+FAILURE SCENARIOS:
+
+    test_mt5_failure.py:
+        test_mt5_initialize_fails():
+            mt5.initialize() returns False → bot enters reconnect loop → no crash
+
+        test_mt5_disconnects_mid_scan():
+            mt5 raises ConnectionError during symbol scan → error logged,
+            loop continues on next iteration
+
+        test_order_send_returns_requote():
+            retcode = 10004 → retry once → success
+
+        test_order_send_returns_no_money():
+            retcode = 10019 → CRITICAL log → no retry → no crash
+
+        test_positions_get_returns_none():
+            mt5.positions_get() returns None → logged as WARNING → returns empty list
+
+    test_data_failure.py:
+        test_database_locked():
+            SQLite database locked → retry with backoff → warning logged
+
+        test_database_corrupted():
+            SQLite file corrupted → CRITICAL log → bot exits gracefully
+
+        test_news_feed_unavailable():
+            News RSS returns 503 → fail-safe applied → trading blocked (if BLOCK mode)
+
+        test_heartbeat_directory_missing():
+            data/ directory missing → created automatically
+
+CRITICAL TEST SCENARIOS — REQUIRED (CHG-024):
+All of the following TCs must be present and passing before Phase 19 is complete.
+
+    TC-001: test_mt5_initialize_fails()
+      mt5.initialize() returns False → bot enters reconnect loop, no crash, no trade
+
+    TC-002: test_order_send_returns_requote()
+      retcode 10004 (REQUOTE) → retry exactly once → success on second attempt
+
+    TC-003: test_order_send_returns_no_money()
+      retcode 10019 (NO_MONEY) → CRITICAL log, NO retry, bot continues running
+
+    TC-004: test_order_execution_timeout_no_duplicate()
+      mt5.order_send returns None (timeout) → history_deals_get finds matching deal
+      → verify ZERO additional order_send calls made after recovery
+
+    TC-005: test_daily_loss_limit_restart_persists()
+      DB has daily_stats with 1.9% loss → bot restart → new trade blocked (still 1.9%)
+      → verify loss limit state loaded from DB, not reset
+
+    TC-006: test_daily_reset_at_broker_midnight()
+      Simulate broker time crossing midnight → daily_stats record created for new date
+      → verify old day's limits no longer apply
+
+    TC-007: test_orphan_position_alert_on_startup()
+      MT5 has open position, DB has no matching record → CRITICAL alert triggered
+      → verify bot does NOT crash, Telegram alert sent (mocked)
+
+    TC-008: test_news_filter_timeout_blocks_trading()
+      News HTTP request times out after 5s → BLOCK mode → trading blocked → no crash
+
+    TC-009: test_swing_look_ahead_rejection()
+      Pass current (forming) bar to swing detector → verify NO swing confirmed
+      → ensures only CLOSED candles are used in swing detection
+
+    TC-010: test_duplicate_guard_blocks_same_signal()
+      Same symbol/direction/bar submitted to DuplicateGuard twice
+      → second submission rejected → only 1 trade entry created
+
+ACCEPTANCE CRITERIA:
+    [ ] No failure scenario causes unhandled exception
+    [ ] CRITICAL failures log correctly
+    [ ] Recoverable failures retry with backoff
+    [ ] All TC-001 through TC-010 pass
+    [ ] All other failure tests pass
+
+DEFINITION OF DONE:
+    [ ] All failure test files created and passing
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 19-04 — TASK_RECOVERY_TESTS.txt
+================================================================================

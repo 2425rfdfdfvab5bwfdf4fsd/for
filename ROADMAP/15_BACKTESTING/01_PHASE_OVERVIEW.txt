@@ -1,0 +1,88 @@
+================================================================================
+PHASE 15 — BACKTESTING
+================================================================================
+
+PHASE NAME:         Backtesting
+PHASE OBJECTIVE:    Build a backtesting engine that runs the deterministic
+                    strategy logic over historical OHLCV data, producing
+                    statistically meaningful performance metrics.
+
+WHY THIS PHASE EXISTS:
+    Before any live trading, the strategy must be validated on historical data.
+    The backtest engine must use the SAME deterministic logic as the live bot —
+    not a simplified approximation. Results must include realistic simulation
+    of spread, slippage, and execution constraints.
+
+    IMPORTANT: The 55–65% win rate is a PERFORMANCE TARGET, not a guarantee.
+    It can only be assessed through valid backtesting with sufficient sample size.
+
+CRITICAL RULES:
+    - NO LOOK-AHEAD BIAS: Only data available at the time of the bar may be used
+    - NO CURVE FITTING: Parameters set before backtest, not adjusted afterward
+    - DATA SPLIT:
+        Development:      first 70% of data
+        Out-of-sample:    last 30% of data (never touched during development)
+    - MINIMUM DATA: 2+ years per symbol where available
+    - REALISTIC COSTS: spread, slippage, commission included
+
+DEPENDENCIES:
+    - Phase 05 (Strategy Engine): must be importable in backtest context
+    - Phase 06 (Confluence Engine): same scorer used
+    - Phase 07 (Risk Engine): same risk logic used
+    - Phase 04 (Data Layer): historical data storage
+
+INPUTS:
+    - Historical OHLCV data (downloaded from MT5 or CSV)
+    - Strategy parameters (from config)
+    - Backtest configuration (date range, symbols, mode)
+
+OUTPUTS:
+    - Trade-by-trade results CSV
+    - Performance metrics (win rate, profit factor, max DD, Sharpe, etc.)
+    - Equity curve data
+    - HTML or PDF report
+
+FILES EXPECTED TO BE CREATED:
+    backtesting/historical_data.py
+    backtesting/backtest_engine.py
+    backtesting/realistic_execution.py
+    backtesting/metrics.py
+    backtesting/reports.py
+    backtesting/__init__.py
+    run_backtest.py                     (entry point, called by run_backtest.bat)
+    tests/test_backtesting/test_engine.py
+    tests/test_backtesting/test_metrics.py
+
+FILES THAT MUST NOT BE MODIFIED:
+    app/mt5/         (live trading only)
+    app/strategy/    (shared — read only in backtest context)
+    app/risk/        (shared — read only in backtest context)
+    ROADMAP/
+
+TASK ORDER:
+    1. 01_TASK_HISTORICAL_DATA.txt
+    2. 02_TASK_BACKTEST_ENGINE.txt
+    3. 03_TASK_REALISTIC_EXECUTION.txt
+    4. 04_TASK_METRICS.txt
+    5. 05_TASK_REPORTS.txt
+
+ACCEPTANCE CRITERIA:
+    [ ] Backtest runs over 2 years of EURUSD/GBPUSD/USDJPY data
+    [ ] Zero look-ahead bias (verified by test)
+    [ ] Realistic spread and slippage applied
+    [ ] Minimum 30 trades per symbol before drawing conclusions
+    [ ] All standard metrics calculated correctly
+    [ ] HTML report generated
+    [ ] run_backtest.bat works end-to-end
+
+KNOWN RISKS:
+    - MT5 historical data may have gaps; must detect and handle
+    - Strategy engine designed for live bar-by-bar; must adapt for backtest iteration
+    - Look-ahead bias is subtle; have a dedicated test for it
+
+HANDOFF REQUIREMENTS:
+    Before Phase 16 (Validation):
+    - Backtest engine produces reproducible results
+    - Metrics calculator verified with known datasets
+    - At least one full backtest run completed successfully
+================================================================================

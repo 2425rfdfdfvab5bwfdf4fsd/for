@@ -1,0 +1,101 @@
+================================================================================
+TASK: 03-04 — CONNECTION RECOVERY
+================================================================================
+TASK ID:        03-04
+TASK NAME:      MT5 Connection Recovery
+PHASE:          03 — MT5 Integration
+OBJECTIVE:      Add automatic reconnection logic to the MT5 connection layer,
+                with exponential backoff, maximum retry limits, and proper
+                state reconciliation after reconnection.
+
+CONTEXT:
+  MT5 connections can drop due to network issues, broker maintenance,
+  or Windows sleep/wake cycles. The bot must detect this and recover
+  automatically without creating duplicate trades or missing position updates.
+
+DEPENDENCIES:   Task 03-03 complete
+PREVIOUS TASKS: 03-03 MARKET DATA
+
+FILES TO INSPECT:   app/mt5/connection.py
+FILES TO CREATE:
+  app/mt5/recovery.py
+  tests/unit/test_mt5_recovery.py
+FILES TO MODIFY:
+  app/mt5/connection.py (add reconnection support)
+  ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: app/mt5/market_data.py, app/mt5/symbols.py
+
+================================================================================
+DETAILED REQUIREMENTS
+================================================================================
+
+class MT5RecoveryManager:
+
+    MAX_RECONNECT_ATTEMPTS = 5
+    INITIAL_BACKOFF_SECONDS = 5
+    MAX_BACKOFF_SECONDS = 300  # 5 minutes
+
+    def __init__(self, connection: MT5Connection, config: Config):
+        ...
+
+    def attempt_reconnection(self) -> bool:
+        """
+        Tries to reconnect with exponential backoff:
+          Attempt 1: wait 5s
+          Attempt 2: wait 10s
+          Attempt 3: wait 20s
+          Attempt 4: wait 40s
+          Attempt 5: wait 80s (capped at MAX_BACKOFF)
+        Returns True if reconnected, False after all attempts failed.
+        Sends Telegram alert on critical failure (if Telegram available).
+        """
+
+    def is_recovery_needed(self) -> bool:
+        """Returns True if MT5 reports disconnected."""
+
+    def get_reconnect_stats(self) -> dict:
+        """
+        Returns:
+          attempts_today: int
+          last_disconnect: datetime or None
+          last_reconnect: datetime or None
+          consecutive_failures: int
+        """
+
+ADD to MT5Connection class:
+    def reconnect(self) -> bool:
+        """Calls MT5RecoveryManager.attempt_reconnection()."""
+
+    def ensure_connected(self) -> bool:
+        """
+        If not connected, attempt reconnection.
+        Returns True if connected (or reconnected), False if all failed.
+        Used at the start of every trading loop iteration.
+        """
+
+IMPORTANT RULES:
+  - Do NOT trade during reconnection attempts
+  - After reconnection, caller is responsible for reconciling positions
+  - Log every disconnect/reconnect event with timestamp
+  - Never create an infinite retry loop
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+python -m py_compile app/mt5/recovery.py
+pytest tests/unit/test_mt5_recovery.py -v
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ Exponential backoff works correctly (verify timing in tests)
+□ Max retry limit enforced
+□ Recovery stats tracked
+□ Tests pass with mocked MT5
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/03_MT5_INTEGRATION/05_TASK_ACCOUNT_VALIDATION.txt
+================================================================================

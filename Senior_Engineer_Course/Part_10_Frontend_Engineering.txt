@@ -1,0 +1,595 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 10: FRONTEND ENGINEERING
+(React + TypeScript — Senior Level)
+================================================================
+
+SEEKHNE KE MAQASID:
+- Component architecture
+- State management (server + client)
+- Performance optimization
+- Accessibility aur Security
+- Large applications structure
+
+================================================================
+SECTION 1: COMPONENT ARCHITECTURE
+================================================================
+
+Senior frontend engineer components design karta hai — banana nahi.
+
+--- COMPONENT TYPES ---
+
+1. UI/Dumb Components (Presentational):
+   - Sirf display karte hain
+   - Props se data lete hain
+   - No business logic
+   - Easily reusable
+   
+   Example:
+     function Button({ label, onClick, variant = 'primary', disabled = false }) {
+       return (
+         <button
+           className={`btn btn-${variant}`}
+           onClick={onClick}
+           disabled={disabled}
+         >
+           {label}
+         </button>
+       );
+     }
+
+2. Container/Smart Components:
+   - Data fetch karte hain
+   - Business logic handle karte hain
+   - State manage karte hain
+   - Dumb components ko data dete hain
+   
+   Example:
+     function UserProfileContainer() {
+       const { data: user, isLoading, error } = useUser(userId);
+       
+       if (isLoading) return <Skeleton />;
+       if (error) return <ErrorMessage error={error} />;
+       
+       return <UserProfile user={user} />;
+     }
+
+3. Layout Components:
+   - Page structure define karte hain
+   - Header, sidebar, footer
+   
+4. Page Components:
+   - Route-level components
+   - Compose smaller components
+
+--- COMPONENT DESIGN PRINCIPLES ---
+
+Single Responsibility:
+  Har component ek kaam kare.
+
+Props Interface Define Karo:
+  interface UserCardProps {
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      avatar?: string;
+    };
+    onEdit?: (userId: string) => void;
+    showActions?: boolean;
+  }
+  
+  function UserCard({ user, onEdit, showActions = true }: UserCardProps) {
+    // ...
+  }
+
+Composition > Duplication:
+  Ek flexible component jo multiple cases handle kare.
+
+================================================================
+SECTION 2: STATE MANAGEMENT
+================================================================
+
+State = UI ka current data
+
+Types:
+  1. Server State  → Database se ata hai (users, products)
+  2. Client State  → UI-only (modal open/closed, form input)
+  3. URL State     → Route params, query strings
+  4. Form State    → Form values, validation
+
+--- SERVER STATE (TanStack Query / React Query) ---
+
+Server state = async data jo server se aata hai
+
+BAD (manual state management):
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  useEffect(() => {
+    setLoading(true);
+    fetch('/api/users')
+      .then(r => r.json())
+      .then(data => { setUsers(data); setLoading(false); })
+      .catch(err => { setError(err); setLoading(false); });
+  }, []);
+  
+  // No caching, no retry, no background refresh, lots of boilerplate
+
+GOOD (React Query):
+  import { useQuery } from '@tanstack/react-query';
+  
+  function useUsers() {
+    return useQuery({
+      queryKey: ['users'],
+      queryFn: () => apiClient.get('/users').then(r => r.data),
+      staleTime: 5 * 60 * 1000, // 5 min cache
+    });
+  }
+  
+  function UserList() {
+    const { data: users, isLoading, error } = useUsers();
+    
+    if (isLoading) return <Spinner />;
+    if (error) return <ErrorBoundary error={error} />;
+    
+    return users.map(user => <UserCard key={user.id} user={user} />);
+  }
+
+Benefits:
+  - Caching automatic
+  - Background refresh
+  - Retry on failure
+  - Loading/error states built-in
+  - Cache invalidation
+
+--- CLIENT STATE (Zustand) ---
+
+Global UI state ke liye (modals, themes, user preferences):
+
+  import { create } from 'zustand';
+  
+  interface UIStore {
+    isCartOpen: boolean;
+    theme: 'light' | 'dark';
+    openCart: () => void;
+    closeCart: () => void;
+    toggleTheme: () => void;
+  }
+  
+  const useUIStore = create<UIStore>((set) => ({
+    isCartOpen: false,
+    theme: 'light',
+    openCart: () => set({ isCartOpen: true }),
+    closeCart: () => set({ isCartOpen: false }),
+    toggleTheme: () => set(state => ({
+      theme: state.theme === 'light' ? 'dark' : 'light'
+    }))
+  }));
+
+--- WHEN TO USE WHAT ---
+
+Server data (users, products, orders) → React Query
+Global UI state (modal, theme, auth user) → Zustand
+Local component state → useState
+Derived state → useMemo/useCallback
+Form state → React Hook Form
+URL state → useSearchParams/useRouter
+
+================================================================
+SECTION 3: FORMS
+================================================================
+
+Senior approach: React Hook Form + Zod
+
+  import { useForm } from 'react-hook-form';
+  import { zodResolver } from '@hookform/resolvers/zod';
+  import { z } from 'zod';
+  
+  const loginSchema = z.object({
+    email: z.string().email('Valid email required'),
+    password: z.string().min(8, 'Min 8 characters')
+  });
+  
+  type LoginForm = z.infer<typeof loginSchema>;
+  
+  function LoginForm() {
+    const {
+      register,
+      handleSubmit,
+      formState: { errors, isSubmitting }
+    } = useForm<LoginForm>({
+      resolver: zodResolver(loginSchema)
+    });
+    
+    const onSubmit = async (data: LoginForm) => {
+      await authService.login(data);
+    };
+    
+    return (
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <input {...register('email')} />
+        {errors.email && <span>{errors.email.message}</span>}
+        
+        <input type="password" {...register('password')} />
+        {errors.password && <span>{errors.password.message}</span>}
+        
+        <button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Logging in...' : 'Login'}
+        </button>
+      </form>
+    );
+  }
+
+================================================================
+SECTION 4: ROUTING
+================================================================
+
+React Router v6:
+
+  // App.tsx
+  import { BrowserRouter, Routes, Route } from 'react-router-dom';
+  
+  function App() {
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="products" element={<Products />} />
+            <Route path="products/:id" element={<ProductDetail />} />
+            <Route
+              path="dashboard"
+              element={<PrivateRoute><Dashboard /></PrivateRoute>}
+            />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    );
+  }
+  
+  // Protected route
+  function PrivateRoute({ children }) {
+    const { isAuthenticated } = useAuth();
+    return isAuthenticated ? children : <Navigate to="/login" />;
+  }
+
+================================================================
+SECTION 5: ERROR BOUNDARIES
+================================================================
+
+JavaScript errors ko gracefully handle karna:
+
+  class ErrorBoundary extends React.Component {
+    state = { hasError: false, error: null };
+    
+    static getDerivedStateFromError(error) {
+      return { hasError: true, error };
+    }
+    
+    componentDidCatch(error, errorInfo) {
+      logger.error('React error boundary caught', {
+        error: error.message,
+        stack: errorInfo.componentStack
+      });
+    }
+    
+    render() {
+      if (this.state.hasError) {
+        return <ErrorFallback error={this.state.error} />;
+      }
+      return this.props.children;
+    }
+  }
+  
+  // Use it:
+  <ErrorBoundary>
+    <Dashboard />
+  </ErrorBoundary>
+
+================================================================
+SECTION 6: PERFORMANCE OPTIMIZATION
+================================================================
+
+--- CODE SPLITTING ---
+
+Sab code ek bundle mein mat rakho:
+
+  // Lazy loading routes
+  const Dashboard = lazy(() => import('./pages/Dashboard'));
+  const Products = lazy(() => import('./pages/Products'));
+  
+  <Suspense fallback={<Spinner />}>
+    <Routes>
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/products" element={<Products />} />
+    </Routes>
+  </Suspense>
+
+--- MEMOIZATION ---
+
+Unnecessary re-renders rokna:
+
+  // useMemo — expensive calculations
+  const sortedProducts = useMemo(
+    () => products.sort((a, b) => a.price - b.price),
+    [products] // Sirf jab products change ho
+  );
+  
+  // useCallback — stable function references
+  const handleSubmit = useCallback(
+    async (data) => { await orderService.create(data); },
+    [] // Dependencies
+  );
+  
+  // React.memo — component memoization
+  const ProductCard = React.memo(function ProductCard({ product }) {
+    return <div>{product.name}</div>;
+  });
+
+When to use:
+  - useMemo: Expensive calculations
+  - useCallback: Functions passed as props to memoized components
+  - React.memo: Components that receive same props often
+
+When NOT to use:
+  - Simple calculations (premature optimization)
+  - Every function/component (overhead hota hai)
+
+--- VIRTUAL SCROLLING ---
+
+10,000 items render karna → browser crash
+Virtual scrolling → sirf visible items render karo
+
+  import { FixedSizeList } from 'react-window';
+  
+  function ProductList({ products }) {
+    return (
+      <FixedSizeList
+        height={600}
+        width="100%"
+        itemCount={products.length}
+        itemSize={80}
+      >
+        {({ index, style }) => (
+          <div style={style}>
+            <ProductCard product={products[index]} />
+          </div>
+        )}
+      </FixedSizeList>
+    );
+  }
+
+--- IMAGE OPTIMIZATION ---
+
+  // Lazy loading
+  <img src={product.image} loading="lazy" alt={product.name} />
+  
+  // Next.js Image component
+  import Image from 'next/image';
+  <Image src={url} width={300} height={200} alt="..." />
+
+================================================================
+SECTION 7: ACCESSIBILITY (a11y)
+================================================================
+
+Kyun zaroori hai:
+  - Legal requirement in many countries
+  - Screen reader users support
+  - Keyboard navigation
+  - Good UX for everyone
+
+Rules:
+
+Semantic HTML:
+  BAD:  <div onClick={...}>Submit</div>
+  GOOD: <button type="submit">Submit</button>
+
+ARIA attributes:
+  <button aria-label="Close modal" onClick={closeModal}>×</button>
+  <div role="alert" aria-live="polite">{errorMessage}</div>
+
+Focus management:
+  - Modals mein focus trap karo
+  - Modal close pe focus wapas karo
+  - Keyboard navigation test karo
+
+Color contrast:
+  - Text contrast ratio minimum 4.5:1
+
+Alt text:
+  <img src="..." alt="User profile photo of Ali" />
+  <img src="decorative.jpg" alt="" /> // Decorative images — empty alt
+
+================================================================
+SECTION 8: SECURITY (FRONTEND)
+================================================================
+
+--- XSS (Cross-Site Scripting) ---
+
+Attack: Malicious script inject karna
+
+React automatic escaping:
+  // React by default escape karta hai
+  const userInput = '<script>alert("xss")</script>';
+  <div>{userInput}</div> // Safe — rendered as text
+
+Dangerous — dangerouslySetInnerHTML:
+  // NEVER without sanitization:
+  <div dangerouslySetInnerHTML={{ __html: userInput }} />
+  
+  // If you must — sanitize first:
+  import DOMPurify from 'dompurify';
+  <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(userInput) }} />
+
+--- SENSITIVE DATA ---
+
+Never store in localStorage:
+  - JWT access tokens (XSS se steal hoga)
+  - Passwords
+  - Credit card numbers
+
+Use httpOnly cookies instead:
+  - XSS se safe (JavaScript access nahi kar sakta)
+  - Server set karta hai
+
+--- CSRF ---
+
+CSRF token ya SameSite cookie attribute use karo.
+
+================================================================
+SECTION 9: API INTEGRATION
+================================================================
+
+Centralized API client:
+
+  // lib/api-client.ts
+  import axios from 'axios';
+  
+  const apiClient = axios.create({
+    baseURL: process.env.REACT_APP_API_URL,
+    timeout: 10000,
+  });
+  
+  // Request interceptor — auth token add karo
+  apiClient.interceptors.request.use((config) => {
+    const token = getAccessToken();
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  });
+  
+  // Response interceptor — error handling
+  apiClient.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      if (error.response?.status === 401) {
+        // Try refresh token
+        try {
+          await refreshAccessToken();
+          return apiClient(error.config); // Retry request
+        } catch {
+          logout(); // Refresh failed — logout
+        }
+      }
+      return Promise.reject(error);
+    }
+  );
+  
+  export default apiClient;
+
+================================================================
+SECTION 10: OPTIMISTIC UPDATES
+================================================================
+
+UI ko immediately update karo, server response ka wait mat karo.
+
+  const queryClient = useQueryClient();
+  
+  const likeMutation = useMutation({
+    mutationFn: (postId) => apiClient.post(`/posts/${postId}/like`),
+    
+    // Optimistic update
+    onMutate: async (postId) => {
+      await queryClient.cancelQueries(['post', postId]);
+      const previousPost = queryClient.getQueryData(['post', postId]);
+      
+      // Optimistically update
+      queryClient.setQueryData(['post', postId], (old) => ({
+        ...old,
+        likes: old.likes + 1,
+        isLiked: true
+      }));
+      
+      return { previousPost };
+    },
+    
+    // Rollback on error
+    onError: (err, postId, context) => {
+      queryClient.setQueryData(['post', postId], context.previousPost);
+    },
+    
+    // Refetch on success
+    onSettled: (data, error, postId) => {
+      queryClient.invalidateQueries(['post', postId]);
+    }
+  });
+
+================================================================
+SECTION 11: LARGE APP STRUCTURE
+================================================================
+
+  src/
+  ├── app/                  ← App-level setup
+  │   ├── App.tsx
+  │   ├── router.tsx
+  │   └── providers.tsx
+  │
+  ├── features/             ← Feature-based modules
+  │   ├── auth/
+  │   │   ├── components/
+  │   │   ├── hooks/
+  │   │   ├── services/
+  │   │   ├── types/
+  │   │   └── index.ts      ← Public API
+  │   ├── products/
+  │   └── orders/
+  │
+  ├── shared/               ← Shared across features
+  │   ├── components/       ← Common UI components
+  │   │   ├── Button/
+  │   │   ├── Modal/
+  │   │   └── Table/
+  │   ├── hooks/            ← Common hooks
+  │   ├── utils/            ← Helpers
+  │   ├── types/            ← Global types
+  │   └── api/              ← API client
+  │
+  ├── pages/                ← Route-level components
+  └── assets/               ← Images, fonts
+
+Feature Module Rules:
+  - Sirf index.ts se import karo (public API)
+  - Features dusre features ke internals import nahi karein
+  - Shared code shared/ mein
+
+================================================================
+QUIZ — PART 10
+================================================================
+
+Q1: Server state aur client state mein farq?
+    (a) Server state database se aata hai (async), client state UI-only (sync)
+    (b) Server state fast hai, client state slow
+    (c) Koi farq nahi
+    (d) Server state local hai, client state remote
+
+Jawab: (a)
+
+Q2: React.memo kyun use karte hain?
+    (a) Component code shorten karne ke liye
+    (b) Component ko re-render se bachane ke liye jab props same hon
+    (c) API calls kam karne ke liye
+    (d) Styling ke liye
+
+Jawab: (b)
+
+Q3: XSS attack se bachne ke liye React mein kya karte hain?
+    (a) Manually escape karo har string
+    (b) React auto-escape karta hai; dangerouslySetInnerHTML mat use karo
+    (c) localStorage use mat karo
+    (d) HTTPS use karo
+
+Jawab: (b)
+
+Q4: Optimistic update ka faida kya hai?
+    (a) Server pe load kam hota hai
+    (b) UI immediately update hota hai — better user experience
+    (c) Cache automatically clear hota hai
+    (d) Code simple hota hai
+
+Jawab: (b)
+
+================================================================
+AGLA PART: Part 11 — System Design
+================================================================

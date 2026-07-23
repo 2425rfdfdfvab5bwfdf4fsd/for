@@ -1,0 +1,123 @@
+================================================================================
+TASK ID:     08-01
+TASK NAME:   Session Filter
+PHASE:       08 — Filters
+================================================================================
+
+OBJECTIVE:
+    Implement SessionFilter that allows scanning only during London and New York
+    trading sessions, and blocks scanning at all other times.
+
+CONTEXT:
+    Session windows (UTC, configurable):
+    - London:   07:00 – 16:00 UTC  (LONDON_START / LONDON_END)
+    - New York: 12:00 – 20:00 UTC  (NY_START / NY_END)
+    - Overlap:  12:00 – 16:00 UTC  (highest quality window)
+
+    Sessions can be individually enabled/disabled:
+    LONDON_SESSION_ENABLED, NEW_YORK_SESSION_ENABLED
+
+    No trading outside enabled session windows.
+
+DEPENDENCIES:
+    - Phase 02 config loaded
+
+FILES TO CREATE:
+    app/filters/session_filter.py
+    tests/test_filters/test_session.py
+
+FILES TO MODIFY:
+    app/database/models.py    — add FilterResult if not already present
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+
+================================================================================
+DST_HANDLING — REQUIRED (CHG-019)
+================================================================================
+
+London and New York sessions shift by 1 hour during DST transitions.
+Without explicit handling, the bot trades at wrong hours twice per year.
+
+SESSION HOURS IN UTC (use these — never use local system clock):
+
+  LONDON SESSION:
+    Summer (BST, UTC+1): 07:00–16:00 UTC
+    Winter (GMT, UTC+0): 08:00–17:00 UTC
+
+  NEW YORK SESSION:
+    Summer (EDT, UTC-4): 13:00–22:00 UTC
+    Winter (EST, UTC-5): 14:00–23:00 UTC
+
+  NOTE: The session window CONFIG parameters (LONDON_START_UTC etc.) should
+  reflect the SUMMER hours as default. DST detection adjusts them automatically.
+
+IMPLEMENTATION:
+  Use Python's stdlib zoneinfo module (Python 3.9+, no external dependency):
+    from zoneinfo import ZoneInfo
+    from datetime import datetime, timezone
+
+    def is_london_session(utc_dt: datetime) -> bool:
+        # Convert to London timezone to get correct DST-aware hour
+        london_tz = ZoneInfo("Europe/London")
+        london_time = utc_dt.astimezone(london_tz)
+        return datetime(2000,1,1, LONDON_START_HOUR) <= ...
+        # OR: use UTC hours directly based on DST status of the London zone
+
+  SIMPLER APPROACH (recommended):
+    # Determine if US/EU is in DST using tz offset
+    london_tz = ZoneInfo("Europe/London")
+    ny_tz = ZoneInfo("America/New_York")
+    london_offset = datetime.now(london_tz).utcoffset().total_seconds() / 3600
+    # If london_offset == 1.0: summer (BST) — use 07:00–16:00 UTC
+    # If london_offset == 0.0: winter (GMT) — use 08:00–17:00 UTC
+
+ALWAYS USE:
+    current_utc = datetime.now(timezone.utc)  # timezone-aware UTC datetime
+    NEVER use: datetime.utcnow()              # naive, no DST context
+
+TEST REQUIREMENTS (add to test_session.py):
+  - test_london_summer_correct_utc_hours()  (BST: UTC+1, session starts 07:00 UTC)
+  - test_london_winter_correct_utc_hours()  (GMT: UTC+0, session starts 08:00 UTC)
+  - test_ny_summer_correct_utc_hours()      (EDT: UTC-4, session starts 13:00 UTC)
+  - test_ny_winter_correct_utc_hours()      (EST: UTC-5, session starts 14:00 UTC)
+  DST boundary test dates (use these in mock datetimes):
+    2026-03-29 02:00 UTC — EU clocks forward (London winter→summer)
+    2026-10-25 01:00 UTC — EU clocks back (London summer→winter)
+    2026-03-08 02:00 EST — US clocks forward (NY winter→summer)
+    2026-11-01 02:00 EDT — US clocks back (NY summer→winter)
+
+================================================================================
+DETAILED REQUIREMENTS:
+    class SessionFilter:
+        check(utc_datetime: datetime) -> FilterResult
+
+    FilterResult:
+        passed: bool
+        reason: str | None    # "OUTSIDE_SESSION", "SESSION_DISABLED", None
+        active_session: str | None   # "LONDON", "NEW_YORK", "OVERLAP", None
+
+TEST REQUIREMENTS:
+    - test_inside_london_passes()
+    - test_inside_ny_passes()
+    - test_inside_overlap_passes()
+    - test_outside_both_sessions_blocked()
+    - test_weekend_blocked()
+    - test_london_disabled_blocks_london_time()
+
+ACCEPTANCE CRITERIA:
+    [ ] Session windows correct in UTC
+    [ ] Weekend always blocked
+    [ ] Disabled sessions blocked
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] session_filter.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 08-02 — TASK_SPREAD_FILTER.txt
+================================================================================

@@ -1,0 +1,80 @@
+================================================================================
+TASK ID:     06-03
+TASK NAME:   Signal Deduplication
+PHASE:       06 — Confluence Engine
+================================================================================
+
+OBJECTIVE:
+    Implement a SignalDeduplicator that prevents the same setup from being
+    scored and potentially executed multiple times within the same evaluation
+    window (same symbol, same direction, same bar).
+
+CONTEXT:
+    The main loop runs on a schedule (e.g. every 60 seconds). If a setup
+    persists across multiple loop iterations, it would be scored repeatedly.
+    Deduplication uses a fingerprint (symbol + direction + timeframe + bar_time)
+    to detect and suppress duplicate evaluations.
+
+DEPENDENCIES:
+    - 06-01 (TASK_SCORING) complete
+    - 06-02 (TASK_TRADE_QUALITY) complete
+
+FILES TO INSPECT:
+    app/confluence/scorer.py
+    app/database/models.py
+
+FILES TO CREATE:
+    app/confluence/deduplication.py
+    tests/test_confluence/test_deduplication.py
+
+FILES TO MODIFY:
+    app/confluence/scorer.py    — wrap score() with deduplication check
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/strategy/
+    ROADMAP/
+
+--------------------------------------------------------------------------------
+DETAILED REQUIREMENTS:
+--------------------------------------------------------------------------------
+
+FINGERPRINT DEFINITION:
+    fingerprint = f"{symbol}_{direction}_{timeframe}_{bar_open_time_utc}"
+
+DEDUPLICATION WINDOW:
+    Configurable: DEDUP_WINDOW_SECONDS (default: 3600 = 1 hour)
+    After window expires, the same setup can be re-evaluated.
+
+STORAGE:
+    In-memory dict. Not persisted across restarts (restarts reset the window).
+    This is intentional — after a crash/restart, re-evaluation is safer than
+    missing a valid setup.
+
+IMPLEMENTATION:
+    class SignalDeduplicator:
+        def is_duplicate(self, signal: Signal) -> bool
+        def register(self, signal: Signal) -> None
+        def clear_expired(self) -> None   (called by main loop periodically)
+
+TEST REQUIREMENTS:
+    - test_first_signal_not_duplicate()
+    - test_same_signal_is_duplicate()
+    - test_expired_signal_not_duplicate()
+    - test_different_direction_not_duplicate()
+    - test_different_symbol_not_duplicate()
+
+ACCEPTANCE CRITERIA:
+    [ ] Deduplicator correctly identifies duplicate signals
+    [ ] Expired entries are purged
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] deduplication.py created and tested
+    [ ] Integrated with scorer.py
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK:
+    Begin Phase 07 — Risk Engine
+    Start with: ROADMAP/07_RISK_ENGINE/01_PHASE_OVERVIEW.txt
+================================================================================

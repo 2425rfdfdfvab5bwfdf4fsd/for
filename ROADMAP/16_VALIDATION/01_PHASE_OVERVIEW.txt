@@ -1,0 +1,69 @@
+================================================================================
+PHASE 16 — VALIDATION
+================================================================================
+
+PHASE NAME:         Validation
+PHASE OBJECTIVE:    Run systematic validation tests against the backtest engine
+                    to verify strategy robustness, absence of look-ahead bias,
+                    and genuine out-of-sample performance.
+
+WHY THIS PHASE EXISTS:
+    A strategy that passes in-sample backtesting may have been unconsciously
+    over-fitted to the data. Validation uses separate data, walk-forward
+    testing, and robustness checks to stress-test the results before any
+    live deployment.
+
+    The 55–65% win rate target may ONLY be claimed if:
+    - Out-of-sample win rate meets target
+    - At least 30 trades in out-of-sample period per symbol
+    - Walk-forward validation confirms consistency
+
+DEPENDENCIES:
+    - Phase 15 (Backtesting): BacktestEngine and metrics fully functional
+    - Data: historical data downloaded with clear in-sample/out-of-sample split
+
+DATA SPLIT RULE (STRICTLY ENFORCED):
+    Total data:        e.g. 2020-01-01 to 2025-12-31
+    In-sample (70%):   2020-01-01 to 2024-04-01   (development only)
+    Out-of-sample (30%): 2024-04-01 to 2025-12-31 (NEVER used during development)
+
+    Out-of-sample data must NEVER be viewed during strategy development.
+
+FILES EXPECTED TO BE CREATED:
+    validation/in_sample.py
+    validation/out_of_sample.py
+    validation/walk_forward.py
+    validation/overfitting_check.py
+    validation/robustness_testing.py
+    validation/__init__.py
+    tests/test_validation/test_walk_forward.py
+    tests/test_validation/test_overfitting.py
+
+TASK ORDER:
+    1. 01_TASK_IN_SAMPLE.txt
+    2. 02_TASK_OUT_OF_SAMPLE.txt
+    3. 03_TASK_WALK_FORWARD.txt
+    4. 04_TASK_OVERFITTING_CHECK.txt
+    5. 05_TASK_ROBUSTNESS_TESTING.txt
+
+ACCEPTANCE CRITERIA:
+    [ ] In-sample results documented
+    [ ] Out-of-sample run produces separate report (not contaminated)
+    [ ] Walk-forward consistency score calculated
+    [ ] Overfitting checks pass
+    [ ] Robustness: strategy degrades gracefully under parameter variation
+    [ ] Phase completion requires HUMAN REVIEW of results before proceeding
+        to Phase 21 (Final Validation / Live Readiness)
+
+KNOWN RISKS:
+    - If out-of-sample results significantly underperform in-sample: STOP.
+      Do NOT proceed to live trading. Return to Phase 05 for strategy review.
+    - Parameter sensitivity: if small changes to parameters cause large
+      performance changes, the strategy is over-fitted.
+
+HANDOFF REQUIREMENTS:
+    Before Phase 17 (Self-Improvement):
+    - All 5 validation modules complete
+    - Validation report generated and reviewed
+    - Results documented with honest assessment
+================================================================================

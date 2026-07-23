@@ -1,0 +1,61 @@
+================================================================================
+TASK ID:     16-04
+TASK NAME:   Overfitting Check
+PHASE:       16 — Validation
+================================================================================
+
+OBJECTIVE:
+    Implement OverfittingChecker that tests parameter sensitivity to detect
+    whether the strategy is over-fitted to specific parameter values.
+
+CONTEXT:
+    SENSITIVITY TEST:
+    Vary key parameters by ±10%, ±20%, ±30% from their base values.
+    Run backtest with each variation.
+    If performance changes by more than SENSITIVITY_THRESHOLD (50%) with a
+    10% parameter change: HIGH overfitting risk.
+
+    PARAMETERS TO VARY:
+        - MIN_CONFLUENCE_SCORE: ±1 (7, 8, 9)
+        - MIN_RR_RATIO: ±0.5 (1.5, 2.0, 2.5)
+        - ATR multipliers: ±0.5
+        - EMA periods: ±5
+
+DEPENDENCIES:
+    - Phase 15 BacktestEngine
+
+FILES TO CREATE:
+    validation/overfitting_check.py
+    results/sensitivity/
+    tests/test_validation/test_overfitting.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class OverfittingChecker:
+        run_sensitivity(base_config, parameter_ranges) -> SensitivityReport
+
+    SensitivityReport:
+        parameter_results: dict[str, list[Metrics]]
+        sensitivity_scores: dict[str, float]
+        overall_risk: str   # "LOW", "MEDIUM", "HIGH"
+        recommendations: list[str]
+
+TEST REQUIREMENTS:
+    - test_parameter_variation_runs()
+    - test_sensitivity_score_calculation()
+
+ACCEPTANCE CRITERIA:
+    [ ] All parameter variations tested
+    [ ] Sensitivity report generated
+    [ ] HIGH risk triggers explicit warning
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] overfitting_check.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 16-05 — TASK_ROBUSTNESS_TESTING.txt
+================================================================================

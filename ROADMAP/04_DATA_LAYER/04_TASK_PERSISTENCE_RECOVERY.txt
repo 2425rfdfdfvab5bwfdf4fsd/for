@@ -1,0 +1,143 @@
+================================================================================
+TASK: 04-04 — PERSISTENCE RECOVERY
+================================================================================
+TASK ID:        04-04
+TASK NAME:      State Persistence + Recovery After Restart
+PHASE:          04 — Data Layer
+OBJECTIVE:      Implement and test the state recovery mechanism that loads
+                daily risk state, open positions, and consecutive loss count
+                from the database after a bot restart.
+
+CONTEXT:
+  When the bot restarts (crash, Windows restart, manual restart), it MUST
+  reload its critical state from SQLite before resuming trading.
+  If it fails to do this, it could exceed daily limits, open duplicate
+  positions, or lose track of consecutive losses — all dangerous.
+
+DEPENDENCIES:   Task 04-03 complete
+PREVIOUS TASKS: 04-03 REPOSITORIES
+
+FILES TO INSPECT:   app/database/repositories.py, app/database/models.py
+FILES TO CREATE:
+  app/database/state_recovery.py
+  tests/unit/test_state_recovery.py
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: app/database/repositories.py, app/database/database.py
+
+================================================================================
+DETAILED REQUIREMENTS
+================================================================================
+
+
+================================================================================
+DAILY STATE PERSISTENCE — CRITICAL REQUIREMENT (CHG-003)
+================================================================================
+
+The daily_stats table MUST be created in Phase 04 (not Phase 07).
+Phase 07 depends on this table existing when DailyLimitsChecker runs.
+
+REQUIRED TABLE: daily_stats
+  CREATE TABLE IF NOT EXISTS daily_stats (
+      date              TEXT PRIMARY KEY,    -- broker date, format: YYYY-MM-DD
+      day_start_equity  REAL NOT NULL,       -- equity at start of trading day
+      trades_count      INTEGER DEFAULT 0,   -- number of trades opened today
+      realized_pnl_today REAL DEFAULT 0.0,  -- realized P&L for the day
+      created_at        TEXT,                -- UTC timestamp of creation
+      updated_at        TEXT                 -- UTC timestamp of last update
+  );
+
+STATE RECOVERY BEHAVIOR (enforced in state_recovery.py):
+  On restart, StateRecovery MUST:
+  1. Query daily_stats WHERE date = today_broker_date
+  2. If found: return DailyRiskState with stored day_start_equity
+  3. If not found: create new record with day_start_equity = current_equity
+                   and log WARNING (CONSERVATIVE FALLBACK)
+
+CONSECUTIVE LOSS PERSISTENCE:
+  Consecutive losses survive restart because:
+  - They are stored in a separate table: consecutive_loss_state
+  - StateRecovery.recover_consecutive_losses() queries this table
+  - This table is also created in Phase 04
+
+REQUIRED TABLE: consecutive_loss_state
+  CREATE TABLE IF NOT EXISTS consecutive_loss_state (
+      id              INTEGER PRIMARY KEY,
+      count           INTEGER DEFAULT 0,
+      last_loss_date  TEXT,
+      updated_at      TEXT
+  );
+
+TESTS REQUIRED:
+  - test_daily_state_recovered_after_restart(): simulate DB with existing
+    daily_stats record → verify DailyRiskState uses stored day_start_equity
+  - test_new_day_creates_fresh_record(): different date in DB → new record
+  - test_missing_record_uses_conservative_fallback(): empty DB → current equity
+
+================================================================================
+class StateRecovery:
+
+    def __init__(self, repos: Repositories, config: Config):
+        ...
+
+    def recover_daily_state(self, today: str,
+                            current_balance: float) -> DailyRiskState:
+        """
+        Loads today's risk state from database.
+        If today's state doesn't exist (first run of the day):
+          Create a new DailyRiskState with starting_balance=current_balance.
+        Returns the DailyRiskState.
+        Logs: "Recovered daily state: trades=X, loss=Y%, blocked=Z"
+        """
+
+    def recover_open_trades(self) -> list[Trade]:
+        """
+        Loads all OPEN trades from the database.
+        These are trades the bot opened that haven't been closed yet.
+        Cross-references with MT5 (done in Phase 09) to detect orphans.
+        Returns list of open trades.
+        Logs: "Recovered N open trades from database"
+        """
+
+    def get_recovery_summary(self) -> dict:
+        """
+        Returns summary of what was recovered:
+          date: str
+          trades_today: int
+          daily_loss_pct: float
+          consecutive_losses: int
+          trading_blocked: bool
+          open_positions: int
+        """
+
+    def is_new_trading_day(self, last_date: str, today: str) -> bool:
+        """Returns True if today is different from last_date."""
+
+    def reset_for_new_day(self, today: str,
+                          current_balance: float) -> DailyRiskState:
+        """
+        Called at start of new trading day.
+        Creates fresh DailyRiskState for today.
+        Resets consecutive losses if new day.
+        """
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+python -m py_compile app/database/state_recovery.py
+pytest tests/unit/test_state_recovery.py -v
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ Daily state recovered correctly after simulated restart
+□ Consecutive losses persist across restart
+□ New day detection works correctly
+□ Open trades loaded from database
+□ Phase 04 marked [✓] in status file after this task
+
+================================================================================
+NEXT TASK (PHASE 04 COMPLETE)
+================================================================================
+→ ROADMAP/05_STRATEGY_ENGINE/01_PHASE_OVERVIEW.txt
+================================================================================

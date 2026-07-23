@@ -1,0 +1,283 @@
+================================================================================
+AGENT WORKFLOW GUIDE
+================================================================================
+Project: MT5 Automated Forex Trading Bot
+Purpose: Instructions for using Replit Agent (or any AI coding agent)
+         to implement this project correctly and safely.
+
+================================================================================
+GOLDEN RULE — READ THIS FIRST
+================================================================================
+
+DO NOT ask the agent to build the entire bot in one prompt.
+DO NOT skip task files and improvise.
+DO NOT let the agent decide architecture.
+DO NOT accept agent output without reviewing it.
+
+The workflow is:
+  One Task File → Paste into Agent → Review Output → Checkpoint → Next Task
+
+================================================================================
+SECTION 1: HOW TO USE THE TASK FILES
+================================================================================
+
+Each task file in this ROADMAP folder is a self-contained agent prompt.
+
+HOW TO USE:
+  1. Open the task .txt file (e.g., 02_PROJECT_FOUNDATION/01_TASK_PROJECT_STRUCTURE.txt)
+  2. Read it yourself first to understand what the agent will do
+  3. Copy the ENTIRE file content
+  4. Paste it into Replit Agent as your prompt
+  5. Let the agent work
+  6. Review the output (see Section 3)
+  7. Accept or reject changes
+  8. Update ROADMAP/00_PROJECT_STATUS.txt
+  9. Move to the next task file
+
+================================================================================
+SECTION 2: BEFORE EVERY AGENT TASK
+================================================================================
+
+STEP 1 — Verify the phase prerequisites are complete.
+  Check ROADMAP/00_PROJECT_STATUS.txt.
+  The current phase's dependencies must be [✓] COMPLETE.
+
+STEP 2 — Read the Phase Overview file first.
+  Example: ROADMAP/02_PROJECT_FOUNDATION/01_PHASE_OVERVIEW.txt
+  Understand what the phase is building before you start individual tasks.
+
+STEP 3 — Read the relevant context files.
+  Before each task, ensure these files are current:
+    - replit.md (primary Replit Agent context)
+    - AI_RULES.md (agent constitution)
+    - ARCHITECTURE.md (system structure)
+
+STEP 4 — Start a FRESH Replit Agent conversation for each task.
+  Never carry over context from a previous task into a new task.
+  Context window pollution causes architecture drift and mistakes.
+
+STEP 5 — Paste the context files + task file together.
+  Start your agent prompt like this:
+  ---
+  [paste relevant section of AI_RULES.md]
+  [paste relevant section of ARCHITECTURE.md]
+  [paste the complete task .txt file]
+  ---
+
+================================================================================
+SECTION 3: THE MANDATORY REVIEW RITUAL (After Every Agent Task)
+================================================================================
+
+NEVER accept agent output without performing this review.
+Skipping this review is how bugs compound into unfixable messes.
+
+STEP 1 — SCOPE CHECK (30 seconds)
+  □ Check which files were created or modified
+  □ Are there any unexpected files changed? → REJECT IMMEDIATELY
+  □ Was package.json / requirements.txt changed? → Check why. Approve or reject.
+  □ Were any config files or .env files touched? → REJECT if yes (unless the task requires it)
+
+STEP 2 — CODE READ (5–10 minutes)
+  □ Read every new or modified file
+  □ Trace the happy path logic manually
+  □ Trace at least 2 edge cases mentally
+  □ Is error handling present for all failure paths?
+  □ Are Python types used consistently?
+  □ Are there any hardcoded values that should be config? → Fix before accepting
+
+STEP 3 — SYNTAX + IMPORTS
+  □ Run: python -m py_compile app/[modified_file].py (for each modified file)
+  □ Check imports — no missing or broken imports
+  □ Run: python -c "import app.[module]" to verify imports work
+
+STEP 4 — TESTS
+  □ Run: pytest tests/ (or the specific test file for this task)
+  □ Are all tests passing?
+  □ Are the new tests actually meaningful (not trivially passing)?
+  □ Do the tests cover edge cases?
+
+STEP 5 — TRADING SAFETY CHECK (for any trading-related code)
+  □ Does the code respect the daily loss limit?
+  □ Does the code check R:R before any entry?
+  □ Does the code verify SL is valid before execution?
+  □ Is LIVE_TRADING=true required for any real execution?
+  □ Is there duplicate trade protection?
+
+STEP 6 — SECURITY CHECK
+  □ No hardcoded secrets (passwords, API keys, tokens)
+  □ No secrets in log output
+  □ .env not committed to source control (.gitignore check)
+
+================================================================================
+SECTION 4: WHEN TO REJECT AGENT OUTPUT
+================================================================================
+
+ALWAYS REJECT if:
+  ✗ Unexpected files were modified
+  ✗ Syntax errors in the generated code
+  ✗ Imports are broken
+  ✗ Tests fail
+  ✗ Business logic is obviously wrong (trace through it)
+  ✗ Pattern is inconsistent with existing codebase
+  ✗ Security hole is visible (hardcoded secret, missing auth check)
+  ✗ Required context files (replit.md, AI_RULES.md) were modified unexpectedly
+
+HOW TO REJECT:
+  1. Do NOT add to the same conversation — start FRESH
+  2. Identify the specific problem clearly
+  3. Rewrite the task prompt with more explicit instructions
+  4. Add the failure mode to AI_RULES.md NEVER list
+  5. Make the task smaller if the agent is drifting
+
+REJECTION PROMPT TEMPLATE:
+  "The previous attempt had these specific issues:
+   1. [exact issue + file + line if possible]
+   2. [exact issue]
+
+   Please redo ONLY this:
+   [re-state the minimal task]
+
+   ONLY modify these files: [explicit list]
+   FORBIDDEN: [explicit list of what not to touch]"
+
+================================================================================
+SECTION 5: CHECKPOINT PROCEDURE
+================================================================================
+
+After every PHASE (not just task) is complete:
+
+  1. Run the full test suite: pytest tests/ --tb=short
+  2. Verify the bot imports without errors: python -c "from app.main import main"
+  3. Review all files changed in this phase (git diff if available)
+  4. Confirm no unrelated files changed
+  5. Update ROADMAP/00_PROJECT_STATUS.txt — mark phase [✓] COMPLETE
+  6. Note any known limitations or technical debt
+  7. Create a Replit checkpoint (Replit saves these automatically — verify)
+  8. Confirm the next phase's prerequisites are now met
+
+CHECKPOINT CHECKLIST:
+  □ All tasks in phase marked [✓]
+  □ All phase tests pass
+  □ No critical errors
+  □ No unrelated files changed
+  □ Project status updated
+  □ Checkpoint/commit created
+  □ Next phase dependencies verified
+
+================================================================================
+SECTION 6: AGENT TASK EXECUTION FORMAT
+================================================================================
+
+Every task file instructs the agent to follow this workflow:
+
+STEP 1 — Read project context files (replit.md, AI_RULES.md, ARCHITECTURE.md)
+STEP 2 — Read the phase overview file
+STEP 3 — Read the current task file completely
+STEP 4 — Inspect only the relevant existing files
+STEP 5 — Explain the implementation plan (before writing code)
+STEP 6 — Identify exact files that will be created or modified
+STEP 7 — Do NOT modify unrelated files
+STEP 8 — Implement the task
+STEP 9 — Run focused tests
+STEP 10 — Run validation commands
+STEP 11 — Review the changes
+STEP 12 — Fix any discovered issues
+STEP 13 — Run tests again
+STEP 14 — Report completion with a summary of what was done
+STEP 15 — Update ROADMAP/00_PROJECT_STATUS.txt if instructed
+
+================================================================================
+SECTION 7: TASK SIZE RULES
+================================================================================
+
+The agent tasks in this roadmap are pre-scoped to be agent-safe.
+However, if you ever need to create additional tasks:
+
+GOOD task size:
+  - 1–3 files maximum per task
+  - One logical unit (e.g., one module, one feature)
+  - Has clear success criteria (tests, validation commands)
+  - Reviewable in under 10 minutes
+
+BAD task size:
+  - "Implement the entire strategy engine"
+  - More than 5 files changed
+  - No clear success criteria
+  - Takes more than 30 minutes to review
+
+DECOMPOSITION RULE (from Part 22 AI Agent Workflow):
+  Layer 1: Data models
+  Layer 2: Data access (repositories)
+  Layer 3: Business logic
+  Layer 4: Integration layer
+  Layer 5: Tests
+
+Build in this order. Review each layer before moving to the next.
+
+================================================================================
+SECTION 8: PARALLEL AGENT SAFETY
+================================================================================
+
+SAFE to parallelize (non-overlapping files):
+  - Phase 03 (MT5) and Phase 04 (Data Layer) — completely different files
+  - Phase 07 (Risk) and Phase 08 (Filters) — different files
+  - Phase 12 (Telegram), 13 (Journal), 14 (Dashboard) — different files
+
+NEVER parallelize tasks that touch the same files.
+  If two tasks need to modify app/config.py — run them sequentially.
+  If two tasks both modify app/database/models.py — sequential only.
+
+When in doubt, run sequentially.
+
+================================================================================
+SECTION 9: COMMON AGENT FAILURE MODES AND FIXES
+================================================================================
+
+FAILURE: Agent modifies files outside task scope
+FIX: Explicitly add FORBIDDEN: "Do NOT modify any file not listed above"
+     Also add to AI_RULES.md NEVER list for this project
+
+FAILURE: Agent creates its own architecture instead of following existing patterns
+FIX: Paste a relevant existing file as a pattern to follow
+     "Follow this exact pattern: [paste file content]"
+
+FAILURE: Agent "forgets" rules after a long conversation
+FIX: Start a new conversation for every task
+     Always paste AI_RULES.md at the start
+
+FAILURE: Agent adds unnecessary packages to requirements.txt
+FIX: "Do NOT add any new packages to requirements.txt"
+     Specify exact packages allowed if any are needed
+
+FAILURE: Agent generates tests that always pass (no assertions)
+FIX: "Tests must have explicit assertions. Tests that always pass are invalid."
+
+FAILURE: Agent assumes MT5 is available (we're in Replit, not Windows)
+FIX: "MetaTrader5 Python package is NOT available in this environment.
+     Create mock/stub for MT5 functions using the interface defined in mt5/connection.py"
+
+FAILURE: Agent hardcodes values that should be configurable
+FIX: "All configurable values must be loaded from app/config.py
+     Do NOT hardcode any numeric thresholds, session times, or symbol names"
+
+================================================================================
+SECTION 10: ENVIRONMENT NOTES
+================================================================================
+
+IMPORTANT: This project runs on WINDOWS only (MetaTrader5 Python package
+is Windows-only). The code is developed here but executes on Windows.
+
+When writing code:
+  - All file paths should use os.path or pathlib (not hardcoded forward slashes)
+  - Windows .bat files are for Windows execution
+  - MT5 connection code will only work on Windows with MT5 installed
+  - Unit tests must mock MT5 entirely (do not require real MT5 connection)
+
+For Replit Agent context:
+  - Replit runs Linux, but the TARGET environment is Windows
+  - Python syntax/logic tests can run in Replit
+  - MT5-specific code must be mocked in all tests run in Replit
+
+================================================================================
+END OF AGENT WORKFLOW
+================================================================================

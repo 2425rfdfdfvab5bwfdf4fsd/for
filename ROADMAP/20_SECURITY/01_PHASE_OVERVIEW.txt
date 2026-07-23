@@ -1,0 +1,64 @@
+================================================================================
+PHASE 20 — SECURITY
+================================================================================
+
+PHASE NAME:         Security
+PHASE OBJECTIVE:    Implement all security controls to protect credentials,
+                    prevent unauthorized live trading, and audit the system
+                    for common vulnerabilities.
+
+WHY THIS PHASE EXISTS:
+    A trading bot handles financial credentials and executes real trades.
+    Security failures can result in financial loss, credential theft, or
+    unauthorized trading. This phase implements defense-in-depth protections.
+
+DEPENDENCIES:
+    - All phases 02–19 complete
+    - Phase 18 (Windows Automation): .env file management
+
+SECURITY PRIORITIES:
+    P0 — CRITICAL: Prevent unauthorized live trade execution
+    P1 — HIGH: Protect credentials (MT5 login, Telegram token)
+    P2 — MEDIUM: Prevent secret leaks in logs/dashboard/errors
+    P3 — LOW: Code injection, path traversal protections
+
+FILES EXPECTED TO BE CREATED:
+    src/security/secret_manager.py
+    src/security/live_trading_guards.py
+    src/security/security_audit.py
+    src/security/__init__.py
+    tests/test_security/test_secrets.py
+    tests/test_security/test_live_guards.py
+    SECURITY.md
+
+FILES THAT MUST NOT BE MODIFIED:
+    app/mt5/
+    app/strategy/
+    app/risk/
+    app/execution/
+    ROADMAP/
+
+TASK ORDER:
+    1. 01_TASK_SECRET_MANAGEMENT.txt
+    2. 02_TASK_LIVE_TRADING_GUARDS.txt
+    3. 03_TASK_SECURITY_AUDIT.txt
+
+ACCEPTANCE CRITERIA:
+    [ ] No secrets logged, printed, or exposed via API
+    [ ] Live trading requires explicit LIVE_TRADING=true AND confirmation
+    [ ] Live trading account number verified before any live order
+    [ ] Security audit identifies all P0/P1 issues
+    [ ] SECURITY.md documents all security practices
+    [ ] All tests pass
+
+KNOWN RISKS:
+    - .env file must never be committed to version control
+    - Log files may contain sensitive data; log level management important
+    - Dashboard must never expose .env contents
+
+HANDOFF REQUIREMENTS:
+    Before Phase 21 (Final Validation):
+    - All P0 and P1 security issues resolved
+    - Security audit passed
+    - SECURITY.md created
+================================================================================

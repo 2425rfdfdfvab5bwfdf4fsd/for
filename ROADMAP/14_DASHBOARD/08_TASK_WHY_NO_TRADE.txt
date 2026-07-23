@@ -1,0 +1,161 @@
+================================================================================
+TASK ID:     14-08
+TASK NAME:   Why No Trade Explainer (Feature D08)
+PHASE:       14 — Dashboard
+================================================================================
+
+OBJECTIVE:
+    Add a "Why No Trade Today?" explainer panel to the dashboard that shows
+    the user exactly why the bot has not entered any trades today (or in
+    the last scan cycle), with human-readable reasoning for each rejection.
+
+CONTEXT:
+    New users often see the bot running but no trades being taken. Without
+    explanation, this looks like the bot is broken. This panel shows the
+    real-time decision state: what was scanned, what was close to triggering,
+    and why nothing qualified.
+
+    This is a READ-ONLY display feature. It does NOT change trading behavior.
+
+    FEATURE D08 was identified as missing in the audit (AUDIT/06_CRITICAL_ISSUES.txt,
+    MI-002). It is required for user confidence and transparency.
+
+DEPENDENCIES:
+    - 14-01 BackendAPI (REST endpoints exist)
+    - 14-02 OverviewUI (dashboard framework available)
+    - Phase 06 Confluence Engine (rejection records stored in DB)
+    - Phase 08 Filters (session/news/spread filter state available)
+
+FILES TO CREATE:
+    app/dashboard/api/why_no_trade.py       (new API endpoint module)
+    app/dashboard/templates/why_no_trade.html  (partial/fragment for panel)
+    tests/test_dashboard/test_why_no_trade.py
+
+FILES TO MODIFY:
+    app/dashboard/api/routes.py             (register new endpoint)
+    app/dashboard/templates/index.html      (add panel to overview page)
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/strategy/
+    app/risk/
+    app/execution/
+    ROADMAP/
+
+================================================================================
+DETAILED REQUIREMENTS:
+================================================================================
+
+PANEL CONTENT — show in order of most recent first:
+
+  SECTION 1: CURRENT TRADING STATUS
+    - Is bot in session? [YES / NO — reason]
+    - News blackout active? [YES — [news event name] in [X] minutes / NO]
+    - Daily trade limit: [X / MAX_DAILY_TRADES] trades used
+    - Daily loss status: [X.X% / MAX_DAILY_LOSS_PCT%] used
+    - Spread status per symbol: [EURUSD: 1.2 pips OK / GBPUSD: 5.1 pips BLOCKED]
+
+  SECTION 2: LAST SCAN RESULTS (from last scan cycle)
+    For each symbol scanned:
+      Symbol: EURUSD [H4: BULLISH TREND] [H1: BEARISH — BLOCKED]
+      Nearest setup: "BOS detected H1, OB at 1.0850 — score 6.5/10 (needs 8.0)"
+      Missing factors: FVG not present (-1.0), M5 confirmation absent (-1.0)
+
+  SECTION 3: LAST 5 REJECTIONS (from rejection_records in DB)
+    Table: Time | Symbol | Direction | Score | Missing Factors
+    Click to expand: shows full factor breakdown of rejected signal
+
+  SECTION 4: MARKET REGIME STATUS
+    EURUSD H4: [RANGING — min score raised to 9.0/10]
+    GBPUSD H4: [TRENDING BULLISH — normal scoring]
+    USDJPY H4: [HIGH VOLATILITY — trading blocked]
+
+API ENDPOINT:
+    GET /api/why-no-trade
+    Returns: JSON with four sections above
+    Uses database queries to rejection_records table
+    Uses current bot state (from heartbeat + live MT5 query if available)
+
+DATA SOURCES:
+    rejection_records table  — last 5 rejections with factor_scores JSON column
+    daily_stats table        — current day's trade count and realized P&L
+    heartbeat.json           — current bot state
+    live scan state          — passed from bot to dashboard via a lightweight
+                               scan_state.json file written after each scan
+
+SCAN_STATE_FILE (new lightweight persistence):
+    After every scan cycle, bot writes data/scan_state.json with:
+    {
+      "timestamp_utc": "2026-07-23T14:30:00Z",
+      "symbols_scanned": ["EURUSD", "GBPUSD", "USDJPY"],
+      "session_active": true,
+      "news_blackout": false,
+      "filter_results": {
+        "EURUSD": {"session": true, "news": true, "spread": true, "regime": "TRENDING"},
+        "GBPUSD": {"session": true, "news": true, "spread": false, "spread_pips": 5.1},
+        "USDJPY": {"session": true, "news": true, "spread": true, "regime": "HIGH_VOL"}
+      },
+      "nearest_signal": {
+        "symbol": "EURUSD",
+        "score": 6.5,
+        "missing": ["fvg_present", "m5_entry_confirmation"],
+        "threshold": 8.0
+      }
+    }
+
+MAIN BOT CHANGE (minor):
+    main.py must write scan_state.json after each scan iteration.
+    This is a ~5-line addition — well within scope for this task.
+    Write atomically: write to temp file, then rename to final name.
+
+================================================================================
+IMPLEMENTATION STEPS:
+================================================================================
+
+1. Add scan_state.json write to main.py scan loop (atomic write)
+2. Create GET /api/why-no-trade endpoint in why_no_trade.py
+3. Query rejection_records for last 5 rejections with factor_scores JSON
+4. Return combined JSON: DB records + scan_state.json + daily_stats query
+5. Create HTML panel template (collapsible accordion sections)
+6. Add panel to overview page (below main metrics panel)
+7. Auto-refresh: every 30 seconds (same as rest of dashboard)
+8. Write tests for API endpoint
+
+================================================================================
+TEST REQUIREMENTS:
+================================================================================
+
+    - test_why_no_trade_no_trades_today()
+        No rejections in DB — panel shows empty rejections, current filter status
+    - test_why_no_trade_shows_last_rejection()
+        DB has 3 rejections — panel shows 3 rows in rejection table
+    - test_why_no_trade_handles_missing_scan_state()
+        scan_state.json does not exist — API returns 200 with empty scan section
+    - test_why_no_trade_high_volatility_regime_shown()
+        scan_state.json shows USDJPY regime=HIGH_VOL — panel shows "Trading Blocked"
+    - test_api_returns_200_when_bot_not_running()
+        heartbeat.json is stale — API still returns 200 with "Bot Offline" status
+
+================================================================================
+ACCEPTANCE CRITERIA:
+================================================================================
+
+    [ ] Panel visible on dashboard overview page
+    [ ] Shows current filter status (session, news, spread) for each symbol
+    [ ] Shows last 5 rejections with factor breakdown
+    [ ] Shows regime status per symbol
+    [ ] API returns 200 even when bot is stopped (graceful empty state)
+    [ ] scan_state.json updated on every scan cycle
+    [ ] All tests pass
+
+================================================================================
+DEFINITION OF DONE:
+================================================================================
+
+    [ ] why_no_trade.py endpoint created and tested
+    [ ] HTML panel integrated into dashboard overview page
+    [ ] scan_state.json written by main.py scan loop
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: Phase 15 — Backtesting (see 15_BACKTESTING/01_PHASE_OVERVIEW.txt)
+================================================================================

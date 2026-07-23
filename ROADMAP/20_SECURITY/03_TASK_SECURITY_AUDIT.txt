@@ -1,0 +1,82 @@
+================================================================================
+TASK ID:     20-03
+TASK NAME:   Security Audit
+PHASE:       20 — Security
+================================================================================
+
+OBJECTIVE:
+    Implement security_audit.py that performs an automated security checklist
+    scan of the codebase, and create SECURITY.md documenting all security
+    practices and controls.
+
+CONTEXT:
+    The automated audit checks for common issues:
+    - Hardcoded credentials (scan source files for password/token patterns)
+    - Secrets in log calls (grep for logging.* with secret variable names)
+    - .env in version control (check .gitignore)
+    - Dashboard exposing sensitive data (check API routes)
+    - SQL injection vectors (check all DB queries use parameterized statements)
+    - Path traversal (check file operations)
+
+DEPENDENCIES:
+    - 20-01 and 20-02 complete
+
+FILES TO CREATE:
+    src/security/security_audit.py
+    SECURITY.md
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class SecurityAudit:
+        run() -> SecurityAuditReport
+
+    SecurityAuditReport:
+        critical_issues: list[SecurityIssue]
+        high_issues: list[SecurityIssue]
+        medium_issues: list[SecurityIssue]
+        passed_checks: list[str]
+        overall_status: str   # "PASS", "WARN", "FAIL"
+
+    SecurityIssue:
+        severity: str
+        check_name: str
+        file_path: str | None
+        line_number: int | None
+        description: str
+        recommendation: str
+
+SECURITY.md must document:
+    - Credential storage approach (.env only)
+    - Secrets never logged policy
+    - Live trading activation procedure
+    - .gitignore coverage
+    - Dashboard security (localhost-only binding)
+    - MT5 connection security
+    - Database security (no external access)
+    - Incident response (what to do if credentials exposed)
+    - Regular security review recommendations
+
+TEST REQUIREMENTS:
+    - test_audit_detects_hardcoded_secret() (inject fake secret in test file)
+    - test_audit_passes_clean_codebase()
+    - test_gitignore_check()
+
+ACCEPTANCE CRITERIA:
+    [ ] Security audit runs without errors
+    [ ] SECURITY.md created and comprehensive
+    [ ] All P0 and P1 issues resolved before this task passes
+    [ ] Phase 20 acceptance criteria met
+
+DEFINITION OF DONE:
+    [ ] security_audit.py created
+    [ ] SECURITY.md created
+    [ ] Phase 20 COMPLETE in ROADMAP/00_PROJECT_STATUS.txt
+
+NEXT TASK:
+    Begin Phase 21 — Final Validation
+    Start with: ROADMAP/21_FINAL_VALIDATION/01_PHASE_OVERVIEW.txt
+================================================================================

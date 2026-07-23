@@ -1,0 +1,190 @@
+================================================================================
+TASK: 04-01 — DATA MODELS
+================================================================================
+TASK ID:        04-01
+TASK NAME:      Data Models Definition
+PHASE:          04 — Data Layer
+OBJECTIVE:      Define all data structures used by the trading bot as
+                Python dataclasses/TypedDicts and SQLite CREATE TABLE
+                statements. No database connections in this task — only model definitions.
+
+CONTEXT:
+  Clear data models prevent schema confusion in later phases.
+  All models are defined here and used by all other modules.
+  Define both the Python representation AND the SQL schema.
+
+DEPENDENCIES:   Phase 02 complete
+PREVIOUS TASKS: 02-04
+
+FILES TO INSPECT:   ROADMAP/00_MASTER_ROADMAP.txt (Complete Feature List)
+FILES TO CREATE:    app/database/models.py
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: Any other files
+
+================================================================================
+DETAILED REQUIREMENTS — app/database/models.py
+================================================================================
+
+Define Python dataclasses AND SQL CREATE TABLE strings for:
+
+1. TRADE TABLE (trades):
+   trade_id: str (UUID)
+   symbol: str (e.g., "EURUSD")
+   direction: str ("BUY" or "SELL")
+   entry_price: float
+   sl_price: float
+   tp_price: float
+   lot_size: float
+   risk_pct: float
+   confluence_score: int
+   quality_grade: str ("A+", "A", "B", "C", "REJECTED")
+   market_regime: str
+   session: str ("LONDON", "NEW_YORK")
+   h4_bias: str
+   h1_structure: str
+   m15_setup: str
+   m5_confirmation: str
+   liquidity_event: bool
+   order_block_used: bool
+   fvg_used: bool
+   spread_at_entry: float
+   atr_at_entry: float
+   rr_ratio: float
+   entry_time: str (ISO datetime)
+   exit_time: str (ISO datetime, nullable)
+   exit_reason: str (nullable)
+   profit_loss: float (nullable)
+   r_multiple: float (nullable)
+   mt5_ticket: int (nullable)
+   magic_number: int
+   status: str ("OPEN", "CLOSED", "CANCELLED")
+   created_at: str (ISO datetime)
+   updated_at: str (ISO datetime)
+
+2. REJECTED SIGNALS TABLE (rejected_signals):
+   signal_id: str (UUID)
+   symbol: str
+   direction: str
+   confluence_score: int
+   failed_conditions: str (JSON array)
+   session: str
+   spread_at_time: float
+   rr_ratio: float
+   news_active: bool
+   risk_blocked: bool
+   rejection_reason: str
+   timestamp: str (ISO datetime)
+
+3. DAILY RISK STATE TABLE (daily_risk_state):
+   date: str (YYYY-MM-DD, PRIMARY KEY)
+   starting_balance: float
+   trade_count: int
+   consecutive_losses: int
+   realized_pnl: float
+   daily_loss_pct: float
+   trading_blocked: bool
+   block_reason: str (nullable)
+   last_updated: str (ISO datetime)
+
+4. SYSTEM EVENTS TABLE (system_events):
+   event_id: str (UUID)
+   event_type: str ("STARTED", "STOPPED", "MT5_DISCONNECT", "MT5_RECONNECT",
+                     "DAILY_LIMIT_HIT", "LOSS_LIMIT_HIT", "ERROR", etc.)
+   message: str
+   severity: str ("INFO", "WARNING", "ERROR", "CRITICAL")
+   timestamp: str (ISO datetime)
+
+5. PERFORMANCE SNAPSHOTS TABLE (performance_snapshots):
+   snapshot_id: str (UUID)
+   date: str (YYYY-MM-DD)
+   balance: float
+   equity: float
+   total_trades: int
+   wins: int
+   losses: int
+   win_rate: float
+   profit_factor: float
+   expectancy: float
+   max_drawdown: float
+   snapshot_type: str ("DAILY", "WEEKLY", "MONTHLY")
+   created_at: str (ISO datetime)
+
+SCHEMA VERSION TABLE (schema_version):
+   version: int (PRIMARY KEY)
+   applied_at: str (ISO datetime)
+
+================================================================================
+CROSS-PHASE STUB DATACLASSES — CREATE IN THIS TASK
+================================================================================
+
+IMPORTANT: The following dataclasses are USED by later phases but must be
+pre-created here as stubs (with placeholder fields) so phases 06, 07, and 09
+can import app.database.models without ImportError.
+
+Later phases FILL IN the full field definitions — they do NOT add new top-level
+classes to models.py. This prevents parallel-execution file conflicts.
+
+Pre-create these stubs at the bottom of app/database/models.py:
+
+    @dataclass
+    class ScoredSignal:
+        """Completed by Phase 06 (Confluence Engine)."""
+        # Phase 06 will add: signal, total_score, factor_scores, status, quality_grade
+        pass
+
+    @dataclass
+    class PositionSizeResult:
+        """Completed by Phase 07 (Risk Engine)."""
+        # Phase 07 will add: lot_size, risk_amount, pip_value, sl_pips, max_loss, within_margin
+        pass
+
+    @dataclass
+    class ExecutionResult:
+        """Completed by Phase 09 (Execution Engine)."""
+        # Phase 09 will add: success, ticket, fill_price, slippage, retcode, execution_time
+        pass
+
+    class PositionStatus:
+        """Position status enum — all phases may reference these values."""
+        OPEN = "OPEN"
+        CLOSED = "CLOSED"
+        CANCELLED = "CANCELLED"
+        SUSPICIOUS = "SUSPICIOUS"  # Phase 09-03: position missing from MT5 and history
+
+Note to agent: When Phase 06, 07, or 09 tasks say to "add ScoredSignal to
+models.py", they mean: REPLACE the stub class body with the real fields.
+Do NOT create a new class — update the existing stub.
+
+================================================================================
+IMPLEMENTATION STEPS
+================================================================================
+
+1. Create app/database/models.py
+2. Define all dataclasses using @dataclass
+3. Define SQL CREATE TABLE strings as constants:
+   CREATE_TRADES_TABLE = """CREATE TABLE IF NOT EXISTS trades (...)"""
+4. Define a list: ALL_TABLES = [CREATE_TRADES_TABLE, ...]
+5. Write validation methods on dataclasses where useful
+6. Add stub dataclasses for ScoredSignal, PositionSizeResult, ExecutionResult
+7. Add PositionStatus class with all status values including SUSPICIOUS
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+python -m py_compile app/database/models.py
+python -c "from app.database.models import Trade, RejectedSignal, DailyRiskState; print('Models OK')"
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ All dataclasses defined
+□ All SQL CREATE TABLE statements defined
+□ Models importable without errors
+□ No database connections in this file
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/04_DATA_LAYER/02_TASK_SQLITE_DATABASE.txt
+================================================================================

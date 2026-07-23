@@ -1,0 +1,79 @@
+================================================================================
+TASK ID:     21-03
+TASK NAME:   Live Trading Readiness Checklist
+PHASE:       21 — Final Validation
+================================================================================
+
+OBJECTIVE:
+    Create the definitive live trading readiness checklist that must be
+    completed (manually, by the human operator) before enabling live trading.
+
+CONTEXT:
+    This is the FINAL GATE before real money is at risk.
+    It is a human sign-off process, not an automated one.
+    The AI agent cannot sign off on live readiness — only the human operator can.
+
+    *** CRITICAL RISK WARNING ***
+    Algorithmic trading carries significant financial risk.
+    Past backtesting performance does NOT guarantee future results.
+    The 55–65% win rate target is a performance goal, not a guarantee.
+    Only trade with capital you can afford to lose.
+    Start with the minimum possible live lot size.
+
+FILES TO CREATE:
+    docs/LIVE_READINESS_CHECKLIST.md
+
+FILES FORBIDDEN TO MODIFY:
+    app/
+    ROADMAP/
+
+LIVE READINESS CHECKLIST CONTENT:
+
+    SECTION 1: VALIDATION COMPLETE
+    [ ] Backtesting completed on >= 2 years of data
+    [ ] Out-of-sample test: verdict PASS or CAUTION (not FAIL)
+    [ ] Walk-forward consistency score >= 50%
+    [ ] Robustness tests: verdict ROBUST or ACCEPTABLE (not FRAGILE)
+    [ ] Overfitting risk: LOW or MEDIUM (not HIGH)
+
+    SECTION 2: DEMO TRADING COMPLETE
+    [ ] Demo period >= 4 weeks
+    [ ] At least 20 demo trades executed
+    [ ] No critical bugs observed in demo
+    [ ] Risk management verified in demo
+    [ ] All automation features verified in demo
+
+    SECTION 3: LIVE ENVIRONMENT
+    [ ] Live MT5 account funded with dedicated trading capital
+    [ ] Starting capital documented: $_______
+    [ ] Maximum acceptable loss documented: $_______ (should be < 20% of capital)
+    [ ] Live account number configured in LIVE_ACCOUNT_NUMBER
+    [ ] All live trading flags set correctly
+    [ ] Broker confirmed to support automated trading
+
+    SECTION 4: RISK ACKNOWLEDGEMENT (human sign-off)
+    [ ] I understand the 55-65% win rate is a TARGET, not a guarantee
+    [ ] I understand I may lose money using this system
+    [ ] I am only trading with capital I can afford to lose
+    [ ] I have read and understood SECURITY.md
+    [ ] I have a plan for what to do if the bot malfunctions
+
+    SECTION 5: MONITORING PLAN
+    [ ] Daily monitoring schedule: ______________
+    [ ] Telegram alerts configured for: mobile/desktop
+    [ ] Dashboard review frequency: ______________
+    [ ] Emergency stop procedure: _______________
+
+    HUMAN SIGNATURE: _____________________ DATE: ___________
+
+ACCEPTANCE CRITERIA:
+    [ ] LIVE_READINESS_CHECKLIST.md created with all sections
+    [ ] Risk warnings clearly stated
+    [ ] Human sign-off section present
+
+DEFINITION OF DONE:
+    [ ] docs/LIVE_READINESS_CHECKLIST.md created
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 21-04 — TASK_FINAL_AUDIT.txt
+================================================================================

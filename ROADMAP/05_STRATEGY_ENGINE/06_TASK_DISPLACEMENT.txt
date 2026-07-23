@@ -1,0 +1,132 @@
+================================================================================
+TASK: 05-06 — DISPLACEMENT
+================================================================================
+TASK ID:        05-06
+TASK NAME:      Displacement Measurement
+PHASE:          05 — Strategy Engine
+OBJECTIVE:      Implement displacement detection in app/strategy/displacement.py.
+                Displacement is a strong, impulsive move that validates
+                Order Blocks and creates FVGs.
+
+CONTEXT:
+  Displacement is a rapid, large-range move in one direction.
+  It occurs after a liquidity sweep or BOS and signals institutional
+  participation. Without displacement, Order Blocks and FVGs are weaker.
+
+DEPENDENCIES:   Task 05-05 complete
+PREVIOUS TASKS: 05-05 FVG
+
+FILES TO INSPECT:   app/strategy/market_structure.py, app/strategy/bos_choch.py
+FILES TO CREATE:
+  app/strategy/displacement.py
+  tests/unit/test_displacement.py
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: app/strategy/fvg.py, app/strategy/order_blocks.py
+
+================================================================================
+ALGORITHMIC DEFINITIONS — DISPLACEMENT
+================================================================================
+
+DISPLACEMENT DETECTION:
+  A displacement move consists of 1-3 consecutive large-range candles
+  moving strongly in one direction.
+  
+  SINGLE CANDLE DISPLACEMENT (DECISION-020 — all criteria MUST be true):
+    candle_range = high - low
+    candle_body = abs(close - open)
+    
+    CRITERIA 1: candle_body >= ATR(14) * DISPLACEMENT_BODY_MULTIPLIER
+      Default: DISPLACEMENT_BODY_MULTIPLIER = 1.5 (configurable in app/config.py)
+      Ensures the move is significantly larger than average volatility.
+
+    CRITERIA 2: candle_body / candle_range >= 0.60
+      Body must be at least 60% of total range — ensures directional conviction.
+      Minimum: 0.50, Maximum: 0.75 (configurable via DISPLACEMENT_BODY_RATIO)
+
+    CRITERIA 3: Close position in final 25% of candle range
+      Bullish displacement: close >= low + (candle_range * 0.75)
+        (close is in upper 25% of the candle's range)
+      Bearish displacement: close <= low + (candle_range * 0.25)
+        (close is in lower 25% of the candle's range)
+      This prevents counting "spinning top" candles as displacement.
+
+    CRITERIA 4: CLOSED candle only — current forming candle NEVER qualifies.
+
+    CONFIG PARAMETERS (add to app/config.py):
+      DISPLACEMENT_BODY_MULTIPLIER = 1.5
+      DISPLACEMENT_BODY_RATIO = 0.60
+      DISPLACEMENT_CLOSE_RATIO = 0.75  (upper/lower quartile threshold)
+
+  MULTI-CANDLE DISPLACEMENT (sequence):
+    2-3 consecutive candles where:
+      Total range >= ATR * DISPLACEMENT_ATR_MULT * 1.0
+      All candles move in the same direction
+      No retracement > 50% within the sequence
+
+DISPLACEMENT SIGNIFICANCE:
+  The displacement creates:
+  - The Order Block (last opposing candle before it)
+  - The FVG (gap left in the body of the displacement)
+  
+  Strong displacement = stronger OB and FVG significance.
+
+================================================================================
+DETAILED REQUIREMENTS
+================================================================================
+
+@dataclass
+class Displacement:
+    direction: str        # "BULLISH" or "BEARISH"
+    start_index: int
+    end_index: int
+    start_price: float
+    end_price: float
+    total_range: float
+    atr_multiple: float   # How many ATRs the move spans
+    candle_count: int     # 1, 2, or 3 candles
+    strength: str         # "STRONG" (>= 2x ATR) or "MODERATE" (>= 1.5x ATR)
+
+def detect_displacement(data: pd.DataFrame,
+                        atr: float,
+                        lookback: int = 20,
+                        min_atr_mult: float = 1.5) -> list[Displacement]:
+    """
+    Scans last lookback candles for displacement moves.
+    Returns list of detected displacements.
+    """
+
+def get_latest_displacement(data: pd.DataFrame,
+                             atr: float,
+                             direction: str = None) -> Optional[Displacement]:
+    """
+    Returns most recent displacement.
+    If direction specified, only returns that direction.
+    """
+
+def has_recent_displacement(data: pd.DataFrame,
+                             atr: float,
+                             direction: str,
+                             max_candles_ago: int = 10) -> bool:
+    """Returns True if significant displacement in given direction."""
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+python -m py_compile app/strategy/displacement.py
+pytest tests/unit/test_displacement.py -v
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ Strong single-candle displacement detected correctly
+□ Multi-candle displacement detected
+□ Minimum ATR multiple enforced
+□ Direction correctly identified
+□ All tests pass
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/05_STRATEGY_ENGINE/07_TASK_EMA_ATR.txt
+================================================================================

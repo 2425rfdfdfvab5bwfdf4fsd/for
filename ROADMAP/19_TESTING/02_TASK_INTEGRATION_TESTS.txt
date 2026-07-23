@@ -1,0 +1,64 @@
+================================================================================
+TASK ID:     19-02
+TASK NAME:   Integration Tests
+PHASE:       19 — Testing
+================================================================================
+
+OBJECTIVE:
+    Implement integration tests that verify the correct interaction between
+    multiple phases working together.
+
+DEPENDENCIES:
+    - 19-01 Unit tests and fixtures complete
+
+FILES TO CREATE:
+    tests/integration/test_full_pipeline.py
+    tests/integration/test_risk_pipeline.py
+    tests/integration/test_execution_pipeline.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/
+    ROADMAP/
+
+INTEGRATION TEST SCENARIOS:
+
+    test_full_pipeline.py:
+        test_signal_to_execution_pipeline():
+            Signal → Confluence Score → Risk Validation → Trade Params → Execution
+            Verify each stage receives correct output from previous stage.
+
+        test_filter_blocks_strategy_scan():
+            FilterPipeline BLOCK → StrategyEngine NOT called
+            Verify filter short-circuits correctly.
+
+        test_confluence_rejection_blocks_risk():
+            Score 7.5 → REJECTED → RiskManager NOT called
+            Verify confluence gates risk engine correctly.
+
+    test_risk_pipeline.py:
+        test_daily_limit_chain():
+            2% loss reached → DailyLimitsChecker blocks → RiskManager rejects
+        test_consecutive_loss_chain():
+            2 losses in DB → ConsecutiveLossChecker blocks
+
+    test_execution_pipeline.py:
+        test_duplicate_protection_integration():
+            Position in DB → DuplicateProtection blocks → No order sent
+        test_successful_execution_creates_journal_entry():
+            Successful execution → TradeJournal.record_entry() called
+
+TEST REQUIREMENTS:
+    All scenarios use mock MT5 and in-memory database.
+    Each test is independent and self-contained.
+
+ACCEPTANCE CRITERIA:
+    [ ] All integration scenarios pass
+    [ ] No cross-test contamination (proper fixture teardown)
+    [ ] All tests run in < 60 seconds total
+
+DEFINITION OF DONE:
+    [ ] All integration test files created and passing
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 19-03 — TASK_FAILURE_TESTS.txt
+================================================================================

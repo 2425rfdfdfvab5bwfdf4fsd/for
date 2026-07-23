@@ -1,0 +1,132 @@
+================================================================================
+TASK ID:     15-02
+TASK NAME:   Backtest Engine
+PHASE:       15 — Backtesting
+================================================================================
+
+OBJECTIVE:
+    Implement BacktestEngine that iterates historical data bar-by-bar,
+    runs the same strategy/confluence/risk pipeline as the live bot,
+    and records simulated trades.
+
+CONTEXT:
+    ARCHITECTURE:
+    The backtest engine simulates the main loop by iterating over bars.
+    At each bar:
+    1. Build the "visible" data slice (only bars up to current_bar)
+    2. Run FilterPipeline (using historical time)
+    3. Run StrategyEngine on visible slice
+    4. Run ConfluenceScorer
+    5. Run RiskManager (using simulated account state)
+    6. If approved: call RealisticExecutionSimulator
+    7. Run simulated position management
+
+    ANTI-LOOK-AHEAD:
+    At bar N, only bars [0..N-1] are visible to the strategy.
+    Bar N itself is used for execution simulation only (open price).
+    This is a hard rule. Any violation is a critical bug.
+
+DEPENDENCIES:
+    - 15-01 HistoricalDataManager
+    - Phase 05 StrategyEngine (used read-only)
+    - Phase 06 ConfluenceScorer (used read-only)
+    - Phase 07 RiskManager (adapted for simulated account)
+
+FILES TO CREATE:
+    backtesting/backtest_engine.py
+    tests/test_backtesting/test_engine.py
+
+FILES TO MODIFY:
+    None — StrategyEngine/RiskManager must be usable in backtest context
+    without modification. If they are not, refactor in Phase 05/07 tasks
+    before this task, not during.
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    ROADMAP/
+
+
+================================================================================
+STRATEGY_REUSE — REQUIRED (CHG-021)
+================================================================================
+
+The BacktestEngine MUST use the EXACT same strategy/confluence/risk code as
+the live bot — not a reimplemented version. This is the core guarantee of
+backtesting validity.
+
+IMPLEMENTATION REQUIREMENT:
+  BacktestEngine instantiates these classes UNCHANGED from live code:
+    - StrategyEngine (app/strategy/signal_engine.py)
+    - ConfluenceScorer (app/confluence/scorer.py)
+    - RiskManager (app/risk/risk_manager.py)
+
+  These classes are designed to be testable. They take data as input and
+  return objects as output. They do NOT call MT5 directly (that is the
+  DataManager's job, which BacktestEngine replaces with historical data).
+
+  BacktestEngine provides historical data to them via the same interfaces
+  used in the live bot. The only difference is the DATA SOURCE.
+
+ADAPTER PATTERN:
+  class BacktestDataProvider:
+      """Wraps historical data to look like live MT5 data to strategy classes."""
+      def get_ohlcv(self, symbol, timeframe, bars) -> pd.DataFrame:
+          return self._historical_slice  # Only up to current_bar index
+
+  This adapter is injected into StrategyEngine, so StrategyEngine code is
+  NOT modified. If StrategyEngine cannot accept a data provider injection,
+  refactor it in a Phase 05 task BEFORE this task (not during).
+
+LOOK-AHEAD GUARD:
+  BacktestDataProvider.get_ohlcv() MUST return only bars with index < current_bar.
+  It MUST raise ValueError if asked for data at or beyond current_bar.
+
+ANTI-DIVERGENCE PRINCIPLE:
+  If any backtest result seems too good, verify that the EXACT same
+  code path (same StrategyEngine, same ConfluenceScorer) was used.
+  Any difference in implementation between live and backtest is a bug.
+
+================================================================================
+DETAILED REQUIREMENTS:
+    class BacktestEngine:
+        run(
+            symbols: list[str],
+            from_date: date,
+            to_date: date,
+            initial_capital: float
+        ) -> BacktestResult
+
+    BacktestResult:
+        trades: list[SimulatedTrade]
+        equity_curve: list[float]
+        daily_stats: list[DailyBacktestStat]
+        total_bars_processed: int
+        duration_seconds: float
+
+    SimulatedTrade:
+        entry_bar, exit_bar, symbol, direction, entry_price, exit_price,
+        sl_price, tp_price, lot_size, pnl, r_multiple, duration_bars,
+        confluence_score, exit_reason
+
+LOOK-AHEAD TEST:
+    Create a test that introduces a future bar into strategy context and
+    verifies the engine raises an error or produces no signal.
+
+TEST REQUIREMENTS:
+    - test_engine_runs_without_error()
+    - test_no_look_ahead_bias()
+    - test_trade_count_within_daily_limit()
+    - test_daily_loss_limit_respected()
+
+ACCEPTANCE CRITERIA:
+    [ ] Engine iterates all bars without crashing
+    [ ] Look-ahead bias test passes
+    [ ] Daily limits enforced in simulation
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] backtest_engine.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 15-03 — TASK_REALISTIC_EXECUTION.txt
+================================================================================

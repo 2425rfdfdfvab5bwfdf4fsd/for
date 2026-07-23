@@ -1,0 +1,135 @@
+================================================================================
+TASK: 05-07 — EMA AND ATR INDICATORS
+================================================================================
+TASK ID:        05-07
+TASK NAME:      EMA Trend Filter + ATR Volatility
+PHASE:          05 — Strategy Engine
+OBJECTIVE:      Implement EMA (trend filter) and ATR (volatility measure)
+                calculations in app/strategy/indicators.py.
+
+CONTEXT:
+  EMA is used as a trend filter — price above EMA_SLOW = bullish bias.
+  ATR is used for position sizing (SL buffer), volatility filter,
+  displacement detection, and OB/FVG size filtering.
+  These are pure numpy/pandas calculations — no lookahead bias possible.
+
+DEPENDENCIES:   Task 05-06 complete
+PREVIOUS TASKS: 05-06 DISPLACEMENT
+
+FILES TO INSPECT:   app/config.py (EMA_FAST, EMA_SLOW, ATR_PERIOD)
+FILES TO CREATE:
+  app/strategy/indicators.py
+  tests/unit/test_indicators.py
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: app/strategy/displacement.py
+
+================================================================================
+DETAILED REQUIREMENTS
+================================================================================
+DETAILED REQUIREMENTS
+================================================================================
+
+================================================================================
+EMA / ATR PERIOD CONFIGURATION — REQUIRED (CHG-C05)
+================================================================================
+
+EMA and ATR periods MUST be identical across all phases that use them.
+Defining them here (Phase 05-07) makes this task the single source of truth.
+
+PINNED VALUES (add to app/config.py in Phase 02 if not already present):
+  EMA_FAST_PERIOD = 21    # trend filter: H4 EMA21 — price above = bullish bias
+  EMA_SLOW_PERIOD = 50    # slope calculation used by market regime classifier
+  ATR_PERIOD      = 14    # standard ATR for SL buffer, OB/FVG sizing, volatility
+
+THESE SAME VALUES must be used without modification in:
+  Phase 05-07  indicators.py   — calculate_ema(period=EMA_FAST_PERIOD/EMA_SLOW_PERIOD)
+                                  calculate_atr(period=ATR_PERIOD)
+  Phase 05-08  market_regime.py — REGIME_ATR_AVERAGE_PERIOD uses ATR_PERIOD base
+  Phase 06-01  scorer.py       — ATR_ACCEPTABLE factor uses current ATR from indicators
+  Phase 08-04  volatility.py   — filter compares ATR to its own average (ATR_PERIOD)
+
+IMPLEMENTATION RULE:
+  Never hardcode 21, 50, or 14 in any file.
+  Always read from config: config.EMA_FAST_PERIOD, config.EMA_SLOW_PERIOD, config.ATR_PERIOD
+
+================================================================================
+
+def calculate_ema(data: pd.Series,
+                  period: int) -> pd.Series:
+    """
+    Calculates EMA using pandas ewm().mean().
+    Returns Series of same length as input.
+    First 'period' values will be NaN.
+    """
+
+def calculate_atr(data: pd.DataFrame,
+                  period: int = 14) -> pd.Series:
+    """
+    Calculates ATR (Average True Range).
+    True Range = max(high-low, abs(high-prev_close), abs(low-prev_close))
+    ATR = EMA(True Range, period)
+    Returns Series of same length as DataFrame.
+    """
+
+def get_current_atr(data: pd.DataFrame,
+                    period: int = 14) -> float:
+    """Returns the most recent ATR value as a float."""
+
+def calculate_ema_alignment(data: pd.DataFrame,
+                             fast_period: int,
+                             slow_period: int) -> dict:
+    """
+    Calculates EMA alignment:
+    Returns:
+      ema_fast: float (current fast EMA)
+      ema_slow: float (current slow EMA)
+      aligned_bullish: bool (price > ema_slow AND ema_fast > ema_slow)
+      aligned_bearish: bool (price < ema_slow AND ema_fast < ema_slow)
+      current_price: float
+      price_above_slow: bool
+      price_above_fast: bool
+    """
+
+def get_average_atr(data: pd.DataFrame,
+                    period: int = 14,
+                    average_over: int = 20) -> float:
+    """
+    Returns average of last 'average_over' ATR values.
+    Used for volatility filter normalization.
+    """
+
+def atr_to_pips(atr_price: float, symbol: str) -> float:
+    """
+    Converts ATR in price to pips.
+    EURUSD/GBPUSD: multiply by 10000
+    USDJPY: multiply by 100
+    """
+
+RULES:
+  - All calculations use only past data (no lookahead)
+  - Must work on the slice of data provided (no global state)
+  - ATR must return 0.0 if insufficient data (not crash)
+  - EMA must return 0.0 if insufficient data (not crash)
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+python -m py_compile app/strategy/indicators.py
+pytest tests/unit/test_indicators.py -v
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ EMA calculation matches standard formula
+□ ATR calculation matches standard formula
+□ EMA alignment detection correct
+□ ATR-to-pips conversion works for all 3 pairs
+□ Handles insufficient data without crashing
+□ All tests pass
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/05_STRATEGY_ENGINE/08_TASK_MARKET_REGIME.txt
+================================================================================

@@ -1,0 +1,160 @@
+================================================================================
+TASK: 03-05 — ACCOUNT VALIDATION
+================================================================================
+TASK ID:        03-05
+TASK NAME:      Account Info + Validation
+PHASE:          03 — MT5 Integration
+OBJECTIVE:      Create app/mt5/account.py to fetch account information and
+                implement live trading guards that prevent accidental live
+                trading without explicit configuration.
+
+CONTEXT:
+  Live trading safety is a P0 (critical) requirement. The bot must never
+  accidentally trade live when in demo mode, and must never trade on the
+  wrong account. All live trading requires LIVE_TRADING=true AND valid
+  account verification.
+
+DEPENDENCIES:   Task 03-04 complete
+PREVIOUS TASKS: 03-04 CONNECTION RECOVERY
+
+FILES TO INSPECT:   app/config.py, app/mt5/connection.py
+FILES TO CREATE:
+  app/mt5/account.py
+  tests/unit/test_mt5_account.py
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: app/mt5/connection.py, app/mt5/recovery.py
+
+================================================================================
+DETAILED REQUIREMENTS
+================================================================================
+
+
+================================================================================
+SERVER_TIMEZONE_DETECTION — REQUIRED (CHG-008)
+================================================================================
+
+The broker server time is NOT the same as UTC. Most MT5 brokers use UTC+2
+(or UTC+3 during DST). Using the wrong timezone will cause the daily loss
+limit to reset at the wrong time, potentially allowing excess risk.
+
+DETECTION ALGORITHM (call on startup):
+  1. Query mt5.symbol_info_tick(symbol) to get server_time (MT5 timestamp)
+  2. Compare server_time with datetime.utcnow() to compute offset
+  3. Round to nearest hour: SERVER_UTC_OFFSET_HOURS = round((server_time - utc_now).seconds / 3600)
+  4. Store in config (or pass to DailyLimitsChecker)
+  5. Log: "Detected broker server UTC offset: +{X} hours"
+  6. Validate against .env configured SERVER_UTC_OFFSET_HOURS if set
+
+.env.example ADDITION:
+  # Broker server timezone offset from UTC (most MT5 brokers: +2 or +3)
+  SERVER_UTC_OFFSET_HOURS=2
+
+  # Server DST behavior (brokers often shift by 1 hour for US/EU DST)
+  # Check broker documentation — most use UTC+2 in summer, UTC+3 in winter
+  # or vice versa. Set this to the offset that matches your broker's daily reset.
+
+IMPLEMENTATION NOTE:
+  Add detect_server_timezone() method to AccountManager class.
+  This method is called once at startup before the main loop begins.
+  Store the detected offset for use by DailyLimitsChecker.
+  RE-DETECTION: Call detect_server_timezone() every 12 hours during market
+  close periods to catch DST transitions automatically. If the offset changes,
+  log WARNING and update the runtime value used by DailyLimitsChecker.
+
+ACCOUNT TYPE FIELD:
+  mt5.account_info().trade_mode values:
+    0 = ACCOUNT_TRADE_MODE_DEMO   → is_demo = True
+    1 = ACCOUNT_TRADE_MODE_CONTEST
+    2 = ACCOUNT_TRADE_MODE_REAL   → required when LIVE_TRADING=true
+  Verify: if LIVE_TRADING=true AND trade_mode != 2: block and log CRITICAL.
+
+================================================================================
+class AccountManager:
+
+    def __init__(self, config: Config, connection: MT5Connection):
+        ...
+
+    def get_account_info(self) -> Optional[dict]:
+        """
+        Returns dict with:
+          login: int, balance: float, equity: float,
+          margin: float, margin_free: float, margin_level: float,
+          currency: str, server: str, name: str,
+          trade_allowed: bool, is_demo: bool
+        """
+
+    def get_equity(self) -> Optional[float]:
+        """Returns current account equity or None."""
+
+    def get_balance(self) -> Optional[float]:
+        """Returns current account balance or None."""
+
+    def get_margin_level(self) -> Optional[float]:
+        """Returns margin level % or None."""
+
+    def validate_for_live_trading(self) -> tuple[bool, str]:
+        """
+        Performs pre-live-trading checks.
+        Returns (is_valid, reason_if_not_valid).
+        
+        Checks:
+        1. config.LIVE_TRADING must be True
+        2. MT5 must be connected
+        3. Account must be accessible
+        4. Account must be real (not demo) when LIVE_TRADING=true
+        5. Balance must be > 0
+        6. Trading must be allowed on the account
+        
+        If any check fails: return (False, "reason")
+        If all pass: return (True, "")
+        
+        LOG a prominent WARNING when live trading is validated:
+        logger.warning("=" * 60)
+        logger.warning("LIVE TRADING MODE ACTIVATED")
+        logger.warning(f"Account: {masked_login}")
+        logger.warning(f"Balance: {balance}")
+        logger.warning(f"Server: {server}")
+        logger.warning("=" * 60)
+        """
+
+    def is_trading_allowed(self) -> bool:
+        """Returns True if account allows trading."""
+
+    def mask_login(self, login: int) -> str:
+        """Returns 'XXXX7890' format for safe logging."""
+
+STARTUP DISPLAY (call this at bot startup):
+    def display_account_summary(self) -> None:
+        """
+        Logs:
+        Account: XXXX7890
+        Mode: DEMO / LIVE
+        Server: [server]
+        Balance: $XXXX.XX
+        Equity: $XXXX.XX
+        Trading Allowed: YES/NO
+        """
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+python -m py_compile app/mt5/account.py
+pytest tests/unit/test_mt5_account.py -v
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ Account info retrieval works with mock
+□ Live trading validation correctly blocks when LIVE_TRADING=false
+□ Live trading logs prominent warning when enabled
+□ Login number masked in all log output
+□ Phase 03 marked [✓] in status file after this task
+
+================================================================================
+NEXT TASK (PHASE 03 COMPLETE)
+================================================================================
+→ Next: ROADMAP/04_DATA_LAYER/01_PHASE_OVERVIEW.txt
+  (Phase 03 and Phase 04 could be worked on in parallel by different agents
+   since they work on completely different files)
+================================================================================

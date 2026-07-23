@@ -1,0 +1,176 @@
+================================================================================
+TASK: 05-04 — ORDER BLOCKS
+================================================================================
+TASK ID:        05-04
+TASK NAME:      Order Block Detection + Validation
+PHASE:          05 — Strategy Engine
+OBJECTIVE:      Implement deterministic Order Block (OB) detection with
+                explicit rules for identification, freshness, invalidation,
+                and mitigation in app/strategy/order_blocks.py.
+
+CONTEXT:
+  An Order Block is the last opposing candle before a significant move
+  (displacement). It represents an area where institutional orders were
+  placed. Price often returns to this zone before continuing.
+
+DEPENDENCIES:   Task 05-03 complete
+PREVIOUS TASKS: 05-03 LIQUIDITY
+
+FILES TO INSPECT:   app/strategy/market_structure.py, app/strategy/bos_choch.py
+FILES TO CREATE:
+  app/strategy/order_blocks.py
+  tests/unit/test_order_blocks.py
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: app/strategy/liquidity.py
+
+================================================================================
+ALGORITHMIC DEFINITIONS — ORDER BLOCK
+================================================================================
+
+BULLISH ORDER BLOCK (demand zone — support for BUY entries):
+  Definition:
+    The last BEARISH candle (close < open) immediately before a
+    significant bullish move (displacement). This bearish candle
+    is the OB.
+  
+  Exact Detection:
+  1. Find displacement move (see Phase 05-06)
+  2. Look back from the displacement start
+  3. Find the last candle where close < open (bearish candle)
+  4. That candle's body defines the OB zone:
+       OB_high = max(open, close) of the bearish candle
+       OB_low  = min(open, close) of the bearish candle
+     (Some practitioners use the candle's full range — wick included.
+      Use BODY only for stricter definition.)
+  
+  ALTERNATIVE (simpler, more common):
+    OB_high = candle high
+    OB_low  = candle low
+    (Include wicks for wider zone)
+
+BEARISH ORDER BLOCK (supply zone — resistance for SELL entries):
+  Definition:
+    The last BULLISH candle (close > open) before a significant
+    bearish move.
+  
+  Detection:
+  1. Find bearish displacement
+  2. Last candle where close > open before the displacement
+  3. OB zone:
+       OB_high = candle high
+       OB_low  = candle low
+
+ORDER BLOCK FRESHNESS:
+  An OB is FRESH if price has not yet returned into the OB zone.
+  An OB is MITIGATED if price has entered the zone (closed within the OB).
+  An OB is INVALIDATED if price has CLOSED beyond the OB:
+    Bullish OB invalidated if close < OB_low
+    Bearish OB invalidated if close > OB_high
+
+ORDER BLOCK VALIDITY RULES:
+  1. Must be formed after a BOS in the same direction
+  2. Must be FRESH (not yet mitigated)
+  3. Must be within the last N candles (max_age = 50 by default)
+  4. The displacement move must be significant (see displacement task)
+
+================================================================================
+
+================================================================================
+ORDER_BLOCK_EXACT_DEFINITION — REQUIRED (CHG-012)
+================================================================================
+
+BULLISH ORDER BLOCK:
+  - The LAST bearish candle (close < open) immediately preceding a bullish
+    BOS impulse move (displacement). "Last" means the candle directly before
+    the displacement sequence starts.
+  - OB zone = [candle.low, candle.high] (full range including wicks)
+  - If using body-only: OB zone = [min(open,close), max(open,close)]
+  - DEFAULT: use FULL RANGE (wicks included) for wider, more reliable zone.
+  - CONFIG: OB_USE_BODY_ONLY = false (default)
+
+BEARISH ORDER BLOCK:
+  - The LAST bullish candle (close > open) immediately preceding a bearish
+    BOS impulse move. OB zone = [candle.low, candle.high]
+
+FRESHNESS STATES (exact definitions):
+  FRESH:      price has NOT re-entered the OB zone [low, high] since OB formed.
+              Test: ALL candles after OB formation have high < OB.high (for bullish)
+              OR low > OB.low (for bearish)
+  MITIGATED:  price has entered the zone but NOT closed beyond the far edge.
+              Test: any candle after OB has low <= OB.high (for bullish OB touched)
+              AND no candle has close < OB.low
+  INVALIDATED: price has CLOSED beyond the far edge of the OB zone.
+              Test: any candle has close < OB.low (for bullish OB — invalidated)
+              OR close > OB.high (for bearish OB — invalidated)
+
+TIMEFRAME USAGE RULES:
+  M15 and H1 OBs: used as ENTRY ZONES (price must return to OB for entry)
+  H4 OBs:         used for DIRECTIONAL BIAS ONLY (not entry zones)
+
+VALIDITY RULE: An OB is only valid if:
+  1. It was formed after a confirmed BOS in the same direction
+  2. It is currently FRESH (not mitigated or invalidated)
+  3. Age <= OB_MAX_AGE_CANDLES (default: 50 M15 candles)
+  4. The displacement move that created it was significant (>= 1.5x ATR)
+
+================================================================================
+DETAILED REQUIREMENTS
+================================================================================
+
+@dataclass
+class OrderBlock:
+    ob_type: str         # "BULLISH" or "BEARISH"
+    high: float
+    low: float
+    candle_index: int
+    candle_time: datetime
+    fresh: bool          # True = not mitigated
+    mitigated: bool      # True = price returned to zone
+    invalidated: bool    # True = price closed beyond zone
+    age_candles: int     # How many candles since OB formed
+
+def detect_order_blocks(data: pd.DataFrame,
+                        bos_events: list,
+                        max_age: int = 50) -> list[OrderBlock]:
+    """
+    Detects all valid (fresh) order blocks in the data.
+    Looks for last opposing candle before displacement.
+    Updates mitigation/invalidation status for each OB.
+    """
+
+def get_valid_ob_at_price(order_blocks: list[OrderBlock],
+                          current_price: float,
+                          ob_type: str) -> Optional[OrderBlock]:
+    """
+    Returns the most relevant OB of given type that current price
+    is at or near. Returns None if no relevant OB.
+    """
+
+def is_price_in_ob(price: float, ob: OrderBlock) -> bool:
+    """Returns True if price is within the OB zone."""
+
+def update_ob_status(order_blocks: list[OrderBlock],
+                     data: pd.DataFrame) -> list[OrderBlock]:
+    """Updates mitigation and invalidation flags for all OBs."""
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+python -m py_compile app/strategy/order_blocks.py
+pytest tests/unit/test_order_blocks.py -v
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ Bullish OB detected as last bearish candle before bullish move
+□ Bearish OB detected as last bullish candle before bearish move
+□ Freshness/mitigation/invalidation updated correctly
+□ Age tracking works
+□ All tests pass
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/05_STRATEGY_ENGINE/05_TASK_FVG.txt
+================================================================================

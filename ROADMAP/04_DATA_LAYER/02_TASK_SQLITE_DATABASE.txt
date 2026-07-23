@@ -1,0 +1,114 @@
+================================================================================
+TASK: 04-02 — SQLITE DATABASE
+================================================================================
+TASK ID:        04-02
+TASK NAME:      SQLite Database Connection + Initialization
+PHASE:          04 — Data Layer
+OBJECTIVE:      Create app/database/database.py with a database manager
+                that initializes SQLite, creates all tables, handles
+                connections safely, and supports WAL mode for concurrent access.
+
+CONTEXT:
+  The bot (writes) and the dashboard (reads) will access SQLite concurrently.
+  WAL (Write-Ahead Logging) mode is required to prevent locks.
+  The database must initialize itself on first run and handle schema versions.
+
+DEPENDENCIES:   Task 04-01 complete
+PREVIOUS TASKS: 04-01 DATA MODELS
+
+FILES TO INSPECT:   app/config.py (DATABASE_PATH), app/database/models.py
+FILES TO CREATE:
+  app/database/database.py
+  tests/unit/test_database.py
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: app/database/models.py
+
+================================================================================
+DETAILED REQUIREMENTS
+================================================================================
+
+class DatabaseManager:
+
+    SCHEMA_VERSION = 1
+
+    def __init__(self, config: Config):
+        self._db_path = config.DATABASE_PATH
+        self._connection = None
+
+    def initialize(self) -> None:
+        """
+        Creates the database file + directory if needed.
+        Creates all tables using models.ALL_TABLES.
+        Enables WAL mode: PRAGMA journal_mode=WAL
+        Sets busy_timeout: PRAGMA busy_timeout=5000
+        Checks/sets schema version.
+        """
+
+    def get_connection(self) -> sqlite3.Connection:
+        """
+        Returns an open connection to the database.
+        Creates connection if not already open.
+        Sets row_factory = sqlite3.Row (allows column access by name).
+        """
+
+    def close(self) -> None:
+        """Closes the database connection cleanly."""
+
+    def execute(self, sql: str, params: tuple = ()) -> sqlite3.Cursor:
+        """
+        Execute a single SQL statement.
+        Wraps in try/except with logging.
+        Returns cursor.
+        """
+
+    def execute_many(self, sql: str,
+                     params_list: list[tuple]) -> None:
+        """Executes a parameterized SQL statement multiple times."""
+
+    def get_schema_version(self) -> int:
+        """Returns current schema version from schema_version table."""
+
+    @contextmanager
+    def transaction(self):
+        """
+        Context manager for transactions:
+        with db.transaction():
+            db.execute(...)
+            db.execute(...)
+        Auto-commits on success, auto-rollbacks on exception.
+        """
+
+IMPORTANT RULES:
+  - Use parameterized queries ALWAYS (never string concatenation in SQL)
+  - Enable WAL mode on every connection
+  - Set busy_timeout to 5000ms
+  - Log all database errors
+  - Database path from config (never hardcoded)
+  - For tests: accept ":memory:" as path
+
+TEST SETUP:
+  tests/unit/test_database.py should use:
+    config.DATABASE_PATH = ":memory:"
+  This avoids creating real database files in tests.
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+python -m py_compile app/database/database.py
+pytest tests/unit/test_database.py -v
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ DatabaseManager.initialize() creates all tables
+□ WAL mode enabled
+□ Parameterized queries used (no string concat SQL)
+□ In-memory SQLite works for tests
+□ All tests pass
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/04_DATA_LAYER/03_TASK_REPOSITORIES.txt
+================================================================================

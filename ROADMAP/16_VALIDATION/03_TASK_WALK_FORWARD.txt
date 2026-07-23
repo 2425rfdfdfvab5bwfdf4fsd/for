@@ -1,0 +1,104 @@
+================================================================================
+TASK ID:     16-03
+TASK NAME:   Walk-Forward Validation
+PHASE:       16 — Validation
+================================================================================
+
+OBJECTIVE:
+    Implement WalkForwardValidator that runs rolling in-sample/out-of-sample
+    windows to assess strategy consistency over time.
+
+CONTEXT:
+    Walk-forward testing slides a window across the data:
+    Window 1: IS = Year 1, OOS = Q1 Year 2
+    Window 2: IS = Year 1 + Q1 Year 2, OOS = Q2 Year 2
+    Window 3: IS = ..., OOS = Q3 Year 2
+    etc.
+
+    This tests whether the strategy performs consistently across different
+    market regimes, not just the specific period used for development.
+
+    WF_IS_MONTHS: 12 (configurable)
+    WF_OOS_MONTHS: 3 (configurable)
+
+
+================================================================================
+PARAMETER_FREEZE_PROCEDURE — REQUIRED (CHG-020)
+================================================================================
+
+Walk-forward testing is only valid if parameters are FROZEN during the
+out-of-sample (OOS) period. Optimizing parameters using OOS data defeats
+the entire purpose of the test.
+
+FREEZE RULE:
+  All strategy parameters (ATR periods, swing lookbacks, OB definition rules,
+  confluence factor weights, displacement thresholds, regime thresholds) MUST
+  be determined during the in-sample (IS) period ONLY.
+
+  The OOS window runs with EXACTLY the same parameters as the final IS period.
+  No tuning, no adjustments, no cherry-picking after seeing OOS results.
+
+VERIFICATION REQUIREMENT:
+  Before running the OOS simulation for a window, the test framework must:
+  1. Snapshot the current config parameters used for IS
+  2. Write this snapshot to: results/walk_forward/window_N_params.json
+  3. Run OOS with parameters LOCKED from snapshot
+  4. Verify after OOS that no parameter was changed during the run
+
+RESULT REPORTING:
+  WalkForwardResult must include:
+    param_snapshots: list[dict]  — one dict per window with all parameter values
+    This provides full auditability of what parameters were used in each window.
+
+IN-SAMPLE OPTIMIZATION SCOPE:
+  Phase 16 walk-forward does NOT perform automated parameter optimization.
+  Parameters are whatever is in app/config.py when the test runs.
+  The "IS" period validates strategy behavior, not parameter selection.
+  If IS results are poor, the human engineer adjusts config and reruns.
+  This is a deliberate simplification — prevents curve-fitting automation.
+
+================================================================================
+DEPENDENCIES:
+    - Phase 15 BacktestEngine
+    - 16-01 and 16-02 results for context
+
+FILES TO CREATE:
+    validation/walk_forward.py
+    results/walk_forward/
+    tests/test_validation/test_walk_forward.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class WalkForwardValidator:
+        run(symbol, from_date, to_date, config) -> WalkForwardResult
+
+    WalkForwardResult:
+        windows: list[WalkForwardWindow]
+        consistency_score: float   # % of windows that were profitable
+        overall_verdict: str
+
+    WalkForwardWindow:
+        is_from, is_to, oos_from, oos_to
+        is_metrics: Metrics
+        oos_metrics: Metrics
+        profitable: bool
+
+TEST REQUIREMENTS:
+    - test_window_generation()
+    - test_consistency_score_calculation()
+
+ACCEPTANCE CRITERIA:
+    [ ] Walk-forward analysis runs for all 3 symbols
+    [ ] Consistency score calculated
+    [ ] < 50% profitable windows = CAUTION logged
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] walk_forward.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 16-04 — TASK_OVERFITTING_CHECK.txt
+================================================================================

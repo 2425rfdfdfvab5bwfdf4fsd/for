@@ -1,0 +1,74 @@
+================================================================================
+TASK ID:     19-05
+TASK NAME:   End-to-End Tests (Dry Run)
+PHASE:       19 — Testing
+================================================================================
+
+OBJECTIVE:
+    Implement end-to-end tests that run the full bot main loop in DRY_RUN
+    mode for multiple iterations, verifying the complete pipeline without
+    placing real orders.
+
+DEPENDENCIES:
+    - 19-01 through 19-04 complete
+
+FILES TO CREATE:
+    tests/e2e/test_dry_run.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/
+    ROADMAP/
+
+E2E TEST SCENARIOS:
+
+    test_dry_run_10_iterations():
+        Run MainLoop._tick() 10 times with:
+        - Mock MT5 (returns simulated data)
+        - In-memory database
+        - DRY_RUN=True
+        Verify:
+        - No real orders placed
+        - Loop completes all 10 iterations
+        - Heartbeat updated each iteration
+        - No unhandled exceptions
+
+    test_dry_run_with_valid_signal():
+        Configure mock MT5 to return data that produces a valid signal.
+        Run 3 loop iterations.
+        Verify:
+        - Signal detected and scored >= 8
+        - Risk validation ran and produced TradeParameters
+        - Execution SKIPPED (DRY_RUN=True)
+        - Journal records a DRY_RUN entry
+        - Telegram mock called with TRADE_ENTRY notification
+
+    test_dry_run_filters_block_all():
+        Configure mock to simulate outside session (03:00 UTC).
+        Run 5 iterations.
+        Verify:
+        - SessionFilter blocked all iterations
+        - Strategy engine not called
+        - No signals generated
+
+    test_dry_run_daily_limit_respected():
+        Simulate 3 trades already executed today (from DB).
+        Run 5 iterations.
+        Verify:
+        - DailyLimitsChecker blocks each iteration
+        - No new trades attempted
+
+ACCEPTANCE CRITERIA:
+    [ ] All E2E scenarios pass without errors
+    [ ] DRY_RUN mode never places orders
+    [ ] Complete pipeline exercised
+    [ ] Phase 19 acceptance criteria met (80% coverage)
+
+DEFINITION OF DONE:
+    [ ] test_dry_run.py created and all tests passing
+    [ ] Coverage report generated: pytest --cov=src --cov-report=html
+    [ ] Phase 19 COMPLETE in ROADMAP/00_PROJECT_STATUS.txt
+
+NEXT TASK:
+    Begin Phase 20 — Security
+    Start with: ROADMAP/20_SECURITY/01_PHASE_OVERVIEW.txt
+================================================================================

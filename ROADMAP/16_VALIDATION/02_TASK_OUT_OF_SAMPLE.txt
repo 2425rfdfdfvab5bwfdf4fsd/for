@@ -1,0 +1,61 @@
+================================================================================
+TASK ID:     16-02
+TASK NAME:   Out-of-Sample Validation
+PHASE:       16 — Validation
+================================================================================
+
+OBJECTIVE:
+    Run the backtest on the out-of-sample data (final 30% of historical data)
+    using EXACTLY the same parameters as the in-sample run.
+    Compare results to in-sample to assess generalization.
+
+CONTEXT:
+    Out-of-sample data must have been completely untouched during strategy
+    development. This is a one-time test. Once run, results cannot be used
+    to adjust parameters (that would make it contaminated in-sample).
+
+    COMPARISON ANALYSIS:
+    - If OOS win rate within 10% of IS win rate: GOOD
+    - If OOS profit factor within 20% of IS profit factor: ACCEPTABLE
+    - If OOS max drawdown significantly exceeds IS: RED FLAG
+    - If OOS win rate < 45%: DO NOT PROCEED TO LIVE TRADING
+
+DEPENDENCIES:
+    - 16-01 InSampleValidator complete (parameters locked)
+
+FILES TO CREATE:
+    validation/out_of_sample.py
+    results/out_of_sample/
+
+FILES FORBIDDEN TO MODIFY:
+    app/strategy/     (parameters remain frozen)
+    app/risk/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class OutOfSampleValidator:
+        run(config: BacktestConfig) -> ValidationResult
+        compare_with_in_sample(
+            oos_results: ValidationResult,
+            is_results: ValidationResult
+        ) -> ComparisonReport
+
+    ComparisonReport:
+        win_rate_degradation_pct: float
+        profit_factor_degradation_pct: float
+        drawdown_increase_pct: float
+        overall_verdict: str  # "PASS", "CAUTION", "FAIL"
+        recommendation: str
+
+ACCEPTANCE CRITERIA:
+    [ ] OOS backtest runs with identical parameters
+    [ ] Comparison report generated
+    [ ] FAIL verdict blocks progression to Phase 21 with explicit warning
+    [ ] All results saved
+
+DEFINITION OF DONE:
+    [ ] out_of_sample.py created and results saved
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 16-03 — TASK_WALK_FORWARD.txt
+================================================================================

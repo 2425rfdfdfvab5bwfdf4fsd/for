@@ -1,0 +1,75 @@
+================================================================================
+TASK ID:     17-03
+TASK NAME:   Recommendation Engine
+PHASE:       17 — Self-Improvement Analytics
+================================================================================
+
+OBJECTIVE:
+    Implement RecommendationEngine that translates segment analysis findings
+    into specific, actionable parameter change suggestions with evidence.
+
+CONTEXT:
+    RECOMMENDATION EXAMPLES:
+
+    "Grade B trades (score 8.0–8.9) have win rate 38% vs Grade A 61%.
+    SUGGESTION: Consider raising MIN_CONFLUENCE_SCORE from 8 to 9.
+    EVIDENCE: 45 Grade B trades (sufficient sample). Win rate gap: 23pp.
+    HUMAN ACTION REQUIRED: Review and decide. Run new backtest before changing."
+
+    "New York session shows significantly lower win rate than London.
+    SUGGESTION: Consider disabling New York session or reducing NY trade limit.
+    EVIDENCE: 28 NY trades, 35% win rate vs 58% London. Sufficient sample."
+
+    RECOMMENDATION TYPES:
+    - PARAMETER_INCREASE: raise a threshold
+    - PARAMETER_DECREASE: lower a threshold
+    - FEATURE_DISABLE: disable a feature/session
+    - INVESTIGATE_FURTHER: flag for user review without specific action
+    - NO_ACTION: performance is acceptable
+
+    Each recommendation requires EVIDENCE_LEVEL: "INSUFFICIENT", "SUGGESTIVE",
+    "MODERATE", "STRONG". Only MODERATE and STRONG produce actionable suggestions.
+
+DEPENDENCIES:
+    - 17-02 SegmentAnalyzer
+
+FILES TO CREATE:
+    app/analytics/recommendation_engine.py
+    tests/test_self_improvement/test_recommendations.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class RecommendationEngine:
+        generate(segment_report: SegmentReport) -> list[Recommendation]
+
+    Recommendation:
+        category: str
+        recommendation_type: str
+        description: str
+        evidence_level: str
+        sample_size: int
+        metric_before: float
+        metric_after_estimated: float
+        human_action_required: bool   # always True
+
+TEST REQUIREMENTS:
+    - test_high_score_grade_generates_recommendation()
+    - test_insufficient_data_no_recommendation()
+    - test_human_action_always_required()
+
+ACCEPTANCE CRITERIA:
+    [ ] Recommendations include evidence
+    [ ] human_action_required always True
+    [ ] Insufficient data produces no recommendation
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] recommendation_engine.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 17-04 — TASK_EVIDENCE_GATES.txt
+================================================================================

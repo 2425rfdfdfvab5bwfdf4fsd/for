@@ -1,0 +1,81 @@
+================================================================================
+TASK ID:     08-05
+TASK NAME:   Trading Cutoffs (EOD, Weekend, Overnight)
+PHASE:       08 — Filters
+================================================================================
+
+OBJECTIVE:
+    Implement TradingCutoffFilter that enforces end-of-day, overnight, and
+    weekend exposure rules to prevent uncontrolled position exposure.
+
+CONTEXT:
+    CUTOFF RULES:
+    1. END-OF-DAY CUTOFF: Stop opening new trades after EOD_CUTOFF_UTC (default 19:30)
+    2. OVERNIGHT CUTOFF: If OVERNIGHT_TRADING_ENABLED=false (default), close all
+       open positions before END_OF_DAY_CLOSE_UTC (default 20:00)
+    3. WEEKEND CUTOFF: No new trades after FRIDAY_CUTOFF_UTC (default Friday 19:00)
+       All positions closed before FRIDAY_CLOSE_UTC (default Friday 19:30)
+    4. MONDAY OPEN: No new trades until MONDAY_OPEN_UTC (default Monday 07:00)
+
+    NOTE: Closing of positions on cutoff is handled by Position Management
+    (Phase 10). This filter only blocks NEW trade entry.
+
+DEPENDENCIES:
+    - Phase 02 config
+    - Session filter (Phase 08-01)
+
+FILES TO CREATE:
+    app/filters/trading_cutoffs.py
+    tests/test_filters/test_cutoffs.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class TradingCutoffFilter:
+        check(utc_datetime: datetime) -> FilterResult
+
+    Checks (in order):
+        1. Is it Friday after FRIDAY_CUTOFF_UTC? → BLOCK "FRIDAY_CUTOFF"
+        2. Is it Saturday or Sunday? → BLOCK "WEEKEND"
+        3. Is it Monday before MONDAY_OPEN_UTC? → BLOCK "MONDAY_PRE_OPEN"
+        4. Is it after EOD_CUTOFF_UTC on weekday? → BLOCK "EOD_CUTOFF"
+        else: PASS
+
+TEST REQUIREMENTS:
+    - test_normal_weekday_passes()
+    - test_friday_before_cutoff_passes()
+    - test_friday_after_cutoff_blocked()
+    - test_saturday_blocked()
+    - test_sunday_blocked()
+    - test_monday_before_open_blocked()
+    - test_monday_after_open_passes()
+    - test_weekday_after_eod_blocked()
+
+ALSO CREATE: FilterPipeline (combines all 5 filters)
+    app/filters/filter_pipeline.py
+    tests/test_filters/test_pipeline.py
+
+    class FilterPipeline:
+        run(symbol: str, utc_datetime: datetime, spread_pips: float,
+            atr_pips: float) -> FilterResult
+        — runs all enabled filters in order; first BLOCK stops chain
+
+ACCEPTANCE CRITERIA:
+    [ ] All cutoff rules enforced
+    [ ] FilterPipeline runs all filters in sequence
+    [ ] First failing filter short-circuits pipeline
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] trading_cutoffs.py and filter_pipeline.py created and tested
+    [ ] Phase 08 acceptance criteria met
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated: Phase 08 COMPLETE
+
+NEXT TASK:
+    Begin Phase 09 — Execution Engine
+    Start with: ROADMAP/09_EXECUTION_ENGINE/01_PHASE_OVERVIEW.txt
+================================================================================

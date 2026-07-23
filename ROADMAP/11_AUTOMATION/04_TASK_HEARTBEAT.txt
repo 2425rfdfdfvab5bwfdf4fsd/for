@@ -1,0 +1,71 @@
+================================================================================
+TASK ID:     11-04
+TASK NAME:   Heartbeat System
+PHASE:       11 — Automation
+================================================================================
+
+OBJECTIVE:
+    Implement Heartbeat that writes a timestamped status file on every loop
+    iteration, enabling watchdog monitoring and status display.
+
+CONTEXT:
+    The heartbeat file is the communication channel between the bot, watchdog,
+    and status.bat script.
+
+    File: data/heartbeat.json
+    Updated: every HEARTBEAT_INTERVAL_SECONDS (default: 30)
+    Format:
+        {
+            "timestamp": "2026-01-01T12:00:00Z",
+            "status": "running",
+            "pid": 12345,
+            "mode": "DEMO",
+            "mt5_connected": true,
+            "trades_today": 2,
+            "open_positions": 1,
+            "daily_pnl": 45.50,
+            "daily_pnl_pct": 0.23,
+            "trading_allowed": true,
+            "active_session": "LONDON",
+            "last_signal": "EURUSD BUY 9.0/10",
+            "consecutive_losses": 0,
+            "version": "1.0.0"
+        }
+
+DEPENDENCIES:
+    - Phase 02 config, logging
+    - Phase 04 database (for daily stats)
+    - Phase 03 MT5 (for connection status)
+
+FILES TO CREATE:
+    app/automation/heartbeat.py
+    tests/test_automation/test_heartbeat.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class Heartbeat:
+        update(status_data: HeartbeatData) -> None
+        read() -> HeartbeatData | None   (class method, for watchdog/status)
+        is_fresh(max_age_seconds: int) -> bool
+
+TEST REQUIREMENTS:
+    - test_heartbeat_written_correctly()
+    - test_heartbeat_readable_after_write()
+    - test_fresh_heartbeat_detected()
+    - test_stale_heartbeat_detected()
+
+ACCEPTANCE CRITERIA:
+    [ ] Heartbeat file written with all fields
+    [ ] Watchdog can read and parse it
+    [ ] Freshness detection works
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] heartbeat.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 11-05 — TASK_AUTO_RECOVERY.txt
+================================================================================

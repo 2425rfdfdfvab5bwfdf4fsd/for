@@ -1,0 +1,97 @@
+================================================================================
+TASK: 01-03 — REQUIREMENTS TRACEABILITY
+================================================================================
+TASK ID:        01-03
+TASK NAME:      Requirements Traceability Matrix
+PHASE:          01 — Project Discovery
+OBJECTIVE:      Confirm that every requirement in the master roadmap maps
+                to a specific phase and task, and identify any gaps.
+
+CONTEXT:
+  This task validates the roadmap itself before implementation begins.
+  It ensures nothing was missed in the planning process.
+  READ-ONLY — no code changes.
+
+DEPENDENCIES:   Task 01-01 complete
+PREVIOUS TASKS: 01-01 (and optionally 01-02)
+
+FILES TO INSPECT:
+  - ROADMAP/00_MASTER_ROADMAP.txt (Complete Feature List)
+  - ROADMAP/00_REQUIREMENT_DECISIONS.txt
+  - All ROADMAP/XX_PHASE/ phase overview files
+
+FILES TO CREATE:    None
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt only
+FILES FORBIDDEN TO MODIFY: All other files
+
+================================================================================
+AGENT EXECUTION INSTRUCTIONS
+================================================================================
+
+STEP 1 — Read ROADMAP/00_MASTER_ROADMAP.txt — specifically the COMPLETE FEATURE LIST.
+
+STEP 2 — For each feature [F01]-[F15], [R01]-[R10], [P01]-[P07],
+         [FL01]-[FL05], [E01]-[E06], [A01]-[A07], [N01]-[N04],
+         [J01]-[J04], [D01]-[D08], [B01]-[B05], [V01]-[V05],
+         [SI01]-[SI04], [W01]-[W12], [S01]-[S05], [T01]-[T05],
+         [DOC01]-[DOC04]:
+
+  Confirm it maps to a phase and task in the roadmap.
+
+STEP 3 — Verify the following critical requirements are explicitly covered:
+  □ MT5 connection + reconnection
+  □ EURUSD, GBPUSD, USDJPY symbols with broker suffix support
+  □ H4/H1/M15/M5 multi-timeframe analysis
+  □ London + New York sessions only
+  □ 0–3 trades/day (no forced minimum)
+  □ 0.5% risk per trade
+  □ 2% daily loss limit
+  □ 2 consecutive loss protection
+  □ 8/10 minimum confluence
+  □ 1:2 minimum R:R
+  □ News filter (automatic + manual blackout)
+  □ Spread filter
+  □ Correlation protection
+  □ Position sizing per pair
+  □ Structure-based SL/TP
+  □ Break-even at +1R
+  □ Trailing stop
+  □ Partial profit (optional)
+  □ Execution verification (post-trade)
+  □ Duplicate trade prevention
+  □ Orphan position recovery
+  □ Singleton/single-instance protection
+  □ Watchdog process
+  □ MT5 auto-reconnection
+  □ Telegram notifications (optional, non-blocking)
+  □ Daily/weekly/monthly reports
+  □ Trade journal + rejection journal
+  □ Dashboard with "why no trade?" explanation
+  □ Backtesting engine (shares live strategy logic)
+  □ Walk-forward validation
+  □ Self-improvement recommendations (evidence-gated)
+  □ Windows .bat automation files
+  □ setup.bat one-click setup
+  □ DEMO mode default, LIVE requires explicit flag
+  □ No LLM APIs, no paid APIs
+  □ $0 software cost
+
+STEP 4 — Report any missing coverage:
+  "REQUIREMENT [X] has no corresponding phase/task."
+
+STEP 5 — Update ROADMAP/00_PROJECT_STATUS.txt — mark Phase 01 [✓] COMPLETE.
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ All requirements traced to phases/tasks
+□ No critical requirements missing
+□ Gaps documented for human review
+□ Phase 01 marked complete in status file
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/02_PROJECT_FOUNDATION/01_PHASE_OVERVIEW.txt
+  (Read this first, then start ROADMAP/02_PROJECT_FOUNDATION/01_TASK_PROJECT_STRUCTURE.txt)
+================================================================================

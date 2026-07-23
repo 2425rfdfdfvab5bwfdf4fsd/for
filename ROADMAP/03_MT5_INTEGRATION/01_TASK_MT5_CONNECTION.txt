@@ -1,0 +1,147 @@
+================================================================================
+TASK: 03-01 — MT5 CONNECTION
+================================================================================
+TASK ID:        03-01
+TASK NAME:      MT5 Connection Module + Mock Interface
+PHASE:          03 — MT5 Integration
+OBJECTIVE:      Create app/mt5/connection.py with a connection manager that
+                handles connecting, disconnecting, and detecting connection
+                status — plus a complete mock interface for testing.
+
+CONTEXT:
+  MetaTrader5 Python package is Windows-only. All tests must mock it.
+  The connection module must wrap all MT5 calls so the rest of the codebase
+  never imports MetaTrader5 directly. Only app/mt5/ modules use MT5 directly.
+
+DEPENDENCIES:   Phase 02 complete
+PREVIOUS TASKS: 02-04
+
+FILES TO INSPECT:   app/config.py (MT5 connection settings)
+FILES TO CREATE:
+  app/mt5/connection.py
+  app/mt5/_mt5_mock.py    (mock MT5 module for testing)
+  tests/unit/test_mt5_connection.py
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: app/config.py, app/logger.py
+
+================================================================================
+DETAILED REQUIREMENTS — app/mt5/connection.py
+================================================================================
+
+class MT5Connection:
+    """Manages MetaTrader 5 terminal connection."""
+
+    def __init__(self, config: Config):
+        ...
+
+    def connect(self) -> bool:
+        """
+        Attempt to connect to MT5 terminal.
+        Returns True on success, False on failure.
+        Uses config.MT5_TERMINAL_PATH if set.
+        Uses config.MT5_LOGIN/PASSWORD/SERVER if set.
+        If MT5 is already logged in, connect without credentials.
+        Logs success/failure clearly.
+        """
+
+    def disconnect(self) -> None:
+        """Safely disconnect from MT5."""
+
+    def is_connected(self) -> bool:
+        """
+        Returns True if MT5 is connected and terminal is active.
+        Does NOT raise exceptions — returns False on any error.
+        """
+
+    def get_terminal_info(self) -> Optional[dict]:
+        """Returns MT5 terminal info or None if not connected."""
+
+    def get_connection_status(self) -> dict:
+        """
+        Returns a dict with:
+          connected: bool
+          terminal_name: str or None
+          terminal_version: str or None
+          last_error: str or None
+        """
+
+IMPORTANT:
+  - Try to import MetaTrader5 at module level with try/except
+  - If MetaTrader5 is not available (not Windows), log a warning
+  - Store connection state internally
+  - MT5 initialization: mt5.initialize(path, login, password, server)
+  - Always call mt5.shutdown() on disconnect
+  - All MT5 API calls wrapped in try/except
+
+================================================================================
+DETAILED REQUIREMENTS — app/mt5/_mt5_mock.py
+================================================================================
+
+A complete mock of the MetaTrader5 package for testing:
+
+  class AccountInfo:
+      login: int = 12345678
+      balance: float = 10000.0
+      equity: float = 10000.0
+      margin: float = 0.0
+      margin_free: float = 10000.0
+      margin_level: float = 0.0
+      currency: str = "USD"
+      server: str = "Demo-Server"
+      name: str = "Test Account"
+
+  def initialize(*args, **kwargs) -> bool: return True
+  def shutdown() -> None: pass
+  def terminal_info() -> TerminalInfo: ...
+  def account_info() -> AccountInfo: ...
+  def last_error() -> tuple: return (0, "")
+  def version() -> tuple: return (5, 0, 0, "")
+
+  # Constants
+  TRADE_RETCODE_DONE = 10009
+  ORDER_TYPE_BUY = 0
+  ORDER_TYPE_SELL = 1
+  ORDER_FILLING_IOC = 1
+  TIMEFRAME_M5 = 5
+  TIMEFRAME_M15 = 15
+  TIMEFRAME_H1 = 60
+  TIMEFRAME_H4 = 240
+  COPY_TICKS_ALL = 1
+
+This mock is used by: import app.mt5._mt5_mock as mt5 (in test mode)
+
+================================================================================
+IMPLEMENTATION STEPS
+================================================================================
+
+1. Create app/mt5/_mt5_mock.py with complete MT5 mock
+2. Create app/mt5/connection.py with MT5Connection class
+3. Write tests in tests/unit/test_mt5_connection.py:
+   - test_connect_success (mock returns True)
+   - test_connect_failure (mock returns False)
+   - test_is_connected_when_connected
+   - test_is_connected_when_disconnected
+   - test_disconnect_calls_shutdown
+   - test_get_connection_status
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+python -m py_compile app/mt5/connection.py
+python -m py_compile app/mt5/_mt5_mock.py
+pytest tests/unit/test_mt5_connection.py -v
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ connection.py imports without errors (even on Linux/without MT5)
+□ All 6 unit tests pass with mocked MT5
+□ Connect/disconnect/is_connected work correctly with mock
+□ No hardcoded values (uses config.py)
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/03_MT5_INTEGRATION/02_TASK_SYMBOL_DISCOVERY.txt
+================================================================================

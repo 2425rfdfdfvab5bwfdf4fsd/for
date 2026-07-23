@@ -1,0 +1,86 @@
+================================================================================
+TASK ID:     20-02
+TASK NAME:   Live Trading Guards
+PHASE:       20 — Security
+================================================================================
+
+OBJECTIVE:
+    Implement LiveTradingGuard as a multi-layer safety system that prevents
+    accidental live trade execution with strict verification requirements.
+
+CONTEXT:
+    LIVE TRADING IS DISABLED BY DEFAULT.
+    Enabling it requires multiple explicit steps that cannot be triggered
+    by a configuration mistake.
+
+    LIVE TRADING ACTIVATION REQUIREMENTS (all must pass):
+    1. TRADING_MODE=LIVE in .env
+    2. LIVE_TRADING=true in .env
+    3. LIVE_TRADING_CONFIRMED=true in .env (separate flag)
+    4. LIVE_ACCOUNT_NUMBER matches actual MT5 account number
+    5. Account type is "real" (not demo)
+    6. Startup confirmation: user must type "I CONFIRM LIVE TRADING" if
+       running interactively (bypassed in watchdog restart)
+
+    If ANY check fails → DEMO mode forced → CRITICAL warning logged
+
+    ADDITIONAL LIVE GUARDS:
+    - Max lot size per trade: LIVE_MAX_LOT_SIZE (default: 0.1)
+    - Max total risk per day: LIVE_MAX_DAILY_LOSS_PERCENT (default: 1.0)
+      (more conservative than demo's 2.0%)
+
+DEPENDENCIES:
+    - Phase 03 MT5 account info
+    - Phase 02 config
+
+FILES TO CREATE:
+    src/security/live_trading_guards.py
+    tests/test_security/test_live_guards.py
+
+FILES TO MODIFY:
+    app/automation/auto_recovery.py    — call LiveTradingGuard on startup
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class LiveTradingGuard:
+        validate(config: Settings, account_info: AccountInfo) -> LiveTradingResult
+
+    LiveTradingResult:
+        live_trading_permitted: bool
+        actual_mode: str        # "LIVE" or "DEMO" (fallback)
+        failed_checks: list[str]
+        warning_message: str | None
+
+    STARTUP SEQUENCE:
+        If LIVE_TRADING=true:
+            Run all 4 config checks
+            Verify MT5 account matches LIVE_ACCOUNT_NUMBER
+            Verify account is real (not demo)
+            Log CRITICAL WARNING: "LIVE TRADING ACTIVE - Account: XXXXX"
+            If any check fails: fallback to DEMO, log CRITICAL
+
+TEST REQUIREMENTS:
+    - test_demo_mode_always_allowed()
+    - test_live_mode_requires_all_flags()
+    - test_account_mismatch_blocks_live()
+    - test_demo_account_blocks_live()
+    - test_missing_confirmation_flag_blocks()
+
+ACCEPTANCE CRITERIA:
+    [ ] Live trading requires all 4 flags set correctly
+    [ ] Account number mismatch blocks live trading
+    [ ] Demo account blocks live mode
+    [ ] Fallback to DEMO is always safe
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] live_trading_guards.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 20-03 — TASK_SECURITY_AUDIT.txt
+================================================================================

@@ -1,0 +1,101 @@
+================================================================================
+TASK ID:     22-02
+TASK NAME:   User Guide
+PHASE:       22 — Documentation
+================================================================================
+
+OBJECTIVE:
+    Create a comprehensive user guide that enables a non-technical Windows
+    user to install, configure, and operate the trading bot.
+
+CONTEXT:
+    The user guide should be written for someone who understands trading
+    but may not be a programmer. Avoid jargon. Use screenshots if helpful
+    (placeholder text where screenshots would go).
+
+DEPENDENCIES:
+    - 22-01 README complete
+
+FILES TO CREATE:
+    docs/USER_GUIDE.md
+
+FILES FORBIDDEN TO MODIFY:
+    app/
+    ROADMAP/
+
+USER GUIDE SECTIONS:
+
+    1. PREREQUISITES
+       - Windows 10/11
+       - Python 3.11+ (with download link)
+       - MetaTrader 5 (with download link)
+       - 5GB free disk space
+       - Stable internet connection
+       - MT5 demo or live account
+
+    2. INSTALLATION (Step-by-Step)
+       Step 1: Download the project files
+       Step 2: Double-click setup.bat
+       Step 3: Follow the on-screen instructions
+       Step 4: What to expect during setup
+
+    3. CONFIGURATION
+       Step 1: Double-click configure.bat
+       Step 2: MT5 settings
+       Step 3: Trading settings
+       Step 4: Risk settings (IMPORTANT: understand before changing)
+       Step 5: Telegram setup (optional)
+       Step 6: Verify your .env file
+
+    4. FIRST RUN (DEMO MODE)
+       Step 1: Open MetaTrader 5 and log in to demo account
+       Step 2: Double-click start_bot.bat
+       Step 3: Check status.bat
+       Step 4: Open run_dashboard.bat
+       Step 5: What to expect
+
+    5. DAILY OPERATION
+       Morning: check status.bat
+       During day: monitor Telegram notifications
+       Evening: review daily report on dashboard
+       Weekly: check analytics page
+
+    6. UNDERSTANDING THE DASHBOARD
+       Overview page explained
+       Market scanner explained
+       Positions page explained
+       Analytics page explained
+       Log viewer explained
+       Health monitor explained
+
+    7. RUNNING BACKTESTS
+       Double-click run_backtest.bat
+       Understanding the results
+       What the metrics mean
+       The 55-65% win rate disclaimer
+
+    8. SWITCHING TO LIVE TRADING
+       WARNING section (bold, prominent)
+       All required steps (reference LIVE_READINESS_CHECKLIST.md)
+
+    9. UPDATING THE BOT
+       Double-click update.bat
+       What happens during update
+       If update fails
+
+    10. STOPPING THE BOT
+        Normal stop: stop_bot.bat
+        Emergency stop: stop_bot.bat (same command)
+
+ACCEPTANCE CRITERIA:
+    [ ] Every major user action documented
+    [ ] Risk warning prominent in live trading section
+    [ ] Screenshots placeholders noted
+    [ ] Written in plain language
+
+DEFINITION OF DONE:
+    [ ] docs/USER_GUIDE.md created
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 22-03 — TASK_TROUBLESHOOTING.txt
+================================================================================

@@ -1,0 +1,93 @@
+================================================================================
+PHASE 14 — DASHBOARD
+================================================================================
+
+PHASE NAME:         Dashboard
+PHASE OBJECTIVE:    Build a local web dashboard (Flask + HTML/JS) that gives
+                    the user a real-time visual overview of the bot's activity,
+                    performance, open positions, and logs.
+
+WHY THIS PHASE EXISTS:
+    The user needs visibility into bot operation beyond Telegram messages.
+    A local web dashboard running on localhost provides a comprehensive view
+    without any cloud dependency or paid service.
+
+    The dashboard is read-only — it does NOT allow trade execution.
+    It is a monitoring interface, not a control panel.
+    (Bot control is via .bat files.)
+
+DEPENDENCIES:
+    - Phase 04 (Data Layer): all database queries
+    - Phase 11 (Automation): heartbeat file for live status
+    - Phase 13 (Trade Journal): trade and rejection data
+
+INPUTS:
+    - Heartbeat file (live bot status)
+    - SQLite database (trade history, journal, stats)
+    - Log files (for log viewer)
+
+OUTPUTS:
+    - Local web server on port 5000 (configurable: DASHBOARD_PORT)
+    - REST API endpoints
+    - HTML/CSS/JS frontend
+
+FILES EXPECTED TO BE CREATED:
+    app/dashboard/app.py            (Flask application)
+    app/dashboard/api/routes.py     (REST API endpoints)
+    app/dashboard/api/data_service.py
+    app/dashboard/static/           (CSS, JS)
+    app/dashboard/templates/        (HTML templates)
+    app/dashboard/__init__.py
+    tests/test_dashboard/test_api.py
+
+FILES THAT MUST NOT BE MODIFIED:
+    app/mt5/
+    app/strategy/
+    app/risk/
+    app/execution/
+    ROADMAP/
+
+TASK ORDER:
+    1. 01_TASK_BACKEND_API.txt
+    2. 02_TASK_OVERVIEW_UI.txt
+    3. 03_TASK_MARKET_SCANNER.txt
+    4. 04_TASK_OPEN_POSITIONS.txt
+    5. 05_TASK_ANALYTICS.txt
+    6. 06_TASK_LOG_VIEWER.txt
+    7. 07_TASK_HEALTH_MONITOR.txt
+    8. 08_TASK_WHY_NO_TRADE.txt   ← ADDED (CHG-018: Feature D08 was missing)
+
+TECHNOLOGY STACK:
+    Backend:   Flask (Python)
+    Frontend:  Vanilla HTML + CSS + JavaScript (no framework needed)
+    Database:  SQLite (read-only queries from dashboard)
+    Charts:    Chart.js (CDN, free)
+    Auto-refresh: JavaScript setInterval()
+
+ACCEPTANCE CRITERIA:
+    [ ] Dashboard accessible at http://localhost:5000
+    [ ] Overview page shows live status from heartbeat
+    [ ] Open positions displayed with live P&L
+    [ ] Trade history table with filters
+    [ ] Analytics charts showing equity curve, win rate, confluence distribution
+    [ ] Log viewer showing last 500 log lines
+    [ ] Health monitor showing all system checks
+    [ ] "Why No Trade?" panel shows filter status and last rejections (D08)
+    [ ] Dashboard read-only (no trade execution)
+    [ ] All API tests pass
+
+KNOWN RISKS:
+    - Dashboard must handle gracefully when bot is not running (heartbeat stale)
+    - Never expose .env secrets via API endpoints
+    - SQLite concurrent reads are safe; writes happen in bot process only
+
+ROLLBACK STRATEGY:
+    Dashboard is a completely separate process. Disable by simply not running
+    run_dashboard.bat. It has zero impact on the trading bot.
+
+HANDOFF REQUIREMENTS:
+    Before Phase 15 (Backtesting):
+    - All 7 dashboard views functional
+    - API endpoints tested
+    - No trading functionality in dashboard code
+================================================================================

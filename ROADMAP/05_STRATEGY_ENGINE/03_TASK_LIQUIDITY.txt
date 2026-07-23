@@ -1,0 +1,146 @@
+================================================================================
+TASK: 05-03 — LIQUIDITY DETECTION
+================================================================================
+TASK ID:        05-03
+TASK NAME:      Liquidity Sweeps + Equal Highs/Lows
+PHASE:          05 — Strategy Engine
+OBJECTIVE:      Implement deterministic detection of liquidity pools
+                (equal highs/lows), liquidity sweeps (stop runs), and
+                confirmation of sweep completion in app/strategy/liquidity.py.
+
+CONTEXT:
+  In SMC/ICT, liquidity refers to stop orders clustered at obvious price
+  levels (equal highs, equal lows, previous swing points). A "sweep"
+  occurs when price briefly exceeds these levels (triggering stops) and
+  then reverses. This is a key entry confirmation signal.
+
+DEPENDENCIES:   Task 05-02 complete
+PREVIOUS TASKS: 05-02 BOS/CHoCH
+
+FILES TO INSPECT:   app/strategy/market_structure.py, app/strategy/bos_choch.py
+FILES TO CREATE:
+  app/strategy/liquidity.py
+  tests/unit/test_liquidity.py
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: app/strategy/market_structure.py, app/strategy/bos_choch.py
+
+================================================================================
+ALGORITHMIC DEFINITIONS — EQUAL HIGHS/LOWS
+================================================================================
+
+EQUAL HIGHS (DECISION-019):
+  Two or more swing highs are "equal" if their prices are within
+  a tolerance band:
+    abs(high_A.price - high_B.price) <= ATR(14, relevant_timeframe)
+                                        * EQUAL_LEVEL_ATR_MULTIPLIER
+  Where:
+    EQUAL_LEVEL_ATR_MULTIPLIER = 0.1 (default — configurable in app/config.py)
+    Minimum: 0.05 (5% of ATR — tighter definition)
+    Maximum: 0.25 (25% of ATR — looser definition)
+  
+  Equal highs represent a "double top" liquidity pool above.
+  Buy stops are clustered just above equal highs.
+
+EQUAL LOWS (DECISION-019):
+  Two or more swing lows within the same tolerance band (same ATR multiplier).
+  Sell stops are clustered just below equal lows.
+
+  CONFIG PARAMETER: EQUAL_LEVEL_ATR_MULTIPLIER = 0.1 in app/config.py
+  NOTE: Use the ATR from the SAME timeframe as the swing points being compared.
+
+================================================================================
+ALGORITHMIC DEFINITIONS — LIQUIDITY SWEEP
+================================================================================
+
+BULLISH LIQUIDITY SWEEP (of lows — triggers BUY setups):
+  Conditions:
+  1. Price extends BELOW a known swing low or equal low
+  2. The low candle's low < sweep_level - small_buffer (0.5 * ATR * 0.1)
+  3. Price returns ABOVE the sweep level within N candles (N <= 5)
+  4. The sweep candle closes ABOVE the sweep level (wick below, body above)
+  
+  Confirmed: candle_low < sweep_level AND candle_close > sweep_level
+
+BEARISH LIQUIDITY SWEEP (of highs — triggers SELL setups):
+  Conditions:
+  1. Price extends ABOVE a known swing high or equal high
+  2. The high candle's high > sweep_level + small_buffer
+  3. Price returns BELOW the sweep level within N candles (N <= 5)
+  4. The sweep candle closes BELOW the sweep level (wick above, body below)
+  
+  Confirmed: candle_high > sweep_level AND candle_close < sweep_level
+
+================================================================================
+DETAILED REQUIREMENTS
+================================================================================
+
+@dataclass
+class LiquidityLevel:
+    level_type: str     # "EQUAL_HIGHS", "EQUAL_LOWS", "SWING_HIGH", "SWING_LOW"
+    price: float
+    candle_index: int
+    candle_time: datetime
+    swept: bool         # True if this level has been swept
+
+@dataclass
+class LiquiditySweep:
+    sweep_type: str     # "BULLISH" (swept lows) or "BEARISH" (swept highs)
+    swept_level: float
+    sweep_candle_index: int
+    sweep_candle_time: datetime
+    sweep_low: float    # Lowest point of sweep
+    sweep_high: float   # Highest point of sweep
+    confirmed: bool     # True if close returned past the level
+
+def detect_liquidity_levels(data: pd.DataFrame,
+                             swing_highs: list,
+                             swing_lows: list,
+                             atr: float) -> list[LiquidityLevel]:
+    """
+    Identifies all liquidity pools:
+    - Recent swing highs and lows
+    - Equal highs/lows (clustered within ATR tolerance)
+    """
+
+def detect_liquidity_sweeps(data: pd.DataFrame,
+                             liquidity_levels: list[LiquidityLevel],
+                             lookback: int = 10) -> list[LiquiditySweep]:
+    """
+    Scans recent candles for confirmed liquidity sweeps.
+    Returns most recent sweeps (lookback candles).
+    """
+
+def get_latest_sweep(sweeps: list[LiquiditySweep],
+                     direction: str) -> Optional[LiquiditySweep]:
+    """
+    Returns most recent confirmed sweep of given direction.
+    direction: "BULLISH" or "BEARISH"
+    """
+
+def has_recent_sweep(data: pd.DataFrame,
+                     liquidity_levels: list,
+                     direction: str,
+                     max_candles_ago: int = 10) -> bool:
+    """Returns True if a recent sweep exists in the given direction."""
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+python -m py_compile app/strategy/liquidity.py
+pytest tests/unit/test_liquidity.py -v
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ Equal highs/lows detected within ATR tolerance
+□ Bullish sweep detected: wick below + close above
+□ Bearish sweep detected: wick above + close below
+□ No false sweeps on clean candles
+□ All tests pass
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/05_STRATEGY_ENGINE/04_TASK_ORDER_BLOCKS.txt
+================================================================================

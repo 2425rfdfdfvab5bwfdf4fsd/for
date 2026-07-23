@@ -1,0 +1,68 @@
+================================================================================
+TASK ID:     10-02
+TASK NAME:   Break-Even Manager
+PHASE:       10 — Position Management
+================================================================================
+
+OBJECTIVE:
+    Implement BreakEvenManager that moves SL to entry price (plus a small
+    buffer) when price reaches the TP1 level.
+
+CONTEXT:
+    BREAK-EVEN RULE:
+    - Trigger: price reaches TP1 level (entry + 1R)
+    - Action: move SL to entry_price + BREAK_EVEN_BUFFER_PIPS
+    - BREAK_EVEN_BUFFER_PIPS default: 2 pips (protects against spread)
+    - Once BE is set: SL never moves back (only tighter moves allowed)
+
+    ENABLE_BREAK_EVEN=true (default, configurable)
+
+DEPENDENCIES:
+    - 10-01 PositionManager
+    - Phase 03 MT5: order_send with TRADE_ACTION_SLTP
+
+FILES TO CREATE:
+    app/management/break_even.py
+    tests/test_position_management/test_break_even.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class BreakEvenManager:
+        check_and_apply(
+            position: Position,
+            trade_record: TradeRecord,
+            current_price: float
+        ) -> BreakEvenAction | None
+
+    BreakEvenAction:
+        new_sl: float
+        reason: str    # "BREAK_EVEN_TRIGGERED"
+        executed: bool
+
+    GUARDS:
+        - Do not apply if BE already set (sl >= entry for LONG)
+        - Do not apply if current_price < tp1 for LONG
+        - new_sl must be < current_price (never SL above price for LONG)
+
+TEST REQUIREMENTS:
+    - test_be_triggered_at_tp1()
+    - test_be_not_triggered_before_tp1()
+    - test_be_not_applied_twice()
+    - test_short_be_triggered_correctly()
+
+ACCEPTANCE CRITERIA:
+    [ ] BE triggered exactly at TP1 for both LONG and SHORT
+    [ ] SL never moves backward
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] break_even.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 10-03 — TASK_PARTIAL_PROFIT.txt
+================================================================================

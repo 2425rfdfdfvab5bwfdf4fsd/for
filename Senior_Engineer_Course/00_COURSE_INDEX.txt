@@ -1,0 +1,293 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE — 2026
+COMPLETE COURSE INDEX (Roman Urdu)
+================================================================
+
+Master Prompt se banaya gaya — Complete Course
+28 Parts | Roman Urdu mein | Beginner se Senior tak
+AI Coding Agents ke liye UPGRADED
+
+================================================================
+COURSE ROADMAP
+================================================================
+
+PART 01 — Senior Engineer Kya Hota Hai?
+  → Junior, Mid, Senior, Staff, Principal ka farq
+  → Competency Matrix
+  File: Part_01_Senior_Engineer_Kya_Hota_Hai.txt
+
+PART 02 — Senior Engineer Ka Mindset
+  → Code se pehle kaise sochte hain
+  → UNDERSTAND→CLARIFY→DECOMPOSE→DESIGN framework
+  → Trade-offs, Technical debt
+  File: Part_02_Senior_Engineer_Mindset.txt
+
+PART 03 — Requirements Engineering
+  → Functional vs Non-functional requirements
+  → User Stories, Acceptance Criteria
+  → Edge cases, Out of scope
+  File: Part_03_Requirements_Engineering.txt
+
+PART 04 — Architectural Thinking
+  → Layered, Clean, Hexagonal, Modular Monolith, Microservices
+  → Event-driven architecture
+  → Kab kaunsa pattern?
+  File: Part_04_Architectural_Thinking.txt
+
+PART 05 — Spec-Driven Development
+  → Complete project specification system
+  → AI agents ke liye context create karna
+  → Hallucinations rokna
+  File: Part_05_Spec_Driven_Development.txt
+
+PART 06 — Software Design Principles
+  → SOLID (S,O,L,I,D) deeply
+  → DRY, KISS, YAGNI
+  → Composition, Immutability, Idempotency
+  File: Part_06_Software_Design_Principles.txt
+
+PART 07 — Data Structures & Algorithms
+  → Arrays, Hash Maps, Sets, Stacks, Queues
+  → Trees, Graphs, Heaps, Tries
+  → Binary Search, BFS, DFS, Sliding Window
+  → Big O complexity
+  File: Part_07_Data_Structures_Algorithms.txt
+
+PART 08 — Database Engineering
+  → SQL, PostgreSQL deeply
+  → Indexes, Transactions, ACID
+  → N+1 problem, Query optimization
+  → NoSQL, Redis, Scaling
+  File: Part_08_Database_Engineering.txt
+
+PART 09 — Backend Engineering
+  → HTTP/HTTPS, REST API design
+  → Authentication (JWT), Authorization (RBAC)
+  → Input validation, Error handling, Logging
+  → Rate limiting, Background jobs, Webhooks
+  File: Part_09_Backend_Engineering.txt
+
+PART 10 — Frontend Engineering
+  → React + TypeScript senior patterns
+  → Server state (React Query) vs Client state (Zustand)
+  → Performance, Accessibility, Security
+  → Large app structure
+  File: Part_10_Frontend_Engineering.txt
+
+PART 11 — System Design
+  → Scalability, Availability, CAP theorem
+  → Load balancing, Caching, CDN, Message queues
+  → URL shortener, Chat app, Notification system designs
+  File: Part_11_System_Design.txt
+
+PART 12 — Distributed Systems
+  → Network failures, Circuit breakers, Retries
+  → Consistency models (strong vs eventual)
+  → Saga pattern, Outbox pattern
+  → Distributed locks, Idempotency
+  File: Part_12_Distributed_Systems.txt
+
+PART 13 — Security Engineering
+  → OWASP Top 10
+  → SQL Injection, XSS, CSRF, SSRF, IDOR
+  → Secrets management, Encryption
+  → Threat modeling (STRIDE)
+  File: Part_13_Security_Engineering.txt
+
+PART 14 — Testing & Quality Engineering
+  → Test pyramid (Unit, Integration, E2E)
+  → Test strategy — kya test karna aur kya nahi
+  → Mocking, Fixtures, CI testing
+  → TDD methodology
+  File: Part_14_Testing_Quality.txt
+
+PART 15 — Debugging Like a Senior Engineer
+  → Systematic debugging framework
+  → Binary search debugging
+  → Memory leaks, Race conditions
+  → Five Whys root cause analysis
+  File: Part_15_Debugging.txt
+
+PART 16 — Performance Engineering
+  → Measure before optimize
+  → Profiling, Benchmarking, Load testing
+  → Frontend aur backend performance
+  → Caching strategies
+  File: Part_16_Performance_Engineering.txt
+
+PART 17 — DevOps & Cloud
+  → Linux basics, Git advanced
+  → Docker, Docker Compose
+  → CI/CD (GitHub Actions)
+  → AWS core services
+  → Infrastructure as Code (Terraform)
+  → Deployment strategies (Blue-Green, Canary)
+  File: Part_17_DevOps_Cloud.txt
+
+PART 18 — Observability & Production Operations
+  → Logs, Metrics, Traces (3 pillars)
+  → SLO, SLI, SLA, Error Budget
+  → Alerting, Incident response
+  → Postmortems
+  File: Part_18_Observability.txt
+
+PART 19 — Code Review & Engineering Standards
+  → Code review framework (9 categories)
+  → Constructive feedback
+  → AI-generated code review
+  → Engineering standards enforce karna
+  File: Part_19_Code_Review.txt
+
+PART 20 — Technical Documentation
+  → README, Architecture docs
+  → RFC, ADR
+  → API docs, Runbooks, Postmortems
+  File: Part_20_Technical_Documentation.txt
+
+PART 21 — AI-Assisted Software Engineering [UPGRADED]
+  → AI coding agents ka deep architecture (how they work)
+  → Agent instruction engineering vs chat prompting
+  → Context engineering — AI_RULES.md, .cursorrules, CLAUDE.md
+  → Replit Agent, Cursor, Claude Code specific patterns
+  → Agentic loop, context window, agent failure modes
+  → AI-generated code verify karne ka golden checklist
+  → Safe agentic workflow — scope, rules, review
+  File: Part_21_AI_Assisted_Engineering.txt
+
+PART 22 — AI Agent Project Workflow [UPGRADED]
+  → 16-stage complete project lifecycle with agents
+  → Context files creation (PROJECT_OVERVIEW, ARCHITECTURE, AI_RULES)
+  → Feature spec writing — template + example
+  → Task decomposition — granularity science (1-3 files per task)
+  → Perfect agent task prompt template
+  → Post-task review ritual — mandatory checklist
+  → Agent conversation management, failure recovery
+  → Day-in-the-life: Senior Engineer + AI Agent
+  File: Part_22_AI_Agent_Workflow.txt
+
+PART 23 — Capstone Project (ShopFlow)
+  → Multi-vendor E-Commerce SaaS
+  → Full project structure
+  → Auth, Products, Cart, Checkout, Notifications
+  → Complete feature engineering process
+  File: Part_23_Capstone_Project.txt
+
+PART 24 — Real-World Scenarios
+  → DB slow, API timeout, 100x traffic spike
+  → Payment succeeds order fails
+  → Race conditions, Security vulnerabilities
+  → AI agent unrelated files modify kare
+  File: Part_24_Real_World_Scenarios.txt
+
+PART 25 — Engineering Decision Making
+  → Decision framework
+  → Build vs Buy, Microservices vs Monolith
+  → Reversibility framework
+  → Communicating decisions
+  File: Part_25_Engineering_Decision_Making.txt
+
+PART 26 — Communication & Leadership
+  → PM, designer, junior engineers se baat karna
+  → Technical disagreements handle karna
+  → Mentoring framework
+  → Incident management
+  File: Part_26_Communication_Leadership.txt
+
+PART 27 — Career Preparation
+  → Coding, System Design, Behavioral interviews
+  → Portfolio building
+  → Salary negotiation
+  → Senior Engineer Readiness Assessment
+  File: Part_27_Career_Preparation.txt
+
+PART 28 — AI Coding Agent Mastery [NEW]
+  → Agent anatomy — LLM + Tools + Memory loop deep dive
+  → Why agents fail (6 failure modes + fixes)
+  → Replit Agent: replit.md optimization, effective workflow
+  → Cursor Agent: .cursorrules advanced template
+  → Claude Code: CLAUDE.md template, slash commands
+  → Advanced context engineering — compression techniques
+  → Multi-file coordination, parallel agent patterns
+  → Agent handoff pattern for complex features
+  → Systematic AI debugging workflow
+  → Production-grade agent setup (complete file structure)
+  → Agent quality gates — CI pipeline integration
+  → Secrets and security with agents
+  → Measuring agent effectiveness (metrics)
+  → Future of agentic development — what agents can't replace
+  File: Part_28_AI_Coding_Agent_Mastery.txt
+
+================================================================
+RECOMMENDED LEARNING ORDER
+================================================================
+
+WEEK 1-2: Foundation
+  Parts 1, 2, 3 — Mindset aur Requirements
+
+WEEK 3-4: Architecture
+  Parts 4, 5, 6 — Design aur Principles
+
+WEEK 5-6: Core Engineering
+  Parts 7, 8, 9 — DSA + Database + Backend
+
+WEEK 7-8: Full Stack
+  Parts 10, 11, 12 — Frontend + Systems
+
+WEEK 9-10: Quality & Security
+  Parts 13, 14, 15 — Security + Testing + Debugging
+
+WEEK 11-12: Production
+  Parts 16, 17, 18 — Performance + DevOps + Observability
+
+WEEK 13-14: Senior Skills
+  Parts 19, 20, 21, 22 — Review + Docs + AI
+
+WEEK 15-16: Mastery
+  Parts 23, 24, 25 — Capstone + Scenarios + Decisions
+
+WEEK 17-18: Leadership & Career
+  Parts 26, 27 — Communication + Career
+
+WEEK 19-20: AI Agent Mastery [NEW]
+  Part 28 — AI Coding Agent Mastery (Advanced)
+
+================================================================
+AI AGENT FAST TRACK
+(Already ek developer ho aur sirf AI agent workflow seekhna hai?)
+================================================================
+
+  Start here:
+  Part 05 — Spec-Driven Development (AI context ke liye)
+  Part 21 — AI-Assisted Engineering (UPGRADED)
+  Part 22 — AI Agent Project Workflow (UPGRADED)
+  Part 28 — AI Coding Agent Mastery (NEW — advanced)
+
+  Estimated time: 3-4 days intense study + practice
+
+================================================================
+KEY DOCUMENTS TO CREATE (AI Agent Setup)
+================================================================
+
+  Yeh files aapke project mein honi chahiye
+  taake AI agents effectively kaam kar sakein:
+
+  docs/
+  ├── PROJECT_OVERVIEW.md  ← Kya banaya ja raha hai
+  ├── ARCHITECTURE.md      ← System structure + patterns
+  ├── CODE_STANDARDS.md    ← Naming, patterns, conventions
+  ├── DATABASE.md          ← Schema + query patterns
+  ├── API.md               ← Endpoint format + examples
+  ├── TESTING.md           ← Testing strategy + examples
+  └── AI_RULES.md          ← Agent ALWAYS/NEVER rules
+
+  Root files:
+  ├── replit.md            ← Replit Agent context
+  ├── .cursorrules         ← Cursor Agent rules
+  └── CLAUDE.md            ← Claude Code rules
+
+  (Details in Parts 21, 22, 28)
+
+================================================================
+TOTAL: 28 PARTS | 20 WEEKS | ROMAN URDU
+AI CODING AGENTS: Parts 21, 22, 28 (3 dedicated parts)
+================================================================

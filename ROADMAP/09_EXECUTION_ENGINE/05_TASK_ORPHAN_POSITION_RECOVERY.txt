@@ -1,0 +1,93 @@
+================================================================================
+TASK ID:     09-05
+TASK NAME:   Orphan Position Recovery
+PHASE:       09 — Execution Engine
+================================================================================
+
+OBJECTIVE:
+    Implement OrphanPositionRecovery that detects MT5 positions that exist
+    without a corresponding database record (orphans) and handles them safely.
+
+CONTEXT:
+    After a crash or unexpected restart, MT5 may have positions that were
+    placed before the database was updated. These orphan positions must be:
+    1. Detected on startup
+    2. Logged with CRITICAL priority
+    3. Either adopted (added to database) or flagged for manual review
+    4. Never silently left unmanaged
+
+    ORPHAN_RECOVERY_POLICY (CHG-016 — configurable via ORPHAN_POLICY in .env):
+
+    DEFAULT: 'alert'
+      - Do NOT auto-close the orphan position
+      - Log as CRITICAL immediately
+      - Send Telegram alert (if enabled)
+      - Record in database as status='untracked'
+      - Operator must manually resolve via MT5 terminal
+      - NEVER silently ignore an orphan
+
+    'close': auto-close at market price
+      - Close the orphan via mt5.order_send() with SELL/BUY to close
+      - Log full details of the forced close
+      - Record as 'force_closed' in database
+      - Send Telegram alert
+
+    'adopt': adopt into bot management
+      - Reconstruct parameters from MT5 position data (best-effort)
+      - Insert into trades table with reconstructed SL/TP from position
+      - Bot will now manage this position normally
+      - Log WARNING that parameters are reconstructed (not original)
+      - Only use if you trust the position was placed by this bot
+
+    .env.example ADDITION:
+      # ORPHAN_POLICY: how to handle positions in MT5 with no DB record
+      # Options: alert (default), close, adopt
+      ORPHAN_POLICY=alert
+
+DEPENDENCIES:
+    - Phase 03 MT5: positions_get
+    - Phase 04 database: trade repository
+
+FILES TO CREATE:
+    app/execution/orphan_recovery.py
+    tests/test_execution/test_orphan_recovery.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class OrphanPositionRecovery:
+        scan_on_startup(mt5_positions: list, db_open_trades: list) -> OrphanReport
+
+    OrphanReport:
+        orphan_positions: list[Position]
+        adopted: list[Position]
+        flagged: list[Position]
+        action_taken: str
+
+    This class is called once on bot startup before the main loop begins.
+
+TEST REQUIREMENTS:
+    - test_no_orphans_clean_startup()
+    - test_orphan_detected()
+    - test_orphan_adopted_when_enabled()
+    - test_orphan_flagged_when_adoption_disabled()
+
+ACCEPTANCE CRITERIA:
+    [ ] Orphan positions detected on startup
+    [ ] Adoption policy respected
+    [ ] CRITICAL log entry for all orphans
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] orphan_recovery.py created and tested
+    [ ] Phase 09 acceptance criteria met
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated: Phase 09 COMPLETE
+
+NEXT TASK:
+    Begin Phase 10 — Position Management
+    Start with: ROADMAP/10_POSITION_MANAGEMENT/01_PHASE_OVERVIEW.txt
+================================================================================

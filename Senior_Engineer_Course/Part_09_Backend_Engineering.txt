@@ -1,0 +1,712 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 9: BACKEND ENGINEERING
+(Production-Grade Backend Development)
+================================================================
+
+SEEKHNE KE MAQASID:
+- HTTP/HTTPS deeply samajhna
+- REST API design standards
+- Authentication & Authorization
+- Error handling, logging, validation
+- Background jobs aur queues
+
+================================================================
+SECTION 1: HTTP FUNDAMENTALS
+================================================================
+
+HTTP = HyperText Transfer Protocol
+     = Client aur Server ke beech communication protocol
+
+--- HTTP REQUEST STRUCTURE ---
+
+GET /api/v1/users/123 HTTP/1.1
+Host: api.example.com
+Authorization: Bearer eyJhbGc...
+Content-Type: application/json
+
+--- HTTP RESPONSE STRUCTURE ---
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+X-Request-ID: abc-123
+
+{"id": 123, "name": "Ali"}
+
+--- HTTP METHODS ---
+
+GET    → Data fetch karo (safe, idempotent)
+POST   → Naya resource create karo
+PUT    → Resource poori tarah replace karo (idempotent)
+PATCH  → Resource partially update karo
+DELETE → Resource delete karo (idempotent)
+
+Idempotent = Same request multiple times → same result
+
+--- HTTP STATUS CODES ---
+
+2xx — Success:
+  200 OK          → Standard success
+  201 Created     → Resource create hua
+  204 No Content  → Success, koi body nahi (DELETE ke baad)
+
+3xx — Redirects:
+  301 Moved Permanently  → URL hamesha ke liye change
+  302 Found             → Temporary redirect
+  304 Not Modified      → Cache valid hai
+
+4xx — Client Errors:
+  400 Bad Request      → Galat input
+  401 Unauthorized     → Login karo pehle
+  403 Forbidden        → Login hai lekin permission nahi
+  404 Not Found        → Resource nahi mila
+  409 Conflict         → Conflict (e.g., duplicate email)
+  422 Unprocessable    → Data format sahi lekin semantics galat
+  429 Too Many Requests → Rate limit exceeded
+
+5xx — Server Errors:
+  500 Internal Server Error → Kuch unexpected hua
+  502 Bad Gateway           → Upstream service fail
+  503 Service Unavailable   → Server overloaded ya down
+  504 Gateway Timeout       → Upstream timeout
+
+================================================================
+SECTION 2: HTTPS & SECURITY BASICS
+================================================================
+
+HTTPS = HTTP + TLS encryption
+
+Kyun zaroori hai:
+  - Data encrypted hota hai (man-in-the-middle attacks prevent)
+  - Server identity verify hoti hai (certificate)
+  - Browsers "Not Secure" show karte hain HTTP pe
+
+TLS Handshake (simplified):
+  1. Client → Server: "Hello, ye encryption support karta hoon"
+  2. Server → Client: Certificate + public key
+  3. Client: Certificate verify karo
+  4. Client → Server: Encrypted session key
+  5. Both: Shared session key se communicate
+
+Production Rules:
+  - ALWAYS HTTPS
+  - HTTP → HTTPS redirect
+  - HSTS header add karo
+  - TLS 1.2+ only
+
+================================================================
+SECTION 3: REST API DESIGN
+================================================================
+
+REST = Representational State Transfer
+     = Resources + HTTP verbs ka combination
+
+--- RESOURCE NAMING ---
+
+Resources = Nouns (plural)
+Actions = HTTP Verbs
+
+GOOD:
+  GET    /api/v1/users         → List users
+  GET    /api/v1/users/123     → Get user 123
+  POST   /api/v1/users         → Create user
+  PUT    /api/v1/users/123     → Replace user 123
+  PATCH  /api/v1/users/123     → Update user 123
+  DELETE /api/v1/users/123     → Delete user 123
+
+Nested resources:
+  GET    /api/v1/users/123/orders     → User 123 ke orders
+  POST   /api/v1/users/123/orders     → User 123 ka naya order
+  GET    /api/v1/orders/456           → Order 456 directly
+
+BAD:
+  GET /api/getUser          → Verb in URL
+  POST /api/deleteUser/123  → Wrong method
+  GET /api/v1/user          → Singular (use plural)
+  POST /api/v1/createOrder  → Action in URL
+
+--- API VERSIONING ---
+
+URL Versioning (recommended):
+  /api/v1/users
+  /api/v2/users
+
+Header Versioning:
+  Accept: application/vnd.api+json;version=2
+
+Rules:
+  - Breaking changes → new version
+  - Old version support minimum 6-12 months
+  - Deprecation notice pehle do
+  - Document changes clearly
+
+--- RESPONSE FORMAT ---
+
+Always consistent format use karo:
+
+Success:
+  {
+    "success": true,
+    "data": {
+      "id": 123,
+      "name": "Ali",
+      "email": "ali@example.com"
+    }
+  }
+
+Error:
+  {
+    "success": false,
+    "error": {
+      "code": "VALIDATION_ERROR",
+      "message": "Email is required",
+      "details": [
+        { "field": "email", "message": "Email is required" }
+      ]
+    }
+  }
+
+List with pagination:
+  {
+    "success": true,
+    "data": [...],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 150,
+      "totalPages": 8,
+      "hasNext": true,
+      "hasPrev": false
+    }
+  }
+
+================================================================
+SECTION 4: AUTHENTICATION
+================================================================
+
+Authentication = "Tum kaun ho?" verify karna
+
+--- JWT (JSON Web Token) ---
+
+Structure: header.payload.signature
+
+Header: { "alg": "HS256", "typ": "JWT" }
+Payload: { "userId": 123, "role": "admin", "exp": 1700000000 }
+Signature: HMACSHA256(base64(header) + "." + base64(payload), secret)
+
+JWT Flow:
+  1. User login karta hai (email + password)
+  2. Server verify karta hai credentials
+  3. Server JWT generate karta hai + return
+  4. Client JWT store karta hai (localStorage or httpOnly cookie)
+  5. Har request mein JWT bhejta hai
+  6. Server JWT verify karta hai
+
+Token Types:
+  Access Token:  Short-lived (15 min - 1 hour)
+                 API calls ke liye
+  
+  Refresh Token: Long-lived (7-30 days)
+                 Naya access token lene ke liye
+
+JWT Best Practices:
+  - Short expiry (15-60 min)
+  - HttpOnly cookies (XSS se safe)
+  - Refresh token rotation
+  - Secret key strong hona chahiye (256-bit minimum)
+  - Sensitive data payload mein mat daalo (public)
+
+--- PASSWORD HASHING ---
+
+NEVER plain text password store karo!
+
+bcrypt use karo:
+  import bcrypt from 'bcrypt';
+  
+  // Hashing (registration):
+  const saltRounds = 12;
+  const hash = await bcrypt.hash(password, saltRounds);
+  // Store hash in DB
+  
+  // Verification (login):
+  const isValid = await bcrypt.compare(inputPassword, storedHash);
+
+Why bcrypt:
+  - Slow by design (brute force expensive)
+  - Salt automatically add karta hai
+  - Work factor adjustable hai
+
+================================================================
+SECTION 5: AUTHORIZATION
+================================================================
+
+Authorization = "Tum yeh kar sakte ho?" check karna
+
+--- RBAC (Role-Based Access Control) ---
+
+Roles:
+  admin   → Sab kuch
+  manager → Reports, user management
+  user    → Apna data
+  guest   → Public data only
+
+Implementation:
+  // Middleware
+  function requireRole(roles: string[]) {
+    return (req, res, next) => {
+      if (!roles.includes(req.user.role)) {
+        return res.status(403).json({
+          error: 'Insufficient permissions'
+        });
+      }
+      next();
+    };
+  }
+  
+  // Route
+  router.delete('/users/:id',
+    authenticate,          // Auth check
+    requireRole(['admin']), // Role check
+    userController.delete
+  );
+
+--- RESOURCE-BASED AUTHORIZATION ---
+
+Sirf role nahi — specific resource ka ownership bhi check karo.
+
+Example:
+  User apna order dekh sakta hai, dusre ka nahi.
+  
+  // BAD — sirf role check:
+  if (req.user.role !== 'admin') throw Forbidden;
+  
+  // GOOD — ownership bhi check:
+  const order = await orderRepo.findById(id);
+  if (order.userId !== req.user.id && req.user.role !== 'admin') {
+    throw new ForbiddenError('You cannot access this order');
+  }
+
+================================================================
+SECTION 6: INPUT VALIDATION
+================================================================
+
+Rule: "Never trust user input"
+
+Server-side validation HAMESHA karo (client-side optional hai):
+
+Using Zod (TypeScript):
+  import { z } from 'zod';
+  
+  const CreateUserSchema = z.object({
+    email: z.string().email('Invalid email'),
+    password: z.string()
+      .min(8, 'Min 8 characters')
+      .regex(/[A-Z]/, 'Must have uppercase')
+      .regex(/[0-9]/, 'Must have number'),
+    name: z.string()
+      .min(2, 'Min 2 characters')
+      .max(100, 'Max 100 characters')
+      .trim()
+  });
+  
+  // Validate
+  const result = CreateUserSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({
+      error: {
+        code: 'VALIDATION_ERROR',
+        details: result.error.issues
+      }
+    });
+  }
+  const validData = result.data; // Type-safe!
+
+Validation Rules:
+  - Type check karo
+  - Range check karo (min/max)
+  - Format check karo (email, phone, URL)
+  - Sanitize karo (strip HTML, trim whitespace)
+  - Whitelist approach (allow only expected fields)
+
+================================================================
+SECTION 7: ERROR HANDLING
+================================================================
+
+Production-grade error handling system:
+
+--- CUSTOM ERROR CLASSES ---
+
+  // Base error
+  class AppError extends Error {
+    constructor(
+      public message: string,
+      public statusCode: number,
+      public code: string,
+      public isOperational = true
+    ) {
+      super(message);
+      Object.setPrototypeOf(this, new.target.prototype);
+    }
+  }
+  
+  // Specific errors
+  class NotFoundError extends AppError {
+    constructor(resource: string) {
+      super(`${resource} not found`, 404, 'NOT_FOUND');
+    }
+  }
+  
+  class ValidationError extends AppError {
+    constructor(message: string) {
+      super(message, 400, 'VALIDATION_ERROR');
+    }
+  }
+  
+  class UnauthorizedError extends AppError {
+    constructor() {
+      super('Authentication required', 401, 'UNAUTHORIZED');
+    }
+  }
+  
+  class ForbiddenError extends AppError {
+    constructor() {
+      super('Insufficient permissions', 403, 'FORBIDDEN');
+    }
+  }
+
+--- GLOBAL ERROR HANDLER ---
+
+  // Express global error handler (last middleware)
+  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+    if (err instanceof AppError) {
+      logger.warn('Operational error', {
+        code: err.code,
+        message: err.message,
+        statusCode: err.statusCode,
+        path: req.path,
+        requestId: req.id
+      });
+      
+      return res.status(err.statusCode).json({
+        success: false,
+        error: {
+          code: err.code,
+          message: err.message
+        }
+      });
+    }
+    
+    // Unexpected error
+    logger.error('Unexpected error', {
+      error: err.message,
+      stack: err.stack,
+      path: req.path
+    });
+    
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Something went wrong'
+      }
+    });
+  });
+
+Rules:
+  - Operational errors (user-facing) vs Programming errors
+  - NEVER expose stack traces to client in production
+  - ALWAYS log with context (request ID, user ID, path)
+  - ALWAYS return consistent error format
+
+================================================================
+SECTION 8: LOGGING
+================================================================
+
+Good logging = production mein problems solve karne ki ability
+
+--- STRUCTURED LOGGING ---
+
+BAD:
+  console.log('User created: ' + userId);
+  // No context, no structure, hard to search
+
+GOOD (Winston structured logging):
+  logger.info('User created', {
+    event: 'user.created',
+    userId: user.id,
+    email: user.email,
+    requestId: req.id,
+    duration: Date.now() - startTime,
+    ip: req.ip
+  });
+
+Log Levels:
+  ERROR → Immediate attention needed (exceptions, failures)
+  WARN  → Something unusual but not breaking
+  INFO  → Normal business events (user created, order placed)
+  DEBUG → Detailed debugging (only in development)
+
+Log What:
+  ✅ Request start/end (method, path, statusCode, duration)
+  ✅ Business events (user registered, payment processed)
+  ✅ Errors with full context
+  ✅ External API calls (and their response times)
+  ✅ Database queries (slow queries)
+
+Don't Log:
+  ❌ Passwords, tokens, credit card numbers
+  ❌ Personal data unless necessary (PII concerns)
+  ❌ Too verbose in production (disk cost)
+
+--- REQUEST ID ---
+
+Har request mein unique ID — traces karo end-to-end:
+
+  import { v4 as uuidv4 } from 'uuid';
+  
+  app.use((req, res, next) => {
+    req.id = req.headers['x-request-id'] || uuidv4();
+    res.setHeader('x-request-id', req.id);
+    next();
+  });
+
+================================================================
+SECTION 9: RATE LIMITING
+================================================================
+
+Rate limiting = Client ko ek specific time mein kitne requests allow hain
+
+Kyun zaroori hai:
+  - Brute force attacks prevent
+  - DoS attacks slow down
+  - API fair usage enforce
+  - Server overload prevent
+
+Implementation (Redis-based):
+
+  import rateLimit from 'express-rate-limit';
+  import RedisStore from 'rate-limit-redis';
+  
+  const loginRateLimit = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5,                    // 5 attempts
+    message: {
+      error: {
+        code: 'RATE_LIMIT_EXCEEDED',
+        message: 'Too many login attempts, try after 15 minutes'
+      }
+    },
+    store: new RedisStore({ client: redisClient })
+  });
+  
+  router.post('/auth/login', loginRateLimit, authController.login);
+
+Different limits for different endpoints:
+  - Login: 5 requests/15 min per IP
+  - Password reset: 3 requests/hour per email
+  - API general: 1000 requests/hour per user
+  - File upload: 10 requests/min per user
+
+================================================================
+SECTION 10: BACKGROUND JOBS & QUEUES
+================================================================
+
+Background jobs = Time-consuming tasks asynchronously karna
+
+Kyun zaroori hai:
+  - Email send karna (HTTP request slow ho jaata hai)
+  - Image processing
+  - PDF generation
+  - Third-party API calls
+  - Report generation
+  - Notifications
+
+--- QUEUE PATTERN ---
+
+  HTTP Request → Create job in queue → Return 202 Accepted
+  
+  Worker process → Pick job → Process → Mark complete
+
+Libraries:
+  - BullMQ (Redis-based, Node.js)
+  - AWS SQS
+  - RabbitMQ
+
+BullMQ Example:
+
+  // Producer (create job)
+  import { Queue } from 'bullmq';
+  
+  const emailQueue = new Queue('emails', { connection: redis });
+  
+  async function sendWelcomeEmail(userId: string) {
+    await emailQueue.add('welcome', { userId }, {
+      attempts: 3,           // Retry 3 times on failure
+      backoff: { type: 'exponential', delay: 2000 }
+    });
+  }
+  
+  // Worker (process job)
+  import { Worker } from 'bullmq';
+  
+  const emailWorker = new Worker('emails', async (job) => {
+    const { userId } = job.data;
+    const user = await userRepo.findById(userId);
+    await emailService.sendWelcome(user.email, user.name);
+  }, { connection: redis });
+  
+  emailWorker.on('failed', (job, err) => {
+    logger.error('Email job failed', { jobId: job.id, error: err.message });
+  });
+
+Job Queue Best Practices:
+  - Idempotent jobs (retry safe hona chahiye)
+  - Exponential backoff on failure
+  - Dead letter queue (failed jobs capture karo)
+  - Job timeout set karo
+  - Monitor queue depth aur processing time
+
+================================================================
+SECTION 11: WEBHOOKS
+================================================================
+
+Webhook = Ek URL jo external service call karta hai jab kuch hota hai
+
+Examples:
+  - Stripe → Your server: "Payment successful"
+  - GitHub → Your server: "New push to repo"
+  - Twilio → Your server: "SMS delivered"
+
+Implementing Webhook Receiver:
+
+  // Stripe webhook
+  router.post('/webhooks/stripe',
+    express.raw({ type: 'application/json' }), // Raw body needed for signature
+    async (req, res) => {
+      const sig = req.headers['stripe-signature'];
+      
+      let event;
+      try {
+        event = stripe.webhooks.constructEvent(
+          req.body, sig, process.env.STRIPE_WEBHOOK_SECRET
+        );
+      } catch (err) {
+        return res.status(400).json({ error: 'Invalid signature' });
+      }
+      
+      // Process event
+      switch (event.type) {
+        case 'payment_intent.succeeded':
+          await orderService.markPaid(event.data.object.metadata.orderId);
+          break;
+        case 'payment_intent.payment_failed':
+          await orderService.markFailed(event.data.object.metadata.orderId);
+          break;
+      }
+      
+      res.json({ received: true }); // Acknowledge immediately!
+    }
+  );
+
+Webhook Rules:
+  - Signature verify karo (security)
+  - Immediately 200 return karo, processing async karo
+  - Idempotent processing (duplicate events possible)
+  - Retry handling (Stripe retries failed deliveries)
+
+================================================================
+SECTION 12: PRODUCTION BACKEND CHECKLIST
+================================================================
+
+Before shipping any endpoint:
+
+Security:
+  □ Input validation
+  □ Authentication required?
+  □ Authorization check (ownership)
+  □ Rate limiting
+  □ SQL injection safe (parameterized queries)
+  □ No sensitive data in logs
+
+Reliability:
+  □ Error handling
+  □ Proper HTTP status codes
+  □ Timeout on external calls
+  □ Retry logic where needed
+
+Observability:
+  □ Structured logging
+  □ Request ID propagation
+  □ Performance metrics
+
+Performance:
+  □ Database queries optimized
+  □ Indexes in place
+  □ N+1 queries checked
+  □ Response time acceptable
+
+Testing:
+  □ Unit tests for service logic
+  □ Integration tests for endpoints
+  □ Edge cases covered
+
+================================================================
+EXERCISE — PART 9
+================================================================
+
+TASK: Design a "Password Reset" API endpoint
+
+Requirements:
+  - POST /api/v1/auth/forgot-password
+  - Rate limited: 3 requests per hour per email
+  - Input: { email: string }
+  - Don't reveal if email exists (security)
+  - Log the event (but not the email in detail)
+  - Send reset email via queue
+
+Write:
+  1. Zod validation schema
+  2. Service logic (pseudocode)
+  3. Error cases
+  4. Success response
+  5. Rate limiting config
+
+================================================================
+QUIZ — PART 9
+================================================================
+
+Q1: 401 aur 403 mein farq?
+    (a) 401 = not logged in, 403 = logged in but no permission
+    (b) 401 = server error, 403 = client error
+    (c) 401 = forbidden, 403 = unauthorized
+    (d) Koi farq nahi
+
+Jawab: (a)
+
+Q2: Background jobs kyun use karte hain?
+    (a) Code simple banana
+    (b) Time-consuming tasks async karna taake HTTP response fast ho
+    (c) Security improve karna
+    (d) Database optimize karna
+
+Jawab: (b)
+
+Q3: "Never trust user input" ka matlab:
+    (a) Users galat hote hain
+    (b) Server-side validation hamesha karo, client-side par rely mat karo
+    (c) Users ko block karo
+    (d) Input log mat karo
+
+Jawab: (b)
+
+Q4: Rate limiting kyun zaroori hai?
+    (a) Performance ke liye
+    (b) Brute force aur DoS attacks prevent karne ke liye
+    (c) Logging ke liye
+    (d) Database optimize karne ke liye
+
+Jawab: (b)
+
+================================================================
+AGLA PART: Part 10 — Frontend Engineering
+================================================================

@@ -1,0 +1,179 @@
+================================================================================
+TASK ID:     09-02
+TASK NAME:   Order Execution
+PHASE:       09 — Execution Engine
+================================================================================
+
+OBJECTIVE:
+    Implement OrderExecutor that submits validated trade parameters to MT5
+    via order_send, verifies the result, and records the outcome.
+
+CONTEXT:
+    MT5 order_send() returns a MqlTradeResult struct. The key field is retcode.
+    retcode 10009 = TRADE_RETCODE_DONE (success).
+    All other retcodes must be handled explicitly.
+
+    EXECUTION FLOW:
+    1. Build MqlTradeRequest from TradeParameters
+    2. Call mt5.order_send(request)
+    3. Check retcode
+    4. If success: record ticket, fill price, slippage
+    5. If requote (10004): optionally retry once with new price
+    6. If other failure: log full details, do NOT retry blindly
+    7. Write ExecutionResult to database
+
+    RETRY POLICY:
+    - MAX_EXECUTION_RETRIES: 1 (configurable, never more than 2)
+    - RETRY_DELAY_SECONDS: 0.5
+    - Only retry on REQUOTE or PRICE_CHANGED retcodes
+
+
+================================================================================
+POST-SEND VERIFICATION PROCEDURE — MANDATORY (CHG-005, CRITICAL SAFETY)
+================================================================================
+
+This is the most dangerous execution scenario: an order is sent but the result
+is unknown (network timeout). Blind retry causes DUPLICATE POSITIONS.
+The following exact algorithm MUST be implemented:
+
+STEP-BY-STEP TIMEOUT PROCEDURE:
+  1. Call mt5.order_send(request)
+  2. If result is returned immediately:
+     a. Check result.retcode (see RETCODE HANDLING TABLE below)
+     b. Proceed normally
+  3. If result is None OR an exception is raised (timeout):
+     a. WAIT 2 seconds (do NOT immediately retry)
+     b. Calculate time_from = datetime.utcnow() - timedelta(seconds=60)
+     c. Query: deals = mt5.history_deals_get(date_from=time_from)
+     d. Search deals for a match: symbol == request.symbol
+                                  AND magic == MAGIC_NUMBER
+                                  AND volume == request.volume
+     e. If match FOUND:
+        - Order WAS executed — record the deal, DO NOT send another order
+        - Log: CRITICAL "Execution timeout resolved: order confirmed as executed"
+     f. If no match after searching:
+        - Wait 3 more seconds, query again (one additional check)
+        - If still no match: order NOT executed — safe to retry ONCE
+     g. Log CRITICAL event regardless of outcome:
+        "Order execution timeout: symbol={}, volume={}, outcome={}"
+  4. Maximum 1 retry total. NEVER submit 2+ orders without step 3 completing.
+  5. If the retry also times out: repeat step 3 once more, then give up.
+     Log CRITICAL and notify via Telegram.
+
+DUPLICATE PREVENTION CONTRACT:
+  The DuplicateGuard (09-04) must be called BEFORE any send_order() call.
+  The timeout procedure above is the SECONDARY safety net.
+  Both layers are required.
+
+TEST REQUIRED (add to test_order_executor.py):
+  - test_no_duplicate_on_timeout_when_order_executed(): mock timeout →
+    mock history_deals_get returns matching deal → verify no 2nd order sent
+  - test_retry_once_when_timeout_and_no_execution(): mock timeout →
+    history_deals_get returns empty → verify exactly 1 retry sent
+
+================================================================================
+DEPENDENCIES:
+    - Phase 03 MT5 connection
+    - 09-01 OrderValidator complete
+    - Phase 04 database write
+
+FILES TO CREATE:
+    app/execution/order_executor.py
+    tests/test_execution/test_order_executor.py
+
+FILES TO MODIFY:
+    app/database/models.py    — add ExecutionResult
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class OrderExecutor:
+        execute(
+            validated_params: OrderValidationResult,
+            trade_params: TradeParameters
+        ) -> ExecutionResult
+
+    ExecutionResult:
+        success: bool
+        ticket: int | None
+        fill_price: float | None
+        requested_price: float | None
+        slippage_pips: float | None
+        retcode: int
+        retcode_description: str
+        execution_time_utc: datetime
+        error_details: str | None
+
+    RETCODE HANDLING TABLE (must implement all):
+        10009 DONE         → success=True
+        10004 REQUOTE      → retry once
+        10006 REJECTED     → success=False, log
+        10007 CANCELLED    → success=False, log
+        10010 PARTIAL      → success=True (partial fill — log warning)
+        10013 INVALID_PRICE → success=False, log
+        10014 INVALID_STOPS → success=False, log
+        10019 NO_MONEY     → success=False, CRITICAL log, notify
+        others             → success=False, log with retcode
+
+
+================================================================================
+PARTIAL_FILL_POLICY — REQUIRED (CHG-009)
+================================================================================
+
+Some brokers and ECN feeds return partial fills on market orders.
+This creates a mismatch between the risk engine's expected size and actual exposure.
+
+DETECTION:
+  After execution success (retcode 10009 or 10010):
+    actual_volume = result.volume  (or deal.volume from history query)
+    requested_volume = request.volume
+    if actual_volume < requested_volume:
+        partial_fill = True
+
+PARTIAL FILL HANDLING PROCEDURE:
+  1. Log WARNING: "Partial fill: requested={}, filled={}, symbol={}"
+  2. Record ACTUAL executed volume in the trade database record (not requested)
+  3. Cancel any remaining pending portion if applicable (MT5 may handle this)
+  4. DO NOT send a second order to fill the remainder
+  5. Update risk engine state with actual position size (not requested size)
+  6. Proceed with position management using actual lot size for P&L calculations
+
+FILL MODE CONFIGURATION:
+  Add to .env.example: ORDER_FILLING_MODE=FOK
+  Supported modes:
+    FOK (Fill-or-Kill): entire order fills or none — minimizes partial fills
+    IOC (Immediate-or-Cancel): partial fill allowed, rest cancelled
+    RETURN: partial fill allowed, rest returned as pending
+  Default: FOK — most conservative for a trading bot
+  Note: Broker must support the requested fill mode; validate on symbol_info.
+
+RETCODE 10010 (PARTIAL):
+  retcode 10010 = ORDER_STATE_PARTIAL
+  Handle as: success=True, but apply partial fill procedure above.
+
+================================================================================
+TEST REQUIREMENTS (all using mock mt5):
+    - test_successful_execution()
+    - test_requote_retried_once()
+    - test_requote_exhausted_fails()
+    - test_rejected_not_retried()
+    - test_no_money_logs_critical()
+    - test_execution_result_recorded_in_db()
+
+ACCEPTANCE CRITERIA:
+    [ ] retcode 10009 = success
+    [ ] All other retcodes handled without crashing
+    [ ] Maximum 1 retry
+    [ ] Execution result always written to database
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] order_executor.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 09-03 — TASK_EXECUTION_RECONCILIATION.txt
+================================================================================

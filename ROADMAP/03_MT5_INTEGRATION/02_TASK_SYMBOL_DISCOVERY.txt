@@ -1,0 +1,96 @@
+================================================================================
+TASK: 03-02 — SYMBOL DISCOVERY
+================================================================================
+TASK ID:        03-02
+TASK NAME:      Symbol Discovery + Broker Suffix Handling
+PHASE:          03 — MT5 Integration
+OBJECTIVE:      Create app/mt5/symbols.py to handle broker-specific symbol
+                names, detect suffix variants (EURUSDm, EURUSD.pro),
+                and provide a validated symbol mapping for all pairs.
+
+CONTEXT:
+  Different brokers use different symbol names for the same pair.
+  EURUSD might be "EURUSDm" at broker A and "EURUSD.pro" at broker B.
+  This module resolves the configured pair names to actual broker symbols.
+
+DEPENDENCIES:   Task 03-01 complete
+PREVIOUS TASKS: 03-01 MT5 CONNECTION
+
+FILES TO INSPECT:   app/config.py, app/mt5/connection.py
+FILES TO CREATE:
+  app/mt5/symbols.py
+  tests/unit/test_mt5_symbols.py
+FILES TO MODIFY:    ROADMAP/00_PROJECT_STATUS.txt
+FILES FORBIDDEN TO MODIFY: app/mt5/connection.py, app/config.py
+
+================================================================================
+DETAILED REQUIREMENTS
+================================================================================
+
+class SymbolManager:
+
+    def __init__(self, config: Config, connection: MT5Connection):
+        ...
+
+    def resolve_symbol(self, base_symbol: str) -> Optional[str]:
+        """
+        Resolves a base symbol name (e.g., "EURUSD") to the broker's
+        actual symbol name.
+        
+        Priority:
+        1. Use explicit mapping from config (e.g., EURUSD_SYMBOL="EURUSDm")
+        2. Try exact match (e.g., "EURUSD")
+        3. Try common suffixes: m, .a, .pro, .r, mini, micro
+        4. Return None if no match found
+        """
+
+    def validate_symbols(self) -> dict[str, str]:
+        """
+        Validates all configured pairs (BOT_PAIRS).
+        Returns dict mapping base_name -> broker_name.
+        Logs which symbols were found and which were missing.
+        Raises SymbolValidationError if any required symbol not found.
+        """
+
+    def get_symbol_info(self, symbol: str) -> Optional[dict]:
+        """
+        Returns symbol info:
+          name, description, digits, point, tick_size, tick_value,
+          contract_size, volume_min, volume_max, volume_step,
+          spread (current), trade_stops_level, trade_freeze_level
+        """
+
+    def select_symbol(self, symbol: str) -> bool:
+        """Ensures symbol is selected/visible in MT5. Required before trading."""
+
+COMMON SUFFIX VARIANTS (try in order):
+  "", "m", ".a", ".pro", ".r", "micro", "mini", "_", ".ecn"
+
+EXAMPLE:
+  resolve_symbol("EURUSD") tries:
+    "EURUSD" → found? return it
+    "EURUSDm" → found? return it
+    "EURUSD.a" → found? return it
+    ... (continue trying suffixes)
+    None → not found, log error
+
+================================================================================
+VALIDATION COMMANDS
+================================================================================
+
+python -m py_compile app/mt5/symbols.py
+pytest tests/unit/test_mt5_symbols.py -v
+
+================================================================================
+ACCEPTANCE CRITERIA
+================================================================================
+□ Symbol resolution works with mocked MT5
+□ Config-based symbol override works (EURUSD_SYMBOL="EURUSDm")
+□ Suffix detection tries common variants
+□ All symbol tests pass
+
+================================================================================
+NEXT TASK
+================================================================================
+→ ROADMAP/03_MT5_INTEGRATION/03_TASK_MARKET_DATA.txt
+================================================================================

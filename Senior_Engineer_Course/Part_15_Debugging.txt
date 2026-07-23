@@ -1,0 +1,429 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 15: DEBUGGING LIKE A SENIOR ENGINEER
+(Systematic Debugging Methodology)
+================================================================
+
+SEEKHNE KE MAQASID:
+- Systematic debugging methodology
+- Production issues investigate karna
+- Root cause analysis
+- Common problem patterns
+
+================================================================
+SECTION 1: DEBUGGING MINDSET
+================================================================
+
+Junior debugging:
+  - Random changes karke dekhna ke kaam karta hai ya nahi
+  - Console.log everywhere
+  - Stack Overflow pe exact error paste karna
+  - "It works on my machine"
+
+Senior debugging:
+  - Scientific method: Hypothesis → Experiment → Evidence
+  - Reproduce first
+  - Understand before fixing
+  - Root cause dhundhna, symptoms nahi
+  - Evidence-based changes
+
+================================================================
+SECTION 2: SYSTEMATIC DEBUGGING FRAMEWORK
+================================================================
+
+Step 1: REPRODUCE
+  Bug ko reproduce karo pehle.
+  Bina reproduction ke blind fly karna hai.
+  
+  Questions:
+  - Steps kya hain reproduce karne ke?
+  - Hamesha hota hai ya kabhi kabhi?
+  - Kab se ho raha hai?
+  - Sirf specific user/data mein?
+
+Step 2: UNDERSTAND THE ENVIRONMENT
+  - Production ya development?
+  - Kaunsa browser/OS/version?
+  - Kaafi traffic ke waqt ya hamesha?
+  - Haal hi mein koi deployment hua?
+
+Step 3: GATHER EVIDENCE
+  - Error messages kya hain?
+  - Stack trace kya hai?
+  - Logs kya kehte hain?
+  - Metrics kya show karte hain?
+  - Database state kya hai?
+
+Step 4: FORM HYPOTHESIS
+  - Ek specific guess karo: "Main sochta hoon problem X hai kyunki Y"
+  - Ek hypothesis ek baar
+
+Step 5: TEST HYPOTHESIS
+  - Minimum experiment karo
+  - Ek cheez change karo ek baar mein
+  - Evidence collect karo
+
+Step 6: ANALYZE RESULTS
+  - Hypothesis confirm hui?
+  - Agar nahi → naya hypothesis
+
+Step 7: FIX + VERIFY
+  - Fix implement karo
+  - Test karo ke bug gone hai
+  - Regression test karo
+
+Step 8: POST-MORTEM
+  - Root cause kya tha?
+  - Kaise prevent karte hain future mein?
+  - Kya monitoring improve karna chahiye?
+
+================================================================
+SECTION 3: BINARY SEARCH DEBUGGING
+================================================================
+
+Ek powerful technique jab source unknown ho.
+
+Concept: Problem scope ko half karte jao
+
+Example — Production bug:
+  Aapka API slow ho gaya. Kab se?
+  
+  Approach:
+  - Last 30 deployments mein se kab se? → Commit history check
+  - 2 weeks pehle sab theek tha → 1 week pehle bhi?
+  - 3 din pehle bhi theek tha → 2 din pehle?
+  - "2 din pehle se slow hua" → Kya deploy hua 2 din pehle?
+  - Deploy X aur Y the → X revert karo → Still slow? → Y revert karo
+  - Fixed! → Y ka code check karo
+
+git bisect tool:
+  git bisect start
+  git bisect bad HEAD          # Current commit bad
+  git bisect good v1.2.0       # This commit was good
+  # Git automatically checks middle commit
+  # Test karo → good ya bad?
+  git bisect good/bad
+  # Repeat until culprit commit found
+  git bisect reset
+
+================================================================
+SECTION 4: PRODUCTION CRASHES
+================================================================
+
+Production crash aaya → Kya karo?
+
+Immediate (Triage):
+  1. Kitne users affected? (severity assess)
+  2. Rollback possible hai? → Agar haan, rollback first
+  3. Quick workaround possible?
+
+Investigation:
+  1. Error monitoring check karo (Sentry, Datadog)
+  2. Application logs check karo
+  3. Recent deployments check karo
+  4. Infrastructure metrics check karo (CPU, memory, DB)
+
+Common Production Crash Causes:
+  - Null pointer / undefined access
+  - Unhandled promise rejection
+  - Memory leak
+  - DB connection pool exhausted
+  - Config/environment variable missing
+  - Third-party service down
+  - Rate limit hit
+  - Disk full
+
+Investigation Checklist:
+  □ Application error logs
+  □ Server metrics (CPU, memory, disk)
+  □ Database metrics (connections, query time)
+  □ Network metrics
+  □ Recent deployments/config changes
+  □ Third-party service status pages
+  □ Database locks / slow queries
+
+================================================================
+SECTION 5: MEMORY LEAKS
+================================================================
+
+Memory leak = Memory allocate hoti hai, release nahi hoti
+
+Symptoms:
+  - Server memory slowly increase hoti hai
+  - Eventually crash ya very slow
+  - Process restart se temporarily fix
+
+Node.js Common Causes:
+  1. Global variables se references accumulate:
+     global.cache = {}; // Kabhi clear nahi hoti
+  
+  2. Event listeners accumulate:
+     emitter.on('event', handler); // Kabhi off nahi hota
+  
+  3. Closures holding references:
+     function createHeavyFunction() {
+       const bigArray = new Array(1000000).fill('x');
+       return function() {
+         // bigArray reference hold ho raha hai — kabhi GC nahi hogi
+         return bigArray.length;
+       };
+     }
+  
+  4. Cache without size limit:
+     const cache = {}; // Unlimited grow karta hai
+
+Investigation:
+  - Node.js: --inspect flag se Chrome DevTools attach karo
+  - Heap snapshot lo → Before/after compare karo
+  - Memory usage graph dekho (grafana/datadog)
+
+Fix:
+  - Cache size limit set karo (LRU)
+  - Event listeners cleanup (useEffect cleanup in React)
+  - WeakMap/WeakRef use karo jahan appropriate
+
+================================================================
+SECTION 6: SLOW APIs
+================================================================
+
+API slow ho gayi → Systematic investigation:
+
+1. Measure exactly kya slow hai:
+   - Total request time?
+   - Database query time?
+   - External API call time?
+   - Computation time?
+
+2. Add timing logs:
+   const start = Date.now();
+   const users = await db.users.findMany();
+   logger.info('DB query time', { ms: Date.now() - start });
+
+3. Database investigation:
+   - EXPLAIN ANALYZE slow query chalao
+   - Slow query log enable karo (log_min_duration_statement = 100ms)
+   - Check indexes
+   - N+1 queries check karo
+
+4. External services:
+   - Timeout set hai?
+   - Latency kitni hai?
+   - Response size?
+
+5. Profiling:
+   Node.js: clinic.js, 0x
+   
+   // Simple profiling:
+   const { performance } = require('perf_hooks');
+   const start = performance.now();
+   // ... code ...
+   console.log(`Took ${performance.now() - start}ms`);
+
+================================================================
+SECTION 7: DATABASE BOTTLENECKS
+================================================================
+
+Common DB problems:
+
+1. Missing Index:
+   EXPLAIN ANALYZE SELECT * FROM orders WHERE user_id = 1;
+   → Seq Scan → Index chahiye!
+   CREATE INDEX CONCURRENTLY idx_orders_user_id ON orders(user_id);
+
+2. N+1 Queries:
+   Identify karo:
+   - Log queries count per request
+   - Prisma: logging: ['query'] enable karo
+   
+   Fix:
+   - Include/join use karo
+   - Dataloader (batching)
+
+3. Locking Issues:
+   SHOW PROCESSLIST; (MySQL)
+   SELECT * FROM pg_locks; (PostgreSQL)
+   
+   Fix:
+   - Transactions short rakho
+   - Lock order consistent rakho
+   - SELECT FOR UPDATE carefully use karo
+
+4. Connection Pool Exhausted:
+   Symptoms: "too many clients" error
+   Fix: Pool size increase, long-running queries fix, connection leaks fix
+
+================================================================
+SECTION 8: RACE CONDITIONS
+================================================================
+
+Race condition = Result depends on execution order/timing
+
+Example:
+  User 1 aur User 2 same seat book karne ki koshish karte hain.
+  
+  Both check: "Seat available? YES"
+  Both book: "Seat booked!"
+  Result: Double booking!
+
+Fix Options:
+
+1. Database Constraints:
+   UNIQUE constraint pe booking table pe (seat_id, event_id)
+   → Second insert fail hoga → Application handle kare
+
+2. Optimistic Locking:
+   Version number track karo
+   
+   const seat = await db.seats.findById(seatId);
+   // ... check available ...
+   await db.seats.update(
+     { status: 'booked', version: seat.version + 1 },
+     {
+       where: {
+         id: seatId,
+         version: seat.version // Sirf tab update agar version same ho
+       }
+     }
+   );
+   // Affected rows = 0 → Someone else booked first!
+
+3. Pessimistic Locking (SELECT FOR UPDATE):
+   BEGIN;
+   SELECT * FROM seats WHERE id = 1 FOR UPDATE; -- Lock!
+   -- Check + update
+   COMMIT; -- Release lock
+
+4. Distributed Lock (Redis):
+   acquireLock('seat:1') → process → releaseLock('seat:1')
+
+================================================================
+SECTION 9: INTERMITTENT FAILURES
+================================================================
+
+"Kuch aur nahi toot raha, lekin kabhi kabhi fail hota hai"
+
+These are hardest to debug.
+
+Common causes:
+  - Race conditions
+  - Timing issues (async)
+  - Network blips
+  - Memory pressure (GC pauses)
+  - Resource exhaustion (DB connections)
+  - External service instability
+  - Clock skew in distributed systems
+
+Investigation:
+  1. Pattern dhundho: Kab? Kitne frequently? Which users? Which servers?
+  2. Correlation: Traffic spike ke waqt? Specific time of day? After deploy?
+  3. Logging increase karo around suspicious code
+  4. Metrics granularity increase karo
+
+================================================================
+SECTION 10: FIVE WHYS TECHNIQUE
+================================================================
+
+Root cause analysis ke liye.
+
+Example:
+  Problem: Users login nahi kar pa rahe
+
+  Why 1: Authentication service error return kar rahi hai
+  Why 2: Database connection timeout ho raha hai
+  Why 3: Too many open connections
+  Why 4: Connection pool exhausted
+  Why 5: Ek background job connection release nahi kar raha (finally block missing)
+
+  ROOT CAUSE: Finally block mein connection release missing
+
+  Fix: Code fix + add monitoring for connection pool usage
+
+================================================================
+SECTION 11: DEBUGGING TOOLS
+================================================================
+
+Node.js:
+  - node --inspect app.js → Chrome DevTools
+  - console.time/timeEnd
+  - clinic.js (performance profiling)
+  - heapdump (memory analysis)
+
+Database:
+  - EXPLAIN ANALYZE (PostgreSQL)
+  - pg_stat_statements (slow queries)
+  - Database monitoring (pganalyze, DataDog)
+
+Network:
+  - curl with timing: curl -w "@curl-format.txt" ...
+  - tcpdump, Wireshark
+  - Browser Network tab
+
+Application:
+  - Structured logs (Winston + Datadog/CloudWatch)
+  - Distributed tracing (OpenTelemetry + Jaeger)
+  - Error tracking (Sentry)
+  - APM (Datadog APM, New Relic)
+
+================================================================
+SECTION 12: DEBUGGING CHALLENGES
+================================================================
+
+CHALLENGE 1:
+  Production mein users ka cart clear ho raha hai randomly.
+  
+  Investigate karo:
+  - Kab ho raha hai? (timing pattern)
+  - Kaunse users? (new vs old?)
+  - Cart storage kahan hai? (Redis? DB?)
+  - Recent changes kya hain?
+
+CHALLENGE 2:
+  API response time p95 suddenly 2x ho gayi.
+  No errors.
+  
+  Investigation steps batao.
+
+CHALLENGE 3:
+  Memory every 6 ghante mein 500MB se 2GB tak badhti hai, phir restart.
+  
+  Investigate karo.
+
+================================================================
+QUIZ — PART 15
+================================================================
+
+Q1: Binary search debugging kya hai?
+    (a) Code mein binary search implement karna
+    (b) Problem scope ko systematically half karte jana culprit dhundhne ke liye
+    (c) 2 logs compare karna
+    (d) Dono servers compare karna
+
+Jawab: (b)
+
+Q2: Root cause analysis mein "Five Whys" kya karta hai?
+    (a) Char aur sawalaat poochna
+    (b) "Why" 5 baar pooch ke surface symptom se root cause tak pahunchna
+    (c) 5 bug fix karna ek din mein
+    (d) 5 engineers se poochna
+
+Jawab: (b)
+
+Q3: Memory leak ka sabse common sign kya hai?
+    (a) CPU usage badhna
+    (b) Memory gradually increase hona, restart se fix
+    (c) Errors log mein
+    (d) Slow database queries
+
+Jawab: (b)
+
+Q4: Race condition fix karne ke liye database mein kya use karte hain?
+    (a) Indexes
+    (b) UNIQUE constraints, optimistic/pessimistic locking, distributed locks
+    (c) Connection pooling
+    (d) Query optimization
+
+Jawab: (b)
+
+================================================================
+AGLA PART: Part 16 — Performance Engineering
+================================================================

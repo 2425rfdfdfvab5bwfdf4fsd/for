@@ -1,0 +1,459 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 24: SENIOR ENGINEER REAL-WORLD SCENARIOS
+(Production Problems — Kya Karoge?)
+================================================================
+
+SEEKHNE KE MAQASID:
+- Real production problems tackle karna
+- Senior engineer ki soch apply karna
+- Trade-offs aur decisions under pressure
+
+================================================================
+SCENARIO 1: DATABASE BECOMING SLOW
+================================================================
+
+SITUATION:
+  Monday morning 9 AM.
+  Alert fires: "API p99 latency > 2 seconds"
+  Weekend se compare karein → 200ms tha, ab 2000ms.
+  No deployments over weekend.
+
+TASK: Kya karoge? Step by step.
+
+---
+
+SAMPLE SENIOR RESPONSE:
+
+STEP 1: Triage (2 min)
+  - Kitne users affected? (all? specific?)
+  - Kaunse endpoints slow hain? (all? specific?)
+  - Error rate badhi hai? (ya sirf slow?)
+  - Rollback option hai? (no deploy, so no)
+
+STEP 2: Data gather (5 min)
+  - DB metrics check karo (CPU, connections, disk I/O)
+  - Slow query log check karo
+  - Active queries check karo:
+    SELECT pid, query, state, query_start, now() - query_start AS dur
+    FROM pg_stat_activity WHERE state != 'idle' ORDER BY dur DESC;
+
+STEP 3: Hypothesis form karo
+  Evidence: DB CPU 90% (normally 20%)
+            Slow query log: One specific query running 30 seconds
+            Query: SELECT * FROM orders JOIN users ON... WHERE order_date > '2024-01-01'
+  
+  Hypothesis: Data volume weekend mein badh gaya + missing/wrong index
+
+STEP 4: Verify
+  EXPLAIN ANALYZE [slow query];
+  → Confirms: Sequential scan on orders table (500K rows)
+  → Index idx_orders_date was recently auto-vacuum'd? No — check if it dropped
+  
+  \d orders; → Index exists but large data + no partial index
+
+STEP 5: Immediate fix (mitigation, not root cause)
+  CREATE INDEX CONCURRENTLY idx_orders_date_active ON orders(order_date)
+  WHERE is_active = true;
+  → 10 min to build (CONCURRENTLY = no lock)
+
+STEP 6: Verify fix
+  Monitor p99 latency → Drops to 180ms within 2 min
+  Alert resolves
+
+STEP 7: Root cause aur prevention
+  Root cause: Data grew 40% over weekend (holiday sales)
+  Existing index becoming inefficient with this query pattern
+  
+  Prevention:
+  - Better indexes (partial)
+  - Query optimization (pagination needed)
+  - Monitoring: Alert when index scan ratio drops
+  - Regular EXPLAIN ANALYZE reviews
+
+================================================================
+SCENARIO 2: API TIMING OUT
+================================================================
+
+SITUATION:
+  POST /api/v1/checkout → Timeout errors (504 Gateway Timeout)
+  Happens for ~30% of checkout attempts
+  Users not being charged, orders not created
+
+TASK: Investigate aur fix karo.
+
+---
+
+SAMPLE SENIOR RESPONSE:
+
+STEP 1: Critical check — Are users being double-charged?
+  Check: Stripe dashboard for pending payments
+  Check: DB for orphaned payment_intents
+  → Only 30% timing out → others succeeding
+  → Need to ensure idempotency to prevent double charges on retry
+
+STEP 2: Trace the slow path
+  Add timing logs if not present:
+  - Auth check: [Xms]
+  - Cart validation: [Xms]
+  - Inventory check: [Xms]
+  - Payment intent creation: [Xms] ← ?
+  - Order creation: [Xms]
+  - Email queue: [Xms]
+
+STEP 3: Evidence
+  Logs show: Stripe API call → sometimes 28-30 seconds
+  Stripe status page: No incidents
+  Pattern: Requests sent from specific app server → slow
+  Other app servers → fast
+
+STEP 4: Hypothesis
+  Network issue from one specific server to Stripe?
+  
+  Verify: curl from that server to api.stripe.com → 28 seconds
+  DNS lookup slow on that server!
+
+STEP 5: Fix
+  Immediate: Remove that server from load balancer
+  Root cause: DNS resolver issue on that EC2 instance
+  Fix: Update resolv.conf / restart network service / replace instance
+
+STEP 6: Prevention
+  - Timeout on ALL external API calls (was 30s, set to 10s)
+  - Health check that includes external connectivity
+  - Retry logic with different servers
+  - DNS monitoring
+
+================================================================
+SCENARIO 3: TRAFFIC 100X SPIKE
+================================================================
+
+SITUATION:
+  Aapka app suddenly news mein aagaya (viral TikTok)
+  Traffic 1000 RPS se 100,000 RPS ho gaya.
+  Servers crash kar rahe hain.
+
+TASK: Emergency response plan.
+
+---
+
+SAMPLE SENIOR RESPONSE:
+
+IMMEDIATE (first 5 minutes):
+
+  1. Scale horizontally — IMMEDIATELY
+     AWS: Increase ECS desired count from 5 to 50
+     Or: Enable auto-scaling immediately
+  
+  2. Database protection
+     Enable read replicas for read traffic
+     Check connection pool — increase if needed
+     Cache hot data aggressively
+  
+  3. Rate limiting tighten karo (protect the system)
+     Emergency: Rate limit to 10 req/min per IP
+     Or: Cloudflare rate limiting enable karo
+  
+  4. Non-critical features disable karo
+     Feature flags se:
+     - Analytics (async, disable real-time)
+     - Recommendations
+     - Advanced search
+     → Only core checkout/browse functional
+
+SHORT-TERM (next hour):
+  
+  5. CDN push karo static assets ke liye
+     Cloudflare → Cache everything cacheable
+  
+  6. Queue non-essential work
+     Emails → queue mein dal do, baad mein send
+     Analytics → batch processing
+  
+  7. Identify bottleneck
+     CPU? Memory? DB? Network?
+     → Optimize accordingly
+
+MONITORING:
+  Real-time dashboard dekho
+  DB slow queries watch karo
+  Error rate monitor karo
+
+POST-SPIKE:
+  - Capacity planning review
+  - Auto-scaling rules optimize karo
+  - Load testing with realistic traffic
+  - Architecture review for next spike
+
+================================================================
+SCENARIO 4: PAYMENT SUCCEEDS BUT ORDER FAILS
+================================================================
+
+SITUATION:
+  Users complaint karte hain: "Paise kat gaye, order nahi aaya"
+  Stripe dashboard: Payment successful
+  Database: No matching order
+
+TASK: Kya hua aur kaise fix karein?
+
+---
+
+SAMPLE SENIOR RESPONSE:
+
+ROOT CAUSE ANALYSIS:
+
+Possible causes:
+  1. Checkout me race condition (simultaneous checkout)
+  2. DB write timeout after payment
+  3. Server crash between payment + order creation
+  4. Missing transaction / proper error handling
+
+Investigation:
+  1. Stripe webhook logs check karo
+     - payment_intent.succeeded received?
+     - webhook processing failed?
+  
+  2. Application logs (around that payment time)
+     - Error after payment step?
+     - Server crash?
+  
+  3. Code review:
+     const paymentIntent = await stripe.paymentIntents.create({...});
+     // ← Server crash here? payment done, order not created!
+     await createOrder(data);
+
+IMMEDIATE FIX (affected users):
+  - Identify all users with Stripe payment but no order
+  - Manual order create karo ya refund karo
+  - User ko email bhejo with apology + resolution
+
+CODE FIX:
+
+  Option 1: Stripe webhook based order creation (idempotent)
+    - Order creation ONLY when webhook fires
+    - Webhook idempotency → order ID in payment metadata
+    - More reliable than direct flow
+  
+  Option 2: Outbox pattern
+    - DB transaction mein payment_intent_id + order data
+    - Separate process ensures order created
+
+  Either way:
+    - Idempotency key = payment_intent_id for order creation
+    - So retries don't create duplicate orders
+
+PREVENTION:
+  - Saga pattern properly implement karo
+  - Compensation logic (auto-refund if order creation fails)
+  - Alert: "Stripe payment without matching order within 5 min"
+  - Reconciliation job: Daily check Stripe vs DB
+
+================================================================
+SCENARIO 5: TWO USERS UPDATE SAME RESOURCE
+================================================================
+
+SITUATION:
+  Product: 1 item in inventory
+  User A aur User B simultaneously checkout karte hain
+  Both succeed → 2 orders, -1 inventory
+
+TASK: Prevent double booking.
+
+---
+
+SAMPLE SENIOR RESPONSE:
+
+PROBLEM: Race condition in inventory management
+
+Solution options evaluated:
+
+1. Optimistic locking (prefer for read-heavy):
+   Add version column to products
+   
+   UPDATE products
+   SET inventory = inventory - 1, version = version + 1
+   WHERE id = $1 AND version = $2 AND inventory > 0;
+   
+   Agar 0 rows updated → Someone else booked first → Retry or fail
+
+2. Pessimistic locking (prefer for high contention):
+   BEGIN;
+   SELECT inventory FROM products WHERE id = $1 FOR UPDATE SKIP LOCKED;
+   -- Check if inventory > 0
+   UPDATE products SET inventory = inventory - 1 WHERE id = $1;
+   COMMIT;
+
+3. Redis atomic operations:
+   DECR product:inventory:{id}
+   Agar result < 0 → INCR back + reject
+   
+   Advantage: Fast (Redis in-memory)
+   Disadvantage: Redis aur DB sync karna
+
+4. Reservation system:
+   Step 1: Reserve (pending) — short TTL (15 min)
+   Step 2: On checkout success → convert to confirmed
+   Step 3: On timeout/cancel → release reservation
+
+RECOMMENDATION for e-commerce:
+  Pessimistic locking for checkout (high stakes)
+  Optimistic locking for less critical updates
+
+FIX also:
+  Unique constraint: (product_id, order_id) to prevent duplicate line items
+  Monitoring: Alert on negative inventory
+
+================================================================
+SCENARIO 6: SECURITY VULNERABILITY DISCOVERED
+================================================================
+
+SITUATION:
+  Security researcher emails: "I found SQL injection in your product search"
+  Shows proof: ' OR 1=1-- bypasses search filters
+
+TASK: Incident response.
+
+---
+
+SAMPLE SENIOR RESPONSE:
+
+STEP 1: Assess severity (immediately)
+  - Is it exploitable in production? (YES based on proof)
+  - Was it exploited? (check logs immediately)
+  - What data is accessible? (products only? users? payments?)
+  
+  If user/payment data accessible → Data breach protocol → Legal team involved
+
+STEP 2: Immediate mitigation (within 1 hour)
+  - WAF rule add karo to block common SQL injection patterns
+  - Or temporarily disable affected feature
+  - NOT production fix — proper fix needed first
+
+STEP 3: Assess impact
+  - Logs analyze karo: unusual queries?
+  - Any data exfiltration evidence?
+  - Timeline of when vulnerability was introduced
+
+STEP 4: Proper fix
+  - Fix parameterized queries (never string interpolation)
+  - Code review similar code in codebase
+  - Tests add karo for SQL injection
+
+STEP 5: Re-enable feature
+
+STEP 6: Thank the researcher
+  - Security researchers ko thank karo
+  - Bug bounty program consider karo
+
+STEP 7: Post-mortem
+  - How did this pass code review?
+  - Add SQL injection checks to CI
+  - Developer security training
+  - Code audit for similar issues
+
+================================================================
+SCENARIO 7: AI AGENT MODIFIES UNRELATED FILES
+================================================================
+
+SITUATION:
+  You asked AI agent: "Add email validation to user registration"
+  Agent completed — but git diff shows:
+  - auth.service.ts (expected)
+  - order.service.ts (unexpected!)
+  - payment.service.ts (unexpected!)
+  - user.schema.ts (expected)
+
+TASK: Kya karoge?
+
+---
+
+SAMPLE SENIOR RESPONSE:
+
+STEP 1: Do NOT merge as-is
+  
+STEP 2: Review every unexpected change
+  git diff order.service.ts
+  git diff payment.service.ts
+  → Agent ne "improvements" kiye jo kisi ne nahi manga
+
+STEP 3: Evaluate unexpected changes
+  - Are they correct? (Maybe agent fixed a bug)
+  - Are they safe? (Behavior same?)
+  - Are they wanted? (Maybe reject them)
+
+STEP 4: Selective acceptance
+  Accept only auth.service.ts + user.schema.ts changes
+  Revert order.service.ts + payment.service.ts
+  
+  git checkout main -- order.service.ts payment.service.ts
+
+STEP 5: Update AI_RULES.md
+  Add explicit rule:
+  "NEVER modify files outside the specified scope.
+   If you see an improvement in other files, STOP and ask."
+
+STEP 6: Task breakdown improve karo
+  Next time: More explicit scope definition in prompt
+  "ONLY modify: src/modules/auth/auth.service.ts, src/modules/auth/user.schema.ts
+   Do NOT touch any other file."
+
+LESSON: AI scope violations common hain.
+        Always git diff review karo before accepting.
+        Unexpected changes = immediate red flag.
+
+================================================================
+EXERCISE — PART 24
+================================================================
+
+SCENARIO: Your e-commerce site mein users ka session suddenly log out ho raha hai.
+          This affects about 5% of logged-in users.
+          Started 2 hours ago.
+          No recent deployment.
+
+TASK:
+  1. First 5 steps kya honge?
+  2. 3 hypotheses form karo
+  3. How would you verify each hypothesis?
+  4. If root cause: "Redis memory full → evicting session keys"
+     Kaise fix karoge (immediate + long term)?
+  5. Post-mortem action items (minimum 3)
+
+================================================================
+QUIZ — PART 24
+================================================================
+
+Q1: Payment succeeds but order fails — pehla step kya hai?
+    (a) Code fix immediately
+    (b) Check if users are double-charged, manually resolve affected users
+    (c) Deploy rollback
+    (d) Alert disable karo
+
+Jawab: (b)
+
+Q2: Inventory race condition ke liye best immediate fix?
+    (a) Rate limiting
+    (b) Database locking (pessimistic or optimistic) with atomicity
+    (c) Manual monitoring
+    (d) Cache invalidation
+
+Jawab: (b)
+
+Q3: AI agent ne unrelated files modify kiye — pehla step?
+    (a) Accept anyway
+    (b) Merge mat karo, review karo, sirf correct changes accept karo
+    (c) Revert everything
+    (d) AI ko blame karo
+
+Jawab: (b)
+
+Q4: Security vulnerability report mila — pehli action?
+    (a) Public announcement
+    (b) Severity assess karo + exploitation evidence check karo
+    (c) Developer fire karo
+    (d) Feature permanently disable karo
+
+Jawab: (b)
+
+================================================================
+AGLA PART: Part 25 — Engineering Decision Making
+================================================================

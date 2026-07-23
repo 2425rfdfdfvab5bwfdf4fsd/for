@@ -1,0 +1,94 @@
+================================================================================
+PHASE 06 — CONFLUENCE ENGINE
+================================================================================
+
+PHASE NAME:         Confluence Engine
+PHASE OBJECTIVE:    Build the multi-factor confluence scoring system that evaluates
+                    signal quality and gates trade execution at a minimum 8/10 score.
+
+WHY THIS PHASE EXISTS:
+    The Strategy Engine (Phase 05) produces raw signals. Before any trade is
+    considered, each signal must be scored against a defined set of confluent
+    factors. A trade that doesn't achieve 8/10 is rejected — not deferred.
+    This phase implements that scoring logic, the quality classification, and
+    the deduplication system that prevents double-counting the same setup.
+
+DEPENDENCIES:
+    - Phase 02 (Project Foundation) — configuration system, logging
+    - Phase 03 (MT5 Integration) — spread data (Factor 9: SPREAD_ACCEPTABLE requires
+                                    real-time spread from MT5 market data)
+    - Phase 04 (Data Layer) — data models for signals
+    - Phase 05 (Strategy Engine) — raw signal objects consumed by this phase
+    - Phase 08 (Filters) — session filter infrastructure needed by confluence
+                           (HTF_OB_CONFLUENCE factor uses OB data, not session filter
+                            directly, but the filter infrastructure must exist)
+
+    NOTE (CHG-017): Phase 06 was originally listed as depending only on 02+04+05.
+    The SPREAD_ACCEPTABLE factor requires MT5 market data (Phase 03 dependency).
+    All phase 06 agents must ensure phases 02+03+04+05+08 are complete first.
+
+INPUTS:
+    - Raw signal objects from StrategyEngine
+    - Configuration: MIN_CONFLUENCE_SCORE (default 8)
+    - Market context: timeframe alignment, trend direction, session
+
+OUTPUTS:
+    - ScoredSignal objects with factor breakdown
+    - TradeQuality classification (A, B, C, REJECTED)
+    - Rejection records stored in the database
+
+FILES EXPECTED TO BE CREATED:
+    app/confluence/scorer.py
+    app/confluence/factors.py
+    app/confluence/quality_classifier.py
+    app/confluence/deduplication.py
+    app/confluence/__init__.py
+    tests/test_confluence/test_scorer.py
+    tests/test_confluence/test_quality.py
+    tests/test_confluence/test_deduplication.py
+
+FILES EXPECTED TO BE MODIFIED:
+    app/strategy/signal_engine.py  (connect output to confluence scorer)
+    app/database/models.py             (add ScoredSignal, RejectionRecord models)
+
+FILES THAT MUST NOT BE MODIFIED:
+    app/mt5/                       (all MT5 integration files)
+    app/database/database.py           (schema only updated via migration tasks)
+    ROADMAP/                       (no roadmap file changes)
+
+TASK ORDER:
+    1. 01_TASK_SCORING.txt
+    2. 02_TASK_TRADE_QUALITY.txt
+    3. 03_TASK_SIGNAL_DEDUPLICATION.txt
+
+TESTING REQUIREMENTS:
+    - Unit tests for each scoring factor
+    - Tests confirming scores below 8 produce REJECTED status
+    - Tests confirming factor breakdown is logged and stored
+    - Edge case: all factors present = 10/10
+    - Edge case: zero factors = 0/10 → REJECTED
+
+ACCEPTANCE CRITERIA:
+    [ ] ConfluenceScorer.score(signal) returns ScoredSignal with factor_scores dict
+    [ ] Scores below MIN_CONFLUENCE_SCORE result in REJECTED classification
+    [ ] TradeQualityClassifier assigns A/B/C grades above threshold
+    [ ] Deduplication prevents the same setup being scored twice per bar
+    [ ] All unit tests pass
+
+KNOWN RISKS:
+    - Over-engineering the scorer can introduce subjective weights; keep weights
+      defined in config so they are auditable and adjustable
+    - Factor double-counting (e.g. BOS and CHoCH both active); define mutual
+      exclusivity rules explicitly in factors.py
+
+ROLLBACK STRATEGY:
+    If scorer produces incorrect results, disable confluence gate temporarily
+    via config flag CONFLUENCE_ENABLED=false and log all signals as UNSCORED.
+    Do not modify Phase 05 files during rollback.
+
+HANDOFF REQUIREMENTS:
+    Before Phase 07 (Risk Engine) begins:
+    - ScoredSignal model is stable and documented
+    - Scorer unit tests all pass
+    - At least one integration test showing signal → score → ACCEPTED/REJECTED
+================================================================================

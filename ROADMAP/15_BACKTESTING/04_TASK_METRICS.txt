@@ -1,0 +1,72 @@
+================================================================================
+TASK ID:     15-04
+TASK NAME:   Performance Metrics Calculator
+PHASE:       15 — Backtesting
+================================================================================
+
+OBJECTIVE:
+    Implement MetricsCalculator that computes all standard trading performance
+    metrics from a list of simulated trades and an equity curve.
+
+CONTEXT:
+    Minimum required sample size: 30 trades per symbol (warn if below this).
+    Note: Do NOT claim 55–65% win rate is achieved unless sample is statistically
+    significant and results are from out-of-sample data.
+
+DEPENDENCIES:
+    - 15-02 BacktestEngine (produces BacktestResult)
+
+FILES TO CREATE:
+    backtesting/metrics.py
+    tests/test_backtesting/test_metrics.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/strategy/
+    ROADMAP/
+
+METRICS TO CALCULATE:
+
+    TRADE STATISTICS:
+        total_trades, winning_trades, losing_trades, breakeven_trades
+        win_rate_pct, loss_rate_pct
+        avg_win, avg_loss, largest_win, largest_loss
+        avg_r_multiple, avg_duration_bars
+
+    FINANCIAL:
+        total_pnl, total_return_pct
+        profit_factor = gross_profit / abs(gross_loss)
+        expected_value = (win_rate * avg_win) + (loss_rate * avg_loss)
+        max_drawdown_pct, max_drawdown_duration_bars
+        recovery_factor = total_pnl / max_drawdown
+
+    RISK-ADJUSTED:
+        sharpe_ratio (annualized, risk-free=0)
+        sortino_ratio
+        calmar_ratio = annual_return / max_drawdown
+
+    CONSISTENCY:
+        consecutive_wins_max, consecutive_losses_max
+        monthly_win_rate (pct of profitable months)
+
+    STATISTICAL WARNINGS:
+        low_sample_warning: bool   (< 30 trades)
+        statistical_significance: str   ("LOW", "MODERATE", "HIGH")
+
+TEST REQUIREMENTS:
+    - test_win_rate_calculation()
+    - test_profit_factor_calculation()
+    - test_max_drawdown_calculation()
+    - test_sharpe_ratio_calculation()
+    - test_low_sample_warning_triggered()
+
+ACCEPTANCE CRITERIA:
+    [ ] All metrics calculated correctly (verified against known inputs)
+    [ ] Low sample size triggers warning
+    [ ] All tests pass with known mathematical results
+
+DEFINITION OF DONE:
+    [ ] metrics.py created and all tests pass
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 15-05 — TASK_REPORTS.txt
+================================================================================

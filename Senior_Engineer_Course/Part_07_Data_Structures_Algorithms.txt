@@ -1,0 +1,527 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 7: DATA STRUCTURES & ALGORITHMS
+(Practical Engineering Ke Liye)
+================================================================
+
+SEEKHNE KE MAQASID:
+- Important data structures aur unke real use cases
+- Algorithms aur Big O complexity
+- Interview aur production dono ke liye apply karna
+- Trade-offs samajhna
+
+================================================================
+SECTION 1: BIG O NOTATION
+================================================================
+
+Big O = Algorithm ki efficiency measure karna
+      = Jab input size badhta hai, time/space kitna badhta hai?
+
+Common Complexities (best to worst):
+
+O(1)       - Constant     → Array element access
+O(log n)   - Logarithmic  → Binary search
+O(n)       - Linear       → Array loop
+O(n log n) - Linearithmic → Merge sort
+O(n²)      - Quadratic    → Nested loops
+O(2ⁿ)      - Exponential  → Recursive subsets
+
+Real Example:
+  1 million users ke liye:
+  O(1)     → 1 operation
+  O(log n) → 20 operations
+  O(n)     → 1,000,000 operations
+  O(n²)    → 1,000,000,000,000 operations ← CRASH
+
+Time vs Space:
+  Har optimization mein trade-off hota hai:
+  - Zyada memory use karo → fast ho jao
+  - Kam memory use karo → slow ho jao
+
+================================================================
+SECTION 2: ARRAYS
+================================================================
+
+Kya hai: Ordered collection, continuous memory, index-based access
+
+Operations:
+  Access by index: O(1) ← bahut fast
+  Search (unsorted): O(n)
+  Search (sorted): O(log n) with binary search
+  Insert at end: O(1) amortized
+  Insert at middle: O(n) ← slow (shift required)
+  Delete from middle: O(n)
+
+Real Use Cases:
+  - List of items (cart items, search results)
+  - Stack implementation
+  - Queue implementation
+  - Sorting collections
+
+When to use:
+  - Index-based access chahiye
+  - Order important hai
+  - Size roughly known hai
+
+When NOT to use:
+  - Frequent insertions/deletions in middle
+  - Frequent search by value
+
+================================================================
+SECTION 3: HASH MAPS (Objects/Dictionaries)
+================================================================
+
+Kya hai: Key-value pairs, O(1) average lookup
+
+Operations:
+  Insert: O(1) average
+  Lookup: O(1) average
+  Delete: O(1) average
+
+Real Use Cases:
+  - User session storage (userId → sessionData)
+  - Caching (key → cached value)
+  - Frequency counting
+  - Deduplication
+  - Index building
+
+Example — Frequency Count:
+  // Find most common word in text
+  const words = text.split(' ');
+  const freq: Record<string, number> = {};
+  
+  for (const word of words) {
+    freq[word] = (freq[word] || 0) + 1;
+  }
+  
+  // O(n) time, O(n) space — much better than O(n²) nested loops
+
+Production Example:
+  Redis = distributed hash map
+  → Session storage, caching, rate limiting counters
+
+================================================================
+SECTION 4: SETS
+================================================================
+
+Kya hai: Unique values ka collection, O(1) membership check
+
+Operations:
+  Add: O(1)
+  Has: O(1)
+  Delete: O(1)
+
+Real Use Cases:
+  - Deduplication
+  - Permission checking
+  - Tag systems
+  - Visited nodes tracking (BFS/DFS)
+
+Example:
+  // Remove duplicate emails from list
+  const emails = ['a@b.com', 'c@d.com', 'a@b.com'];
+  const uniqueEmails = [...new Set(emails)];
+  // ['a@b.com', 'c@d.com']
+
+  // Check if user has permission
+  const permissions = new Set(['read', 'write']);
+  if (permissions.has('delete')) { /* ... */ }
+
+================================================================
+SECTION 5: STACKS
+================================================================
+
+Kya hai: LIFO (Last In, First Out) — last element pehle nikalta hai
+
+Operations:
+  Push: O(1)
+  Pop: O(1)
+  Peek: O(1)
+
+Real Use Cases:
+  - Browser history (back button)
+  - Undo/Redo functionality
+  - Call stack (recursion)
+  - Balanced parentheses checking
+  - Expression evaluation
+
+Example — Undo Feature:
+  const undoStack = [];
+  
+  function doAction(action) {
+    executeAction(action);
+    undoStack.push(action);
+  }
+  
+  function undo() {
+    const lastAction = undoStack.pop();
+    reverseAction(lastAction);
+  }
+
+================================================================
+SECTION 6: QUEUES
+================================================================
+
+Kya hai: FIFO (First In, First Out) — pehla aaya pehla gaya
+
+Operations:
+  Enqueue: O(1)
+  Dequeue: O(1)
+
+Real Use Cases:
+  - Background job processing
+  - Message queues (RabbitMQ, SQS)
+  - BFS graph traversal
+  - Rate limiting
+  - Request buffering
+
+Production Example:
+  Email queue:
+  1. User signs up → email task queue mein daalo
+  2. Worker queue se task uthata hai
+  3. Email send karta hai
+  4. Task complete mark karta hai
+
+================================================================
+SECTION 7: LINKED LISTS
+================================================================
+
+Kya hai: Nodes ka chain — har node next node ko point karta hai
+
+Operations:
+  Access by index: O(n) ← slow
+  Insert at head: O(1) ← fast
+  Insert at tail: O(1) with tail pointer
+  Search: O(n)
+
+Real Use Cases:
+  - Browser history implementation
+  - LRU Cache implementation
+  - Music playlist (next/previous)
+
+Note: Arrays zyada commonly use hote hain production mein.
+      Linked lists zyada interviews aur special cases mein hain.
+
+================================================================
+SECTION 8: TREES
+================================================================
+
+Kya hai: Hierarchical data structure — parent-child relationships
+
+Binary Search Tree (BST):
+  Left < Root < Right
+  Search: O(log n) balanced, O(n) worst case
+
+Real Use Cases:
+  - File system directory structure
+  - HTML DOM tree
+  - Database indexes (B-tree)
+  - Auto-complete / Tries
+  - Hierarchical data (categories, org charts)
+
+Example — Category tree:
+  Electronics
+  ├── Phones
+  │   ├── Android
+  │   └── iPhone
+  └── Laptops
+      ├── Gaming
+      └── Business
+
+================================================================
+SECTION 9: GRAPHS
+================================================================
+
+Kya hai: Nodes aur edges — relationships represent karna
+
+Types:
+  - Directed (ek taraf) vs Undirected (dono taraf)
+  - Weighted (edges pe values) vs Unweighted
+
+Real Use Cases:
+  - Social networks (friends graph)
+  - Maps / Navigation (GPS routes)
+  - Recommendation systems
+  - Dependency resolution
+  - Network routing
+
+Example — Friend suggestions:
+  Users = Nodes
+  Friendships = Edges
+  
+  "Friends of friends" = 2 hops away → BFS use karo
+
+================================================================
+SECTION 10: HEAPS (PRIORITY QUEUES)
+================================================================
+
+Kya hai: Tree structure where parent hamesha >= (max-heap) ya <= (min-heap) children se
+
+Operations:
+  Insert: O(log n)
+  Get max/min: O(1)
+  Remove max/min: O(log n)
+
+Real Use Cases:
+  - Task scheduling (priority jobs)
+  - Dijkstra's shortest path
+  - Top K elements find karna
+  - Merge K sorted lists
+
+Example — Priority Queue:
+  High priority emails pehle send karo
+  
+  PriorityQueue:
+    critical-alert: priority 1  ← pehle nikalta hai
+    transactional: priority 2
+    marketing: priority 3       ← baad mein
+
+================================================================
+SECTION 11: TRIES
+================================================================
+
+Kya hai: Tree jahan har node ek character represent karta hai
+
+Real Use Cases:
+  - Auto-complete search
+  - Spell checking
+  - IP routing tables
+  - Word games
+
+Example:
+  "car", "card", "cat", "cap" store karna Trie mein:
+  
+      c
+      |
+      a
+     /|\
+    r  t  p
+    |
+    d
+
+================================================================
+SECTION 12: KEY ALGORITHMS
+================================================================
+
+--- BINARY SEARCH ---
+
+Sorted array mein search → O(log n)
+
+function binarySearch(arr, target) {
+  let left = 0, right = arr.length - 1;
+  
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+    if (arr[mid] === target) return mid;
+    if (arr[mid] < target) left = mid + 1;
+    else right = mid - 1;
+  }
+  return -1;
+}
+
+Real Use: Database indexes, sorted search
+
+--- BFS (Breadth-First Search) ---
+
+Level by level traverse karna
+
+Use: Shortest path, friend suggestions, crawling
+
+function bfs(graph, start) {
+  const visited = new Set([start]);
+  const queue = [start];
+  
+  while (queue.length) {
+    const node = queue.shift();
+    for (const neighbor of graph[node]) {
+      if (!visited.has(neighbor)) {
+        visited.add(neighbor);
+        queue.push(neighbor);
+      }
+    }
+  }
+}
+
+--- DFS (Depth-First Search) ---
+
+Ek path tak jaao, phir back aao
+
+Use: Tree traversal, cycle detection, topological sort
+
+function dfs(graph, node, visited = new Set()) {
+  visited.add(node);
+  for (const neighbor of graph[node]) {
+    if (!visited.has(neighbor)) {
+      dfs(graph, neighbor, visited);
+    }
+  }
+}
+
+--- SLIDING WINDOW ---
+
+Subarray/substring problems
+
+Real Use: Rate limiting (last N requests), moving average
+
+function maxSumSubarray(arr, k) {
+  let sum = arr.slice(0, k).reduce((a, b) => a + b, 0);
+  let maxSum = sum;
+  
+  for (let i = k; i < arr.length; i++) {
+    sum += arr[i] - arr[i - k]; // Window slide karo
+    maxSum = Math.max(maxSum, sum);
+  }
+  return maxSum;
+}
+
+--- TWO POINTERS ---
+
+Array/string problems where two indices together move
+
+Real Use: Sorted array pair finding, palindrome check
+
+function hasPairWithSum(sortedArr, target) {
+  let left = 0, right = sortedArr.length - 1;
+  
+  while (left < right) {
+    const sum = sortedArr[left] + sortedArr[right];
+    if (sum === target) return true;
+    if (sum < target) left++;
+    else right--;
+  }
+  return false;
+}
+
+================================================================
+SECTION 13: SORTING ALGORITHMS
+================================================================
+
+Practical focus:
+
+MERGE SORT: O(n log n) — stable, predictable
+  Use: When stability needed
+
+QUICK SORT: O(n log n) average, O(n²) worst
+  Use: General purpose, in-place sorting
+
+BUILT-IN SORT: In most languages → use this!
+  JavaScript: arr.sort((a, b) => a - b)
+
+Kab khud implement karo vs built-in use karo:
+  - Production mein: built-in sort use karo
+  - Interview mein: merge sort ya quicksort implement karo
+  - Special cases mein: counting sort, radix sort (integers only)
+
+================================================================
+SECTION 14: DYNAMIC PROGRAMMING
+================================================================
+
+Kya hai: Complex problem ko subproblems mein todna + results cache karna
+
+Fibonacci Example:
+  Naive (O(2ⁿ)):
+    function fib(n) {
+      if (n <= 1) return n;
+      return fib(n-1) + fib(n-2); // Recalculates same values
+    }
+  
+  DP (O(n)):
+    const memo = {};
+    function fib(n) {
+      if (n <= 1) return n;
+      if (memo[n]) return memo[n];
+      memo[n] = fib(n-1) + fib(n-2);
+      return memo[n];
+    }
+
+Real Production Use:
+  - Route optimization
+  - Edit distance (spell checker)
+  - Knapsack (resource allocation)
+  - Longest common subsequence (diff tools)
+
+================================================================
+SECTION 15: PRODUCTION ENGINEERING USE CASES
+================================================================
+
+Situation → Which Data Structure/Algorithm:
+
+Search users by ID        → Hash Map (O(1))
+Find top 10 products      → Heap (O(n log k))
+Route navigation          → Graph + Dijkstra
+Auto-complete search      → Trie
+Rate limiting             → Sliding Window Counter
+LRU Cache                 → Hash Map + Doubly Linked List
+Job scheduling by priority → Priority Queue (Heap)
+Finding friends of friends → BFS on Graph
+Detecting cycles           → DFS
+Binary search in DB index  → Binary Search Tree (B-Tree)
+
+================================================================
+SECTION 16: EXERCISE
+================================================================
+
+PROBLEM 1: Rate Limiter
+"Implement a simple rate limiter: max 100 requests per user per minute"
+
+Hint: Sliding window + timestamp array per user
+
+PROBLEM 2: LRU Cache
+"Implement LRU Cache with O(1) get and put"
+
+Hint: Hash Map + Doubly Linked List
+
+PROBLEM 3: Top K Elements
+"Given a list of product views, return top 5 most viewed products"
+
+Hint: Min-Heap of size K
+
+PROBLEM 4: Two Sum
+"Given sorted array, find two numbers that sum to target"
+
+Hint: Two Pointers
+
+PROBLEM 5: Validate Parentheses
+"Given string of brackets, are they balanced?"
+
+Hint: Stack
+
+================================================================
+QUIZ — PART 7
+================================================================
+
+Q1: Hash Map ka average time complexity kya hai lookup ke liye?
+    (a) O(n)
+    (b) O(log n)
+    (c) O(1)
+    (d) O(n²)
+
+Jawab: (c)
+
+Q2: BFS aur DFS mein farq?
+    (a) BFS deep jaata hai, DFS wide
+    (b) BFS level by level, DFS ek path ke end tak
+    (c) Koi farq nahi
+    (d) BFS sirf trees pe, DFS sirf graphs pe
+
+Jawab: (b)
+
+Q3: Rate limiting ke liye kaunsa pattern best hai?
+    (a) Binary Search
+    (b) Sliding Window
+    (c) DFS
+    (d) Merge Sort
+
+Jawab: (b)
+
+Q4: Sorted array mein fast search ke liye?
+    (a) Linear Search O(n)
+    (b) Hash Map O(1)
+    (c) Binary Search O(log n)
+    (d) DFS O(n)
+
+Jawab: (c)
+
+================================================================
+AGLA PART: Part 8 — Database Engineering
+================================================================

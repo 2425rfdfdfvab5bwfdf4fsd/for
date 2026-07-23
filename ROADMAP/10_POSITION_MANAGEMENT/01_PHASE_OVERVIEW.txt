@@ -1,0 +1,95 @@
+================================================================================
+PHASE 10 — POSITION MANAGEMENT
+================================================================================
+
+PHASE NAME:         Position Management
+PHASE OBJECTIVE:    Implement all post-entry trade lifecycle management:
+                    break-even, partial profit, trailing stop, expiration,
+                    and end-of-day position closure.
+
+WHY THIS PHASE EXISTS:
+    Placing a trade is only the beginning. Profitable trading requires active
+    management of open positions. This phase implements the automated rules
+    that move SL, take partial profit, and close positions appropriately —
+    without any manual intervention.
+
+DEPENDENCIES:
+    - Phase 03 (MT5): positions_get, order_send (for SL/TP modification)
+    - Phase 04 (Data Layer): open trade records
+    - Phase 09 (Execution Engine): MT5 order interaction patterns
+
+INPUTS:
+    - Open position list from MT5
+    - Trade parameters from database (original SL, TP, entry)
+    - Current price from MT5 tick
+    - ATR for trailing stop distance
+
+OUTPUTS:
+    - Modified SL/TP orders sent to MT5
+    - Partial close orders sent to MT5
+    - Full close orders sent to MT5
+    - Position management events written to database
+
+FILES EXPECTED TO BE CREATED:
+    app/management/position_manager.py
+    app/management/break_even.py
+    app/management/partial_profit.py
+    app/management/trailing_stop.py
+    app/management/trade_expiration.py
+    app/management/__init__.py
+    tests/test_position_management/test_break_even.py
+    tests/test_position_management/test_partial_profit.py
+    tests/test_position_management/test_trailing_stop.py
+    tests/test_position_management/test_expiration.py
+    tests/test_position_management/test_position_manager.py
+
+FILES EXPECTED TO BE MODIFIED:
+    app/database/models.py    (add PositionManagementEvent)
+
+FILES THAT MUST NOT BE MODIFIED:
+    app/mt5/
+    app/strategy/
+    app/risk/
+    app/confluence/
+    app/filters/
+    app/execution/
+    ROADMAP/
+
+TASK ORDER:
+    1. 01_TASK_POSITION_MANAGER.txt
+    2. 02_TASK_BREAK_EVEN.txt
+    3. 03_TASK_PARTIAL_PROFIT.txt
+    4. 04_TASK_TRAILING_STOP.txt
+    5. 05_TASK_TRADE_EXPIRATION.txt
+
+TESTING REQUIREMENTS:
+    - All management logic tested with mock MT5 (no live trades in tests)
+    - Break-even trigger tested at exact price levels
+    - Partial close tested for correct lot calculation
+    - Trailing stop tested across price sequences
+    - Expiration tested for EOD and time-based cutoffs
+
+ACCEPTANCE CRITERIA:
+    [ ] Break-even moves SL to entry after TP1 reached
+    [ ] Partial close closes 50% of position at TP1
+    [ ] Trailing stop activates after configured profit threshold
+    [ ] EOD positions closed before cutoff time
+    [ ] Position manager processes all open trades on each loop iteration
+    [ ] All tests pass
+
+KNOWN RISKS:
+    - MT5 SL modification requires fresh price; stale price causes rejection
+    - Partial close creates a new ticket; database must track both
+    - Trailing stop must never widen the SL (only tighten)
+
+ROLLBACK STRATEGY:
+    Individual management features can be disabled via config:
+    ENABLE_BREAK_EVEN, ENABLE_PARTIAL_PROFIT, ENABLE_TRAILING_STOP
+    Disabling does not affect position closing — only active management.
+
+HANDOFF REQUIREMENTS:
+    Before Phase 11 (Automation):
+    - PositionManager.process_all() fully operational
+    - All 5 sub-components tested individually
+    - Integration test: trade lifecycle from entry → BE → TP
+================================================================================

@@ -1,0 +1,73 @@
+================================================================================
+TASK ID:     14-07
+TASK NAME:   Health Monitor
+PHASE:       14 — Dashboard
+================================================================================
+
+OBJECTIVE:
+    Build the health monitor page that shows a comprehensive system health
+    checklist covering all critical components.
+
+DEPENDENCIES:
+    - 14-01 Backend API (/api/health)
+
+FILES TO CREATE:
+    app/dashboard/templates/health.html
+    app/dashboard/static/js/health.js
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+HEALTH CHECKS DISPLAYED:
+
+    BOT PROCESS
+    [ ✅ ] Bot process running
+    [ ✅ ] Heartbeat fresh (last: 45s ago)
+    [ ✅ ] Singleton lock held
+
+    MT5 CONNECTION
+    [ ✅ ] MT5 connected
+    [ ✅ ] Account authenticated
+    [ ✅ ] All symbols available
+    [ ✅ ] Market data flowing
+
+    RISK ENGINE
+    [ ✅ ] Daily loss within limit (0.38% / 2%)
+    [ ✅ ] Trades within limit (2 / 3)
+    [ ✅ ] Consecutive losses OK (0 / 2)
+    [ ⚠️ ] Consecutive losses WARNING: 1 / 2
+
+    DATA
+    [ ✅ ] Database accessible
+    [ ✅ ] Database last write: 2min ago
+    [ ✅ ] Log file writable
+
+    NOTIFICATIONS
+    [ ✅ ] Telegram configured
+    [ ✅ ] Last Telegram send: successful
+
+    NEWS FILTER
+    [ ✅ ] News feed last updated: 45min ago
+    [ ⚠️ ] News feed stale (> 2 hours)
+
+    Each item: ✅ green / ⚠️ yellow / ❌ red
+    Auto-refresh every 30 seconds.
+
+ACCEPTANCE CRITERIA:
+    [ ] All health checks displayed
+    [ ] Status icons correct
+    [ ] Auto-refresh functional
+    [ ] Phase 14 acceptance criteria fully met
+
+DEFINITION OF DONE:
+    [ ] health.html and health.js created
+    [ ] Phase 14 acceptance criteria met
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated: Phase 14 COMPLETE
+
+NEXT TASK:
+    Begin Phase 15 — Backtesting
+    Start with: ROADMAP/15_BACKTESTING/01_PHASE_OVERVIEW.txt
+================================================================================

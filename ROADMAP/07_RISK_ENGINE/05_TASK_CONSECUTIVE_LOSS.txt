@@ -1,0 +1,75 @@
+================================================================================
+TASK ID:     07-05
+TASK NAME:   Consecutive Loss Protection
+PHASE:       07 — Risk Engine
+================================================================================
+
+OBJECTIVE:
+    Implement ConsecutiveLossChecker that blocks new trades after 2 consecutive
+    losses, and resets the counter appropriately.
+
+CONTEXT:
+    After 2 consecutive losing trades, the bot stops opening new positions.
+    Existing positions continue to be managed normally (SL/TP/BE/trail).
+    The counter resets:
+    - At the start of a new trading day (00:00 UTC)
+    - After a winning trade (win resets streak to 0)
+
+DEPENDENCIES:
+    - Phase 04 (Data Layer): recent trade outcomes
+
+FILES TO CREATE:
+    app/risk/consecutive_loss.py
+    tests/test_risk/test_consecutive_loss.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/strategy/
+    app/confluence/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class ConsecutiveLossChecker:
+        check(recent_trades: list[TradeRecord]) -> ConsecutiveLossResult
+
+    Logic:
+        count consecutive losses from most recent trade backward
+        if count >= MAX_CONSECUTIVE_LOSSES: BLOCKED
+        else: ALLOWED
+
+    MAX_CONSECUTIVE_LOSSES default: 2
+
+TEST REQUIREMENTS:
+    - test_0_losses_allowed()
+    - test_1_loss_allowed()
+    - test_2_losses_blocked()
+    - test_win_after_loss_resets()
+    - test_empty_history_allowed()
+    - test_consecutive_loss_count_restored_after_restart():
+        CRITICAL SAFETY TEST — verifies the counter persists across restarts.
+        Procedure:
+          1. Insert trade records into in-memory DB: 1 losing trade (today)
+          2. Create a FRESH ConsecutiveLossChecker pointing to same DB
+             (simulates bot restart — new instance reads from persistent DB)
+          3. Verify fresh_checker reads consecutive_losses = 1 from DB
+          4. Record a second loss (call checker.record_loss())
+          5. Assert fresh_checker.check() returns BLOCKED
+          6. Assert result.reason == "CONSECUTIVE_LOSS_LIMIT"
+
+STATE PERSISTENCE NOTE:
+    ConsecutiveLossChecker MUST read its initial state from the daily_risk_state
+    table in the database on construction (not start from 0).
+    The consecutive_losses column in daily_risk_state is the source of truth.
+    Any in-memory counter is a cache; the DB value is authoritative on restart.
+
+ACCEPTANCE CRITERIA:
+    [ ] 2 consecutive losses blocks new trades
+    [ ] Win resets counter
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] consecutive_loss.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 07-06 — TASK_CORRELATION.txt
+================================================================================

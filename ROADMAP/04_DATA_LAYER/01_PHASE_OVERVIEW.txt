@@ -1,0 +1,62 @@
+================================================================================
+PHASE 04 — DATA LAYER
+================================================================================
+PHASE NAME:       Data Layer
+PHASE OBJECTIVE:  Build the SQLite database layer with all data models,
+                  table definitions, and repository classes that provide
+                  clean, tested CRUD access to all persistent data.
+
+WHY THIS PHASE EXISTS:
+  The trading bot must persist critical state across restarts:
+  - Open trades and positions
+  - Daily risk state (loss %, trade count)
+  - Consecutive loss counter
+  - Trade journal
+  - Performance history
+  Without this, the bot loses its safety state on every restart —
+  a critical safety risk.
+
+DEPENDENCIES:     Phase 02 complete (config + logger)
+
+INPUTS:
+  - app/config.py (DATABASE_PATH)
+  - app/logger.py
+
+OUTPUTS:
+  - app/database/database.py    (connection + init)
+  - app/database/models.py      (table definitions)
+  - app/database/repositories.py (CRUD operations)
+  - tests/unit/test_database.py
+
+FILES THAT MUST NOT BE MODIFIED:
+  app/config.py, app/logger.py, app/mt5/ (different phase)
+
+TASK ORDER:
+  01_TASK_DATA_MODELS.txt         → Define all data structures
+  02_TASK_SQLITE_DATABASE.txt     → Database init + connection
+  03_TASK_REPOSITORIES.txt        → CRUD repository classes
+  04_TASK_PERSISTENCE_RECOVERY.txt → State reload after restart
+
+TESTING REQUIREMENTS:
+  □ Use in-memory SQLite (:memory:) for all tests
+  □ Test create, read, update, delete for every table
+  □ Test state recovery after simulated restart
+
+ACCEPTANCE CRITERIA:
+  □ Database initializes and creates all tables
+  □ All repositories work with in-memory SQLite
+  □ State persists and reloads correctly
+
+KNOWN RISKS:
+  - SQLite concurrent access (bot + dashboard): use WAL mode
+  - Database migration strategy: use schema version table
+
+ROLLBACK STRATEGY:
+  Delete app/database/*.py contents and restart phase.
+  Use :memory: SQLite in tests, no real data at risk.
+
+HANDOFF REQUIREMENTS:
+  Before Phase 07 (Risk Engine):
+  □ DailyRiskRepository can save/load daily_loss, trade_count
+  □ ConsecutiveLossRepository saves/loads consecutive_loss_count
+================================================================================

@@ -1,0 +1,586 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 5: SPEC-DRIVEN DEVELOPMENT
+(Code Se Pehle Specification Likhna)
+================================================================
+
+SEEKHNE KE MAQASID:
+- Spec-driven development methodology samajhna
+- Complete project specification likhna
+- AI agents ko sahi context dena
+- Inconsistent aur hallucinated code se bachna
+
+================================================================
+SECTION 1: SPEC-DRIVEN DEVELOPMENT KYA HAI?
+================================================================
+
+Traditional approach:
+  Idea → Seedha code likhna → Problems baad mein pata chalti hain
+
+Spec-Driven Development:
+  Idea → Specifications likhna → Review → Phir code likhna
+
+Kyun zaroori hai (especially 2026 mein AI ke saath):
+  - AI agents bina context ke galat code likhte hain
+  - AI unrelated files change kar deta hai
+  - AI existing patterns ignore karta hai
+  - AI duplicate functionality create karta hai
+  - Specifications AI ko "rails" deti hain
+
+================================================================
+SECTION 2: COMPLETE PROJECT SPECIFICATION STRUCTURE
+================================================================
+
+Ek production project ki complete specs:
+
+1. PROJECT OVERVIEW
+2. PRODUCT REQUIREMENTS
+3. ARCHITECTURE SPECIFICATION
+4. TECHNICAL DECISIONS
+5. CODE STANDARDS
+6. AI WORKFLOW RULES
+7. FEATURE SPECIFICATIONS
+8. DATABASE SPECIFICATIONS
+9. API SPECIFICATIONS
+10. TESTING SPECIFICATIONS
+11. SECURITY REQUIREMENTS
+12. DEPLOYMENT REQUIREMENTS
+
+Har ek detail mein:
+
+================================================================
+SECTION 3: PROJECT OVERVIEW DOC
+================================================================
+
+File: docs/PROJECT_OVERVIEW.md
+
+---
+# Project: [App Name]
+
+## What is this?
+[1-2 sentences: kya banaya ja raha hai]
+
+## Problem we're solving
+[Business problem]
+
+## Target users
+[Exact user types]
+
+## Core value proposition
+[Kya unique hai]
+
+## Tech Stack
+- Frontend: React 18 + TypeScript
+- Backend: Node.js + Express
+- Database: PostgreSQL 16
+- Cache: Redis 7
+- Auth: JWT + bcrypt
+- Hosting: AWS (EC2 + RDS + ElastiCache)
+
+## Current Phase
+v1 MVP — Authentication + Core Feature
+
+## Out of scope for v1
+- Mobile app
+- Social features
+- Advanced analytics
+---
+
+================================================================
+SECTION 4: ARCHITECTURE SPECIFICATION
+================================================================
+
+File: docs/ARCHITECTURE.md
+
+---
+# Architecture Specification
+
+## Architecture Pattern
+Modular Monolith (v1)
+Extract to microservices when: [specific conditions]
+
+## Module Structure
+src/
+├── modules/
+│   ├── auth/
+│   ├── users/
+│   ├── products/
+│   └── orders/
+├── shared/
+│   ├── middleware/
+│   ├── utils/
+│   └── types/
+├── config/
+└── app.ts
+
+## Module Boundaries
+RULE: Modules MUST NOT import directly from each other's internals.
+Cross-module communication: ONLY through defined interfaces in shared/
+
+## Data Flow
+Request → Router → Controller → Service → Repository → Database
+                              ↓
+                         External Services
+
+## Key Architectural Decisions
+- [ADR-001]: PostgreSQL as primary DB (see docs/adr/001-postgresql.md)
+- [ADR-002]: JWT for auth (see docs/adr/002-jwt.md)
+---
+
+================================================================
+SECTION 5: TECHNICAL DECISIONS DOC
+================================================================
+
+File: docs/TECHNICAL_DECISIONS.md
+
+---
+# Technical Decisions
+
+## Language: TypeScript (strict mode)
+Why: Type safety, better IDE support, catch errors at compile time
+
+## API Style: REST
+Why: Simple, widely understood, sufficient for our use case
+When to reconsider: Real-time features → add WebSockets
+
+## Validation: Zod
+Why: Runtime + compile time validation, great TypeScript integration
+
+## ORM: Prisma
+Why: Type-safe queries, migrations, good DX
+Trade-off: Less flexible than raw SQL for complex queries
+
+## Error Handling: Custom AppError class
+Pattern: All errors extend AppError with statusCode + message
+Never: throw raw Error objects in services
+
+## Logging: Winston (structured JSON)
+Format: { timestamp, level, message, context, requestId }
+
+## Testing: Vitest + Supertest
+Unit: Services (mock repositories)
+Integration: API endpoints (real DB, test containers)
+---
+
+================================================================
+SECTION 6: CODE STANDARDS DOC
+================================================================
+
+File: docs/CODE_STANDARDS.md
+
+---
+# Code Standards
+
+## Naming Conventions
+- Files: kebab-case (user-service.ts)
+- Classes: PascalCase (UserService)
+- Functions/variables: camelCase (getUserById)
+- Constants: UPPER_SNAKE_CASE (MAX_LOGIN_ATTEMPTS)
+- Database tables: snake_case (user_profiles)
+
+## Function Rules
+- Max function length: 30 lines
+- Single responsibility: one function = one thing
+- Pure functions preferred
+- No side effects without explicit naming (sendEmail, not processUser)
+
+## Error Handling Rules
+- NEVER swallow errors silently
+- ALWAYS log with context
+- ALWAYS return appropriate HTTP status codes
+- NEVER expose internal errors to client
+
+## Import Order
+1. External packages
+2. Internal modules (absolute paths)
+3. Relative imports
+(blank line between groups)
+
+## Comments
+- Code should be self-documenting (clear naming)
+- Comment WHY, not WHAT
+- JSDoc for public APIs
+
+## Git Commit Format
+type(scope): message
+Types: feat, fix, docs, refactor, test, chore
+Example: feat(auth): add password reset flow
+---
+
+================================================================
+SECTION 7: AI WORKFLOW RULES
+================================================================
+
+File: docs/AI_RULES.md
+
+Yeh file AI agents ko deni chahiye EVERY task ke saath.
+
+---
+# AI Agent Rules
+
+## YOU MUST READ BEFORE STARTING ANY TASK
+
+### Scope Rules
+1. ONLY modify files related to the specific task
+2. NEVER modify unrelated modules
+3. NEVER change existing interfaces without explicit instruction
+4. NEVER add new dependencies without asking first
+5. NEVER change database schema without explicit instruction
+
+### Architecture Rules
+1. Follow the module structure in ARCHITECTURE.md
+2. Use existing patterns (don't invent new ones)
+3. Services NEVER import from other module's internals
+4. All DB access through repositories only
+5. No raw SQL in services
+
+### Code Style Rules
+1. Follow CODE_STANDARDS.md exactly
+2. TypeScript strict mode — no 'any'
+3. Error handling as per AppError pattern
+4. Winston for all logging
+
+### Testing Rules
+1. Write tests for every new function
+2. Test files in __tests__ folder next to source
+3. Mock external services in unit tests
+4. No test should hit real external APIs
+
+### Before Finishing
+1. Run TypeScript compiler (tsc --noEmit)
+2. Run tests (npm test)
+3. Check no unrelated files modified
+4. Ensure no console.log left in code
+
+### When Unsure
+STOP and ask, don't assume.
+---
+
+================================================================
+SECTION 8: FEATURE SPECIFICATION TEMPLATE
+================================================================
+
+File: docs/features/FEATURE_NAME.md
+
+---
+# Feature: [Name]
+
+## Status: Draft | Review | Approved | In Progress | Done
+
+## Overview
+[2-3 lines: kya karna hai aur kyun]
+
+## User Stories
+- As a [user], I want [goal] so that [reason]
+
+## Acceptance Criteria
+GIVEN [context]
+WHEN [action]
+THEN [result]
+
+## Technical Design
+
+### API Endpoints
+POST /api/v1/auth/reset-password
+  Request: { email: string }
+  Response: { message: string }
+  Errors: 400 (invalid email), 429 (rate limited)
+
+### Database Changes
+- Table: password_reset_tokens
+  - id: UUID PRIMARY KEY
+  - user_id: UUID REFERENCES users(id)
+  - token: VARCHAR(64) UNIQUE
+  - expires_at: TIMESTAMP
+  - used_at: TIMESTAMP NULL
+
+### Service Logic
+1. Validate email
+2. Find user by email
+3. Generate secure token
+4. Store token (expire old ones)
+5. Send email
+6. Return success (even if email not found — security)
+
+### Error Cases
+- Invalid email format → 400
+- Rate limit exceeded → 429
+- Email service down → 500 + queue retry
+
+## Out of Scope
+- [Items not included]
+
+## Dependencies
+- Email service must be configured
+- Redis for rate limiting
+
+## Estimated Effort
+- Backend: 1 day
+- Tests: 0.5 day
+---
+
+================================================================
+SECTION 9: DATABASE SPECIFICATION
+================================================================
+
+File: docs/DATABASE.md
+
+---
+# Database Specification
+
+## Database: PostgreSQL 16
+
+## Naming Conventions
+- Tables: plural snake_case (users, order_items)
+- Columns: snake_case (created_at, user_id)
+- Indexes: idx_{table}_{column(s)}
+- Foreign keys: fk_{table}_{referenced_table}
+
+## Core Tables
+
+### users
+| Column       | Type         | Constraints              |
+|-------------|--------------|--------------------------|
+| id          | UUID         | PRIMARY KEY DEFAULT gen_random_uuid() |
+| email       | VARCHAR(255) | UNIQUE NOT NULL          |
+| password    | VARCHAR(255) | NOT NULL                 |
+| role        | VARCHAR(50)  | DEFAULT 'user'           |
+| created_at  | TIMESTAMP    | DEFAULT NOW()            |
+| updated_at  | TIMESTAMP    | DEFAULT NOW()            |
+| deleted_at  | TIMESTAMP    | NULL (soft delete)       |
+
+## Migration Rules
+- NEVER edit existing migrations
+- Always create new migration file
+- Migrations must be reversible (up + down)
+- Test migration on copy of prod data before applying
+
+## Indexes
+- Every foreign key has an index
+- Every column used in WHERE clause has an index
+- Composite indexes for common query patterns
+
+## Soft Deletes
+- deleted_at column instead of physical delete
+- All queries must filter WHERE deleted_at IS NULL
+---
+
+================================================================
+SECTION 10: API SPECIFICATION
+================================================================
+
+File: docs/API.md
+
+---
+# API Specification
+
+## Base URL
+Development: http://localhost:3000/api/v1
+Production: https://api.yourapp.com/v1
+
+## Authentication
+Bearer token in Authorization header:
+  Authorization: Bearer <jwt_token>
+
+## Response Format
+Success:
+{
+  "success": true,
+  "data": { ... }
+}
+
+Error:
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Email is required",
+    "details": [ ... ]
+  }
+}
+
+## HTTP Status Codes
+200 - OK
+201 - Created
+400 - Bad Request (validation error)
+401 - Unauthorized
+403 - Forbidden
+404 - Not Found
+409 - Conflict
+422 - Unprocessable Entity
+429 - Too Many Requests
+500 - Internal Server Error
+
+## Pagination
+GET /api/v1/products?page=1&limit=20
+
+Response:
+{
+  "data": [...],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 150,
+    "totalPages": 8
+  }
+}
+
+## Versioning
+URL versioning: /api/v1/, /api/v2/
+Old versions supported for 6 months after deprecation notice
+---
+
+================================================================
+SECTION 11: TESTING SPECIFICATION
+================================================================
+
+File: docs/TESTING.md
+
+---
+# Testing Specification
+
+## Test Types & Coverage
+
+Unit Tests (70% of tests):
+  - Services: test business logic
+  - Utils: test helper functions
+  - Mock: all external dependencies
+
+Integration Tests (25% of tests):
+  - API endpoints
+  - Real database (test containers)
+  - Real Redis
+
+E2E Tests (5% of tests):
+  - Critical user journeys only
+  - Login, checkout, core flows
+
+## Coverage Requirements
+- Minimum 80% code coverage
+- 100% coverage on critical paths (auth, payments)
+
+## Test Naming
+describe("UserService")
+  describe("createUser")
+    it("should create user with hashed password")
+    it("should throw if email already exists")
+    it("should throw if email invalid")
+
+## Test Data
+- Use factories for test data creation
+- Never hardcode IDs
+- Clean up after each test
+- Never use production data
+---
+
+================================================================
+SECTION 12: LIVING CONTEXT SYSTEM
+================================================================
+
+Yeh system AI agents ko poore project mein consistent rakhta hai.
+
+Structure:
+  docs/
+  ├── PROJECT_OVERVIEW.md    ← Har AI task ke saath share karo
+  ├── ARCHITECTURE.md        ← Module structure aur rules
+  ├── TECHNICAL_DECISIONS.md ← Tech choices aur reasoning
+  ├── CODE_STANDARDS.md      ← Coding rules
+  ├── AI_RULES.md            ← AI-specific rules
+  ├── API.md                 ← API contracts
+  ├── DATABASE.md            ← DB schema aur rules
+  ├── TESTING.md             ← Test requirements
+  ├── SECURITY.md            ← Security rules
+  ├── features/              ← Per-feature specs
+  │   ├── auth.md
+  │   ├── products.md
+  │   └── orders.md
+  └── adr/                   ← Architecture decisions
+      ├── 001-postgresql.md
+      └── 002-jwt.md
+
+AI Agent Ko Task Dene Ka Format:
+  "Read docs/AI_RULES.md, docs/ARCHITECTURE.md, docs/CODE_STANDARDS.md
+   first. Then implement the feature described in docs/features/auth.md.
+   Only modify files in src/modules/auth/."
+
+================================================================
+SECTION 13: AI HALLUCINATIONS KO ROKNA
+================================================================
+
+Common AI Mistakes aur Solutions:
+
+1. Architecture hallucination:
+   Problem: AI apna pattern invent karta hai
+   Fix: ARCHITECTURE.md share karo aur "follow existing patterns only" likho
+
+2. Unrelated files change:
+   Problem: AI dusre modules modify karta hai
+   Fix: AI_RULES.md mein explicit scope rules
+
+3. Existing patterns ignore karna:
+   Problem: AI nayi approach invent karta hai
+   Fix: "Look at existing similar code first" instruction
+
+4. Duplicate functionality:
+   Problem: AI naya function banata hai jo already exist karta hai
+   Fix: "Search codebase before creating new functions"
+
+5. Unauthorized dependencies:
+   Problem: AI new npm packages install karta hai
+   Fix: "No new dependencies without explicit approval"
+
+6. Inconsistent error handling:
+   Problem: AI alag alag error patterns use karta hai
+   Fix: CODE_STANDARDS.md mein exact pattern define karo
+
+================================================================
+EXERCISE — PART 5
+================================================================
+
+TASK: Ek choti app ke liye specs likhna
+
+App: Simple Todo List (Backend API only)
+Features: Create, Read, Update, Delete todos
+
+TASK 1: PROJECT_OVERVIEW.md likhna (5 fields fill karo)
+
+TASK 2: Database spec likhna (todos table design karo)
+
+TASK 3: API spec likhna (5 endpoints define karo)
+
+TASK 4: AI_RULES.md ke liye 5 important rules likhna
+
+TASK 5: Ek feature spec likhna "Create Todo" ke liye
+
+================================================================
+QUIZ — PART 5
+================================================================
+
+Q1: Spec-driven development mein pehle kya likhte hain?
+    (a) Code
+    (b) Tests
+    (c) Specifications aur documentation
+    (d) Database
+
+Jawab: (c)
+
+Q2: AI_RULES.md file ka maqsad kya hai?
+    (a) AI ko ban karna
+    (b) AI agents ko precise context aur boundaries dena
+    (c) AI ki speed badhana
+    (d) AI ko test karna
+
+Jawab: (b)
+
+Q3: "Living context system" se kya matlab hai?
+    (a) Ek animated website
+    (b) Ek set of documentation files jo poore project mein consistent context provide karte hain
+    (c) Real-time database
+    (d) CI/CD pipeline
+
+Jawab: (b)
+
+================================================================
+AGLA PART: Part 6 — Software Design Principles
+(SOLID, DRY, KISS, YAGNI)
+================================================================

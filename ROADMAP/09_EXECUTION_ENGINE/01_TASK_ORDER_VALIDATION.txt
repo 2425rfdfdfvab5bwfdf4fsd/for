@@ -1,0 +1,70 @@
+================================================================================
+TASK ID:     09-01
+TASK NAME:   Order Validation (Pre-flight)
+PHASE:       09 — Execution Engine
+================================================================================
+
+OBJECTIVE:
+    Implement OrderValidator that performs a final broker-level validation of
+    TradeParameters before submitting to MT5, checking broker constraints.
+
+CONTEXT:
+    Before calling mt5.order_send(), validate:
+    - Volume (lot size) within broker min/max for the symbol
+    - Volume respects lot step
+    - SL distance respects broker minimum stop level
+    - Price is fresh (not stale — must be within X seconds of current price)
+    - Symbol is tradeable (not halted)
+
+DEPENDENCIES:
+    - Phase 03 MT5 symbol info
+    - Phase 07 TradeParameters
+
+FILES TO CREATE:
+    app/execution/order_validator.py
+    tests/test_execution/test_order_validator.py
+
+FILES TO MODIFY:
+    app/database/models.py    — add OrderValidationResult if needed
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class OrderValidator:
+        validate(
+            trade_params: TradeParameters,
+            symbol_info: SymbolInfo,
+            current_price: float,
+            current_time: datetime
+        ) -> OrderValidationResult
+
+    Checks:
+        1. lot_size >= symbol_info.volume_min
+        2. lot_size <= symbol_info.volume_max
+        3. lot_size % symbol_info.volume_step == 0 (within float tolerance)
+        4. abs(trade_params.sl_price - current_price) >= symbol_info.stops_level * point
+        5. abs(current_price - trade_params.entry_price) <= PRICE_STALENESS_PIPS * point
+        6. symbol_info.trade_mode allows trading
+
+TEST REQUIREMENTS:
+    - test_valid_params_passes()
+    - test_lot_below_min_rejected()
+    - test_lot_above_max_rejected()
+    - test_sl_too_close_rejected()
+    - test_stale_price_rejected()
+    - test_symbol_not_tradeable_rejected()
+
+ACCEPTANCE CRITERIA:
+    [ ] All 6 broker constraints checked
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] order_validator.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 09-02 — TASK_ORDER_EXECUTION.txt
+================================================================================

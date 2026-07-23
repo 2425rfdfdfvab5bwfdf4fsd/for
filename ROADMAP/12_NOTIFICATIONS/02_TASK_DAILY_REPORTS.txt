@@ -1,0 +1,158 @@
+================================================================================
+TASK ID:     12-02
+TASK NAME:   Daily Reports
+PHASE:       12 — Notifications
+================================================================================
+
+OBJECTIVE:
+    Implement DailyReporter that generates and sends a comprehensive daily
+    performance summary via Telegram at the configured time.
+
+CONTEXT:
+    Sent daily at DAILY_REPORT_TIME_UTC (default: "20:30").
+    The report summarizes the day's trading activity.
+
+    REPORT CONTENT:
+    📊 DAILY TRADING REPORT — 2026-01-01
+    ─────────────────────────────────────
+    Mode:             DEMO
+    Session:          London + New York
+    ─────────────────────────────────────
+    Trades Today:     2 / 3
+    Winners:          1 (50%)
+    Losers:           1 (50%)
+    Breakeven:        0
+    ─────────────────────────────────────
+    Gross P&L:        +$75.50
+    Net P&L:          +$75.50
+    Daily P&L %:      +0.38%
+    ─────────────────────────────────────
+    Starting Equity:  $20,000.00
+    Ending Equity:    $20,075.50
+    ─────────────────────────────────────
+    Best Trade:       EURUSD BUY  +$125.00
+    Worst Trade:      GBPUSD SELL -$49.50
+    Avg Score:        8.8/10
+    ─────────────────────────────────────
+    Signals Scanned:  18
+    Signals Accepted: 2 (11.1%)
+    Signals Rejected: 16 (88.9%)
+    ─────────────────────────────────────
+    Consecutive Losses: 0
+    Daily Loss Used:    0.25% / 2.00%
+    ─────────────────────────────────────
+
+DEPENDENCIES:
+
+================================================================================
+WEEKLY AND MONTHLY REPORT CONTENT — REQUIRED (CHG-D02)
+================================================================================
+
+WEEKLY REPORT (sent every Sunday at WEEKLY_REPORT_TIME_UTC, default "20:00"):
+
+  📊 WEEKLY TRADING REPORT — Week of 2026-01-01
+  ─────────────────────────────────────────────
+  Mode:             DEMO
+  Days Active:      5 / 5
+  ─────────────────────────────────────────────
+  Total Trades:     9
+  Winners:          5 (55.6%)
+  Losers:           4 (44.4%)
+  ─────────────────────────────────────────────
+  Gross P&L:        +$312.50
+  Week P&L %:       +1.56%
+  Profit Factor:    2.1
+  Avg R per Trade:  +0.42R
+  ─────────────────────────────────────────────
+  Best Day:  Thu +$187.50   Worst Day: Mon -$49.50
+  Best Trade: EURUSD BUY +$150 (2.4R)
+  Worst Trade: GBPUSD SELL -$75 (-1.0R)
+  ─────────────────────────────────────────────
+  Consecutive Losses (max this week): 1
+  Max Daily Loss Used: 0.48% / 2.00%
+  Starting Equity: $20,000  Ending: $20,312.50
+  ─────────────────────────────────────────────
+
+MONTHLY REPORT (sent on 1st of each month at MONTHLY_REPORT_TIME_UTC, default "08:00"):
+
+  📊 MONTHLY TRADING REPORT — January 2026
+  ─────────────────────────────────────────
+  Mode:             DEMO
+  Trading Days:     21 / 23
+  ─────────────────────────────────────────
+  Total Trades:     38
+  Winners:          22 (57.9%)
+  Losers:           16 (42.1%)
+  Profit Factor:    2.3
+  Expectancy:       +$18.50 / trade
+  ─────────────────────────────────────────
+  Gross P&L:        +$703.00
+  Month P&L %:      +3.52%
+  Max Drawdown:     -1.2%
+  Avg R per Trade:  +0.48R
+  ─────────────────────────────────────────
+  Per-Pair Breakdown:
+    EURUSD: 14 trades, 64% win, +$385.00
+    GBPUSD: 13 trades, 54% win, +$198.00
+    USDJPY: 11 trades, 55% win, +$120.00
+  ─────────────────────────────────────────
+  Starting Equity: $20,000  Ending: $20,703.00
+  ─────────────────────────────────────────
+
+IMPLEMENTATION:
+  Add to class DailyReporter (or create WeeklyReporter / MonthlyReporter):
+    generate_weekly_report(week_start: date, db) -> str
+    generate_monthly_report(month: int, year: int, db) -> str
+    should_send_weekly(current_utc: datetime) -> bool
+    should_send_monthly(current_utc: datetime) -> bool
+
+CONFIG additions to app/config.py (add to .env.example):
+  WEEKLY_REPORT_TIME_UTC=20:00   # Sunday evening
+  MONTHLY_REPORT_TIME_UTC=08:00  # 1st of month morning
+
+TEST REQUIREMENTS (add to test_daily_reporter.py):
+  - test_weekly_report_generated_correctly()
+  - test_monthly_report_generated_correctly()
+  - test_weekly_send_triggers_on_sunday()
+  - test_monthly_send_triggers_on_first_of_month()
+
+================================================================================
+DEPENDENCIES:
+    - 12-01 Telegram complete
+    - Phase 04 database: daily stats query
+
+FILES TO CREATE:
+    app/notifications/daily_reporter.py
+    tests/test_notifications/test_daily_reporter.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class DailyReporter:
+        generate_report(date_utc: date, db) -> str
+        should_send_now(current_utc: datetime) -> bool
+        send_if_due(current_utc: datetime, db, notifier) -> bool
+
+TEST REQUIREMENTS:
+    - test_report_generated_with_trades()
+    - test_report_generated_with_no_trades()
+    - test_send_trigger_at_correct_time()
+    - test_send_not_triggered_before_time()
+
+ACCEPTANCE CRITERIA:
+    [ ] Report generated with all fields populated
+    [ ] Sent once per day at configured time
+    [ ] Zero-trade day handled gracefully
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] daily_reporter.py created and tested
+    [ ] Phase 12 acceptance criteria met
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated: Phase 12 COMPLETE
+
+NEXT TASK:
+    Begin Phase 13 — Trade Journal
+    Start with: ROADMAP/13_TRADE_JOURNAL/01_PHASE_OVERVIEW.txt
+================================================================================

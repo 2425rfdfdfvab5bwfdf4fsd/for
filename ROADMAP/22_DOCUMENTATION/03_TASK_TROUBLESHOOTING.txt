@@ -1,0 +1,78 @@
+================================================================================
+TASK ID:     22-03
+TASK NAME:   Troubleshooting Guide
+PHASE:       22 — Documentation
+================================================================================
+
+OBJECTIVE:
+    Create a troubleshooting guide covering the 25 most common issues users
+    will encounter, with step-by-step diagnosis and resolution.
+
+DEPENDENCIES:
+    - 22-02 User Guide complete
+
+FILES TO CREATE:
+    docs/TROUBLESHOOTING.md
+
+FILES FORBIDDEN TO MODIFY:
+    app/
+    ROADMAP/
+
+TROUBLESHOOTING SECTIONS:
+
+    INSTALLATION ISSUES:
+    1. Python not found / wrong version
+    2. pip install fails (network, permissions)
+    3. MetaTrader5 package not installing
+    4. Virtual environment not created
+    5. .env file not created
+
+    CONNECTION ISSUES:
+    6. MT5 connection fails: not running
+    7. MT5 connection fails: wrong credentials
+    8. MT5 connection fails: wrong server name
+    9. Bot shows DISCONNECTED but MT5 is open
+    10. Symbol not found / broker suffix issues
+
+    TRADING ISSUES:
+    11. Bot running but no trades being placed
+    12. "Trading not allowed" — session blocked
+    13. "Trading not allowed" — daily loss limit
+    14. "Trading not allowed" — consecutive losses
+    15. Bot placed trade but wrong lot size
+    16. Order rejected by broker
+    17. Position not being managed (no BE, no trail)
+
+    AUTOMATION ISSUES:
+    18. Bot stopped unexpectedly
+    19. Watchdog not restarting bot
+    20. Autostart not working
+    21. status.bat shows "BOT NOT RUNNING" but it is
+
+    DASHBOARD ISSUES:
+    22. Dashboard not loading
+    23. Dashboard shows stale data
+    24. Charts not rendering
+
+    NOTIFICATION ISSUES:
+    25. Telegram messages not being received
+
+    Each issue includes:
+    - Symptom description
+    - Common causes (ordered by likelihood)
+    - Diagnosis steps
+    - Resolution steps
+    - If not resolved: what logs to collect and how to get help
+
+ACCEPTANCE CRITERIA:
+    [ ] All 25 issues documented with resolutions
+    [ ] Each issue has diagnosis AND resolution
+    [ ] Log collection instructions included
+    [ ] Written in plain language
+
+DEFINITION OF DONE:
+    [ ] docs/TROUBLESHOOTING.md created
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 22-04 — TASK_OPERATIONS_GUIDE.txt
+================================================================================

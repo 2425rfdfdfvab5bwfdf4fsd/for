@@ -1,0 +1,466 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 11: SYSTEM DESIGN
+(Large Scale Systems Banana)
+================================================================
+
+SEEKHNE KE MAQASID:
+- Scalability, availability, reliability samajhna
+- CAP theorem samajhna
+- Load balancing, caching, CDN
+- Real systems design karna
+
+================================================================
+SECTION 1: KEY CONCEPTS
+================================================================
+
+--- SCALABILITY ---
+
+System ki ability: load badhne pe performance maintain karna
+
+Vertical Scaling (Scale Up):
+  - Better hardware: More CPU, RAM, faster disk
+  - Limit: Single machine ki limit hai
+  - Simple lekin ceiling hai
+
+Horizontal Scaling (Scale Out):
+  - Zyada machines add karo
+  - No hard limit
+  - Complex lekin unlimited
+  - Load balancer chahiye
+
+--- AVAILABILITY ---
+
+System ka uptime percentage
+
+99%    = 3.65 days downtime/year
+99.9%  = 8.77 hours downtime/year (3 nines)
+99.99% = 52.6 minutes downtime/year (4 nines)
+99.999%  = 5.26 minutes downtime/year (5 nines)
+
+Availability = System design ka core concern
+
+--- RELIABILITY ---
+
+System ka behave karna expected tarike se, failure hone pe bhi.
+
+Fault Tolerance: Failures handle karna gracefully
+Redundancy: Critical components duplicate karna
+
+--- LATENCY vs THROUGHPUT ---
+
+Latency: Ek request kitni der mein process ho jaati hai
+         (milliseconds)
+
+Throughput: System kitne requests per second handle kar sakta hai
+            (RPS — Requests Per Second)
+
+Trade-off: Often latency kam karna throughput badhata hai aur vice versa.
+
+================================================================
+SECTION 2: CAP THEOREM
+================================================================
+
+Distributed system mein yeh 3 properties simultaneously possible nahi:
+
+C — CONSISTENCY:
+  Sab nodes pe same data hoga same time pe
+
+A — AVAILABILITY:
+  System hamesha respond karta hai (errors se bhi)
+
+P — PARTITION TOLERANCE:
+  Network partition (disconnection) pe bhi system kaam karta hai
+
+RULE: Network partitions real hain → P hamesha chahiye
+      To choose between C aur A.
+
+CP Systems (Consistency + Partition Tolerance):
+  PostgreSQL, MongoDB (default config), HBase
+  → Partition pe: kuch nodes unavailable ho sakten hain
+  → Use: Banking, inventory (data correctness critical)
+
+AP Systems (Availability + Partition Tolerance):
+  Cassandra, DynamoDB, CouchDB
+  → Partition pe: stale data de sakte hain
+  → Use: Social media, shopping cart (availability critical)
+
+Real World:
+  Most systems hybrid hain — different parts ke liye different choices.
+
+================================================================
+SECTION 3: LOAD BALANCING
+================================================================
+
+Load Balancer = Traffic distribute karna multiple servers pe
+
+Algorithms:
+  Round Robin: Ek ek karke servers pe bhejo
+  Weighted Round Robin: Powerful servers ko zyada requests
+  Least Connections: Sabse kam connections wale server pe
+  IP Hash: Same user → same server (session affinity)
+  Health-based: Unhealthy servers bypass karo
+
+Types:
+  L4 (Transport Layer): IP + Port based
+  L7 (Application Layer): HTTP content based, smart routing
+
+Implementations:
+  - AWS ALB (Application Load Balancer)
+  - NGINX
+  - HAProxy
+  - Cloudflare
+
+Session Handling with Load Balancer:
+  Problem: User server A pe login kiya, load balancer server B pe bheje → session missing!
+  
+  Solutions:
+  1. Sticky sessions (same server hamesha) — scalability limited
+  2. Centralized sessions (Redis) — recommended
+
+================================================================
+SECTION 4: CACHING
+================================================================
+
+Cache = Temporary fast storage
+
+Cache Placement:
+
+  CLIENT CACHE:
+    Browser cache, mobile app cache
+    → HTTP headers: Cache-Control, ETag
+
+  CDN CACHE:
+    Static assets (images, CSS, JS) globally distribute
+    → User ke paas se serve
+
+  APPLICATION CACHE:
+    Redis/Memcached — server memory mein
+    → Database queries cache karo
+
+  DATABASE CACHE:
+    Query cache (most DBs have this)
+
+Cache Strategies:
+
+CACHE ASIDE (Lazy Loading):
+  1. Cache check karo
+  2. Cache miss → DB se fetch → Cache mein store
+  3. Agla request → Cache hit
+
+  Code:
+    async function getUser(userId) {
+      const cached = await redis.get(`user:${userId}`);
+      if (cached) return JSON.parse(cached); // Cache hit
+      
+      const user = await db.users.findById(userId); // Cache miss
+      await redis.setEx(`user:${userId}`, 3600, JSON.stringify(user));
+      return user;
+    }
+
+WRITE-THROUGH:
+  Write → Cache aur DB dono update karo simultaneously
+  Pros: Cache hamesha fresh
+  Cons: Write slow, unused data cache mein
+
+WRITE-BEHIND (Write-Back):
+  Write → Sirf cache update karo → DB async mein update
+  Pros: Write fast
+  Cons: Data loss risk agar cache fail ho
+
+Cache Eviction Policies:
+  LRU (Least Recently Used) → Sabse purana use kiya access remove karo
+  LFU (Least Frequently Used) → Sabse kam use wala remove karo
+  TTL (Time To Live) → Fixed time ke baad expire
+
+Cache Invalidation (Hardest problem!):
+  When to invalidate:
+  - User update → User cache delete karo
+  - Product price change → Product cache + related caches
+  - TTL-based expiry
+
+================================================================
+SECTION 5: CDN (Content Delivery Network)
+================================================================
+
+CDN = Static assets globally distribute karna
+
+How it works:
+  User in Karachi → Nearest CDN edge server
+  → Cache hit: Return immediately
+  → Cache miss: Fetch from origin server → Cache → Return
+
+What to serve via CDN:
+  - Images, videos
+  - CSS, JavaScript files
+  - Fonts
+  - Static HTML
+
+Benefits:
+  - Reduced latency (geographically closer)
+  - Reduced origin server load
+  - DDoS protection (traffic absorb karna)
+  - High availability
+
+Providers: Cloudflare, AWS CloudFront, Fastly
+
+================================================================
+SECTION 6: MESSAGE QUEUES
+================================================================
+
+Message Queue = Services ke beech async communication
+
+Use Cases:
+  - Email sending
+  - Image processing
+  - Order processing
+  - Notifications
+  - Data pipeline
+
+Patterns:
+
+POINT-TO-POINT (Queue):
+  Producer → Queue → Consumer
+  Ek message ek baar consume hota hai
+
+PUBLISH-SUBSCRIBE (Pub/Sub):
+  Publisher → Topic → Multiple Subscribers
+  Ek message multiple consumers ko
+
+Providers:
+  - RabbitMQ (on-premise)
+  - AWS SQS (managed queue) + SNS (pub/sub)
+  - Apache Kafka (event streaming, high throughput)
+
+Message Delivery Guarantees:
+  At-most-once: Message once ya kabhi nahi (fast, data loss possible)
+  At-least-once: Message kam az kam once (duplicates possible — idempotency chahiye)
+  Exactly-once: Exactly once (complex, expensive)
+
+================================================================
+SECTION 7: SYSTEM DESIGN — URL SHORTENER
+================================================================
+
+Like bit.ly — design karo.
+
+Requirements Clarify:
+  - Kitne URLs per day? (1 million)
+  - How long stored? (5 years)
+  - Custom short codes? (v1 nahi)
+  - Analytics? (v1 basic)
+  - Availability? (99.9%)
+
+Back-of-envelope:
+  1M URLs/day × 365 × 5 years = 1.8 billion URLs
+  Storage per URL: ~500 bytes → ~900 GB
+
+Core APIs:
+  POST /api/shorten
+    Request: { originalUrl: "https://very-long-url.com" }
+    Response: { shortCode: "abc123", shortUrl: "https://short.ly/abc123" }
+  
+  GET /:shortCode
+    → 301 Redirect to original URL
+
+Short Code Generation:
+  Option 1: Random 7 chars (a-z, A-Z, 0-9) = 62^7 = 3.5 trillion codes
+  Option 2: MD5 hash, take first 7 chars (collision possible)
+  Option 3: Counter + Base62 encoding
+
+Architecture:
+  Client → Load Balancer → App Servers → Redis Cache
+                                       → PostgreSQL DB
+                         ↓
+                      CDN (for static assets)
+
+Read path (redirect):
+  1. Check Redis cache (shortCode → originalUrl)
+  2. Cache hit → 301 Redirect (fast!)
+  3. Cache miss → DB query → Cache store → Redirect
+
+Write path (create):
+  1. Validate URL
+  2. Generate shortCode
+  3. Save to PostgreSQL
+  4. Return shortUrl
+
+Scaling:
+  Reads >> Writes (100:1 ratio)
+  - Read replicas for DB
+  - Redis cache for hot URLs
+  - CDN for redirect responses
+
+================================================================
+SECTION 8: SYSTEM DESIGN — CHAT APPLICATION
+================================================================
+
+Requirements:
+  - Real-time messaging
+  - 1-on-1 and group chats
+  - Online/offline status
+  - Message history
+  - 10 million users
+
+Core Architecture:
+
+  Client → WebSocket Server → Message Queue → Delivery Service
+         → API Server       → PostgreSQL    → Redis
+
+WebSocket for real-time:
+  - Client connects to WebSocket server
+  - Server pushes messages instantly
+  - Connection maintained (unlike HTTP)
+
+Message Flow:
+  1. User A sends message
+  2. WebSocket server receives
+  3. Store in DB (durability)
+  4. Publish to queue/Pub-Sub
+  5. Delivery service finds User B's server
+  6. Push to User B via WebSocket
+
+User Presence:
+  - Redis SET user:123:online = true (expire 30 sec)
+  - Heartbeat every 15 seconds
+  - Offline: key expires
+
+Message Storage:
+  - PostgreSQL: Message history (reliable)
+  - Redis: Active user sessions, presence
+
+Scaling WebSocket:
+  - Multiple WebSocket servers
+  - Load balancer with sticky sessions
+  - Pub/Sub (Redis) to broadcast between servers
+
+================================================================
+SECTION 9: SYSTEM DESIGN — NOTIFICATION SYSTEM
+================================================================
+
+Types: Push, Email, SMS, In-App
+
+Architecture:
+
+  Various Services → Notification Service → Dispatch Queue
+                                          → Email Worker
+                                          → SMS Worker
+                                          → Push Worker
+                                          → In-App Worker
+
+Components:
+
+1. Notification Service:
+   - API receive karta hai notifications create karne ke liye
+   - User preferences check karta hai
+   - Queue mein daalta hai
+
+2. User Preference Store (Redis/DB):
+   - Kaunse channels user ne enabled kiye hain
+   - Quiet hours (raat ko notification nahi)
+   - Frequency limits (1 email per day)
+
+3. Template Engine:
+   - Notification templates store aur render karo
+   - Personalization (name, order details)
+
+4. Dispatch Workers:
+   - Email → SendGrid/SES
+   - SMS → Twilio
+   - Push → FCM (Android), APNS (iOS)
+
+5. Retry & Dead Letter Queue:
+   - Failed notifications retry
+   - After max retries → dead letter queue
+   - Alert on dead letter queue growth
+
+Rate Limiting per User:
+  - Max 10 emails/day
+  - Max 50 push notifications/day
+  - Deduplication (same notification twice)
+
+================================================================
+SECTION 10: FAILURE MODES THINKING
+================================================================
+
+Senior engineer HAMESHA sochta hai: "Kya fail ho sakta hai?"
+
+Checklist for any system:
+  □ Database down ho jaaye?
+  □ Cache down ho jaaye?
+  □ Third-party service down ho jaaye?
+  □ Network partition ho?
+  □ Single server crash ho?
+  □ Traffic 10x spike aaye?
+  □ Storage full ho jaaye?
+  □ Memory leak ho?
+  □ Slow queries block karein?
+
+Mitigation Strategies:
+  - Circuit breakers (fail fast)
+  - Timeouts on all external calls
+  - Retry with exponential backoff
+  - Fallbacks (cache se serve)
+  - Graceful degradation
+  - Health checks
+  - Auto-scaling
+
+================================================================
+EXERCISE — PART 11
+================================================================
+
+DESIGN: Instagram-like photo sharing system
+
+Requirements:
+  - Users photos upload kar sakte hain
+  - Users follow/unfollow kar sakte hain
+  - Feed: Followed users ki latest photos
+  - 100 million users
+  - 1 billion photos
+
+TASK:
+  1. Core APIs define karo
+  2. Database schema design karo
+  3. Architecture draw karo (words mein)
+  4. Feed generation kaise karogay? (pre-generate ya on-request?)
+  5. Photo storage kahan? (S3?)
+  6. 3 main failure modes identify karo
+
+================================================================
+QUIZ — PART 11
+================================================================
+
+Q1: CAP theorem mein distributed systems kya guarantee kar sakte hain?
+    (a) Teeno C, A, P ek saath
+    (b) P hamesha chahiye, C aur A mein se ek choose karo
+    (c) Sirf C aur A
+    (d) Sirf P
+
+Jawab: (b)
+
+Q2: Cache-Aside pattern kya hai?
+    (a) Pehle cache write karo, phir DB
+    (b) Cache miss pe DB se fetch karo aur cache store karo
+    (c) Sirf DB use karo, cache nahi
+    (d) Cache hamesha DB se sync karo
+
+Jawab: (b)
+
+Q3: URL shortener mein reads vs writes ratio typically?
+    (a) Equal
+    (b) Writes zyada hain
+    (c) Reads bahut zyada hain (100:1)
+    (d) Depends on timezone
+
+Jawab: (c)
+
+Q4: WebSockets kyun use karte hain chat app mein?
+    (a) Faster than HTTP
+    (b) Real-time bi-directional communication — server push kar sakta hai
+    (c) More secure
+    (d) Less bandwidth
+
+Jawab: (b)
+
+================================================================
+AGLA PART: Part 12 — Distributed Systems
+================================================================

@@ -1,0 +1,51 @@
+================================================================================
+TASK ID:     14-04
+TASK NAME:   Open Positions View
+PHASE:       14 — Dashboard
+================================================================================
+
+OBJECTIVE:
+    Build the open positions page showing real-time position data with
+    live P&L, management status, and trade details.
+
+DEPENDENCIES:
+    - 14-01 Backend API (/api/positions)
+
+FILES TO CREATE:
+    app/dashboard/templates/positions.html
+    app/dashboard/static/js/positions.js
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    app/risk/
+    app/strategy/
+    ROADMAP/
+
+PAGE CONTENT:
+
+    POSITIONS TABLE (auto-refresh every 10 seconds):
+    Symbol | Dir | Lots | Entry | Current | SL | TP1 | TP2 | P&L | P&L% | Duration | Score | Grade | BE? | Partial?
+
+    POSITION DETAILS (expandable row):
+        Factor breakdown (score bar chart)
+        Management history
+        Original risk amount
+
+    COLOR CODING:
+        P&L positive: green
+        P&L negative: red
+        BE applied: blue indicator
+        Partial taken: orange indicator
+
+ACCEPTANCE CRITERIA:
+    [ ] All open positions displayed
+    [ ] P&L color-coded
+    [ ] Management status indicators shown
+    [ ] Auto-refresh every 10 seconds
+
+DEFINITION OF DONE:
+    [ ] positions.html and positions.js created
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 14-05 — TASK_ANALYTICS.txt
+================================================================================

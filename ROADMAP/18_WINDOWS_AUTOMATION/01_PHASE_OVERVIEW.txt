@@ -1,0 +1,88 @@
+================================================================================
+PHASE 18 — WINDOWS AUTOMATION
+================================================================================
+
+PHASE NAME:         Windows Automation
+PHASE OBJECTIVE:    Create all Windows .bat scripts and automation tools that
+                    make the bot easy to install, configure, start, stop,
+                    monitor, update, and auto-start on Windows 10/11.
+
+WHY THIS PHASE EXISTS:
+    The bot is designed for Windows. Non-technical users must be able to
+    operate it entirely through .bat files without editing Python code.
+    This phase delivers the complete one-click user experience.
+
+DEPENDENCIES:
+    - All phases 02–17 complete (bot must be fully functional before packaging)
+    - Phase 11 (Automation): main.py, watchdog.py exist
+    - Phase 14 (Dashboard): run_dashboard.bat entry point
+
+INPUTS:
+    - Python environment (created by setup.bat)
+    - Configuration (.env file)
+    - MT5 installation on Windows
+
+OUTPUTS:
+    - setup.bat
+    - configure.bat
+    - start_bot.bat
+    - stop_bot.bat
+    - restart_bot.bat
+    - status.bat
+    - run_dashboard.bat
+    - run_backtest.bat
+    - run_tests.bat
+    - enable_autostart.bat
+    - disable_autostart.bat
+    - update.bat
+
+FILES EXPECTED TO BE CREATED:
+    setup.bat
+    configure.bat
+    start_bot.bat
+    stop_bot.bat
+    restart_bot.bat
+    status.bat
+    run_dashboard.bat
+    run_backtest.bat
+    run_tests.bat
+    enable_autostart.bat
+    disable_autostart.bat
+    update.bat
+    scripts/setup_wizard.py      (Python helper for configure.bat)
+    scripts/status_reader.py     (Python helper for status.bat)
+    scripts/autostart.py         (Windows Task Scheduler helper)
+    .env.example
+
+FILES THAT MUST NOT BE MODIFIED:
+    src/             (all source files)
+    ROADMAP/
+
+TASK ORDER:
+    1. 01_TASK_SETUP_BAT.txt
+    2. 02_TASK_CONFIGURE_BAT.txt
+    3. 03_TASK_START_STOP_RESTART.txt
+    4. 04_TASK_STATUS_BAT.txt
+    5. 05_TASK_AUTOSTART.txt
+    6. 06_TASK_UPDATE_SYSTEM.txt
+
+ACCEPTANCE CRITERIA:
+    [ ] setup.bat runs end-to-end on a clean Windows system
+    [ ] configure.bat guides user through all settings
+    [ ] start_bot.bat starts the bot and watchdog
+    [ ] stop_bot.bat gracefully stops both processes
+    [ ] status.bat shows live bot status
+    [ ] enable_autostart.bat registers Windows Task Scheduler job
+    [ ] All bat files are safe to run multiple times (idempotent)
+    [ ] .env.example has all settings with comments
+
+KNOWN RISKS:
+    - Windows path spaces must be quoted
+    - Python path must be virtual environment path, not system Python
+    - Task Scheduler may require admin privileges for some operations
+    - Bat files must handle errors and show clear messages
+
+ROLLBACK STRATEGY:
+    .bat files are self-contained and do not modify source code.
+    If a .bat file is broken, it can be fixed without affecting the trading bot.
+================================================================================

@@ -1,0 +1,386 @@
+================================================================
+SENIOR SOFTWARE ENGINEER COURSE - 2026
+PART 25: ENGINEERING DECISION MAKING
+(Technical Decisions Lena aur Communicate Karna)
+================================================================
+
+SEEKHNE KE MAQASID:
+- Decision frameworks
+- Trade-offs analyze karna
+- Risk assess karna
+- Decisions communicate karna
+
+================================================================
+SECTION 1: ENGINEERING DECISION FRAMEWORK
+================================================================
+
+Every significant technical decision mein:
+
+1. UNDERSTAND: Problem clearly samjho
+2. OPTIONS: Multiple options identify karo (never just one)
+3. EVALUATE: Har option ke pros/cons/trade-offs
+4. DECIDE: Best option choose karo given context
+5. DOCUMENT: Decision aur reasoning record karo
+6. COMMUNICATE: Stakeholders ko explain karo
+
+================================================================
+SECTION 2: DECISION FACTORS
+================================================================
+
+Har technical decision mein yeh factors consider karo:
+
+TECHNICAL FACTORS:
+  □ Performance impact
+  □ Scalability
+  □ Reliability
+  □ Security implications
+  □ Complexity
+  □ Testability
+  □ Maintainability
+  □ Reversibility
+
+BUSINESS FACTORS:
+  □ Time to implement
+  □ Cost (infrastructure + engineering)
+  □ Risk level
+  □ Business impact
+  □ User impact
+
+TEAM FACTORS:
+  □ Team expertise
+  □ Learning curve
+  □ Hiring implications (common tech = easier to hire)
+  □ Ongoing maintenance burden
+
+================================================================
+SECTION 3: DECISION EXERCISE 1 — DATABASE CHOICE
+================================================================
+
+SCENARIO:
+  New feature: User activity analytics
+  - Store every user click, page view, action
+  - 50 million events per day
+  - Query: "Show user activity for last 30 days"
+  - Query: "Show most popular pages today"
+  - Team knows PostgreSQL well
+
+OPTIONS:
+
+Option A: PostgreSQL
+  Pros:
+    - Team already knows it
+    - ACID compliance
+    - Complex queries possible
+    - Single database (simple)
+  
+  Cons:
+    - High write volume → write throughput limits
+    - Table will be huge (1.5 billion rows/month)
+    - Query performance at scale questionable
+    - Expensive (large instance needed)
+
+Option B: TimescaleDB (PostgreSQL extension for time-series)
+  Pros:
+    - PostgreSQL compatible (team can use)
+    - Optimized for time-series data
+    - Automatic partitioning by time
+    - Compression (10x smaller)
+  
+  Cons:
+    - New technology to learn
+    - Extension management
+    - Less community resources
+
+Option C: ClickHouse (analytics database)
+  Pros:
+    - Extremely fast for analytics queries
+    - Columnar storage (perfect for aggregations)
+    - High write throughput
+  
+  Cons:
+    - New technology — team learning curve
+    - Different query language (mostly SQL but differences)
+    - Operational complexity (separate system)
+
+Option D: AWS Kinesis + S3 + Athena
+  Pros:
+    - Serverless (no operational burden)
+    - Infinite scale
+    - Cost effective for large volume
+  
+  Cons:
+    - Query latency (minutes not seconds)
+    - Complex setup
+    - Team would need to learn new tools
+    - Real-time queries not possible
+
+SENIOR ENGINEER ANALYSIS:
+
+Key questions:
+  - Real-time queries needed? (under 1 second?)
+  - Team size aur expertise?
+  - How long before data volume becomes problem?
+
+Decision for most mid-stage startups:
+  Option B (TimescaleDB) is best:
+  - PostgreSQL team familiar hai
+  - Time-series optimized
+  - Scales much better than plain PostgreSQL
+  - Same connection/ORM
+  
+  If real-time sub-second analytics become critical → migrate to ClickHouse then.
+
+================================================================
+SECTION 4: DECISION EXERCISE 2 — MICROSERVICES VS MONOLITH
+================================================================
+
+SCENARIO:
+  Startup, 8 engineers, 2 year old codebase
+  Current: Single Express monolith
+  Problem: Team slowing down (merge conflicts, deployment risk)
+  CTO says: "Let's split into microservices"
+
+YOUR TASK: Analyze aur respond.
+
+---
+
+SENIOR ENGINEER RESPONSE:
+
+First — understand the real problem:
+  "Merge conflicts aur deployment risk" — is this really a microservices problem?
+  
+  Root causes to investigate:
+  - Merge conflicts → Modular code? Feature branches too long?
+  - Deployment risk → Tests? Feature flags? CI/CD quality?
+
+Analysis:
+
+Benefits of microservices (real):
+  - Independent deployments
+  - Independent scaling
+  - Technology diversity
+  - Team autonomy at scale
+
+Costs of microservices (often underestimated):
+  - Network latency between services
+  - Distributed debugging nightmares
+  - Distributed transactions complex
+  - Service discovery, load balancing
+  - Multiple deployments to manage
+  - Testing across services
+  - Data consistency challenges
+
+RECOMMENDATION for this scenario:
+
+  Phase 1: Modular Monolith (2-3 months)
+    - Properly module-ize existing monolith
+    - Clear module boundaries
+    - Module-level code ownership
+    - Independent module tests
+    - This ALONE might solve merge/deployment issues
+  
+  Phase 2: Evaluate after Phase 1
+    - Did merge conflicts reduce?
+    - Did deployment confidence improve?
+    - If YES → Modular monolith might be enough
+    - If NO → THEN consider selective service extraction
+  
+  Phase 3: Extract specific services if needed
+    - Start with services that need different scaling
+    - Or services naturally isolated (payment, notification)
+    - NOT everything at once
+
+Key message:
+  "Microservices are an organizational solution, not a technical one.
+   You need them when teams can't coordinate, not when code is coupled."
+  — Martin Fowler
+
+================================================================
+SECTION 5: DECISION EXERCISE 3 — BUILD VS BUY
+================================================================
+
+SCENARIO:
+  You need user authentication for your app.
+  Options: Build in-house vs Use Auth0/Supabase Auth
+
+ANALYSIS:
+
+Build In-House:
+  Pros:
+    - Full control
+    - No vendor lock-in
+    - Cost (no SaaS fees)
+    - Custom features possible
+  
+  Cons:
+    - Time: 2-4 weeks to build properly
+    - Security: Easy to get wrong (bcrypt, JWT, timing attacks...)
+    - Maintenance: Updates, security patches
+    - Compliance: OAuth, OIDC standards
+    - Features: Social login, MFA, SSO — each takes time
+
+Auth0/Supabase Auth:
+  Pros:
+    - 1-2 days to integrate
+    - Battle-tested security
+    - Social login, MFA, SSO built-in
+    - Compliance (SOC2, GDPR)
+    - Maintenance is their problem
+  
+  Cons:
+    - Monthly cost ($0-$$$)
+    - Vendor dependency
+    - Customization limited
+    - Data on their servers
+
+DECISION FRAMEWORK for Build vs Buy:
+
+  BUY when:
+  - Core business nahi hai
+  - Well-tested solution exists
+  - Security critical
+  - Time-to-market important
+  - Your volume fits pricing
+
+  BUILD when:
+  - Core competitive advantage
+  - Unique requirements
+  - Volume makes SaaS expensive
+  - Full control critical
+
+RECOMMENDATION: Auth0/Supabase
+  Authentication is NOT your core business.
+  Security risks are high if you build it wrong.
+  Time saved = 3-4 weeks = ship product faster.
+  Revisit at $10K/month SaaS cost → then evaluate building.
+
+================================================================
+SECTION 6: REVERSIBILITY FRAMEWORK
+================================================================
+
+Before any decision ask: "Agar yeh wrong nikla, kya wapas ja sakta hoon?"
+
+REVERSIBLE DECISIONS (fast karo):
+  - Library choice (can replace later)
+  - API design (versioning possible)
+  - Feature implementation (can refactor)
+  - Color scheme
+  - Configuration values
+
+IRREVERSIBLE DECISIONS (carefully karo):
+  - Database engine choice (migration very expensive)
+  - Data deletion (can't recover)
+  - Breaking API changes (users depend on it)
+  - Architecture (changing is months of work)
+  - Public API contracts
+  - Security mechanisms
+
+For irreversible:
+  1. More time spend karo
+  2. More people involve karo
+  3. Prototype/spike karo
+  4. Document thoroughly
+
+================================================================
+SECTION 7: COMMUNICATING TECHNICAL DECISIONS
+================================================================
+
+Different audiences ke liye different framing:
+
+TO ENGINEERS:
+  Technical detail aur trade-offs
+  "We chose PostgreSQL because our data is relational,
+   we need ACID transactions for payments,
+   and the team has strong SQL expertise.
+   MongoDB was considered but rejected due to..."
+
+TO PRODUCT MANAGERS:
+  Business impact aur timeline
+  "This approach takes 2 extra days but reduces risk
+   of data inconsistency that could cause payment issues.
+   The alternative was faster but could lead to customer
+   complaints about wrong charges."
+
+TO EXECUTIVES:
+  Cost, risk, business outcome
+  "We chose the managed service option. It costs $500/month
+   vs building in-house, but saves 3 weeks of engineering
+   time (worth $30,000+), reduces security risk, and lets
+   us focus on our core product features."
+
+================================================================
+SECTION 8: WHEN TO ESCALATE
+================================================================
+
+Sometimes decisions ke liye escalation zaroori hai.
+
+Escalate when:
+  - Decision irreversible aur risky hai
+  - Significant cost implications
+  - Cross-team impact
+  - Conflicting opinions among senior engineers
+  - Business strategy impact
+
+How to escalate:
+  - Options + trade-offs clearly present karo
+  - YOUR recommendation do
+  - Decision-maker ko decide karne do
+
+"I've analyzed 3 options for the database migration.
+ Option A is my recommendation because [reasons].
+ Option B has these risks: [risks].
+ This needs your decision because [business impact].
+ What additional information do you need?"
+
+================================================================
+EXERCISE — PART 25
+================================================================
+
+SCENARIO: Your team is debating caching strategy.
+
+Option A: Cache every API response in Redis (aggressive caching)
+  TTL: 1 hour for all endpoints
+
+Option B: No cache — always hit database directly
+
+Option C: Selective caching — only cache specific expensive queries
+  TTL varies by data type
+
+TASK:
+  1. Analyze each option
+  2. What questions would you ask to make the decision?
+  3. What's your recommendation? Justify it.
+  4. How would you communicate this to PM?
+  5. Write a brief ADR for your decision
+
+================================================================
+QUIZ — PART 25
+================================================================
+
+Q1: "Reversible decision" mein kya karna chahiye?
+    (a) Bahut time spend karo
+    (b) Fast decide karo — agar galat nikla toh change kar lena
+    (c) Escalate karo
+    (d) Team vote karo
+
+Jawab: (b)
+
+Q2: Microservices kab choose karna chahiye?
+    (a) Har new project mein
+    (b) Jab teams independently deploy karne ki zaroorat ho aur organization scale ho
+    (c) Jab code messy ho
+    (d) Jab performance slow ho
+
+Jawab: (b)
+
+Q3: "Build vs Buy" decision mein kaunsa factor most important hai?
+    (a) Cost sirf
+    (b) Kya yeh core business hai aur kya existing solution fit karta hai
+    (c) Team preference
+    (d) Vendor reputation
+
+Jawab: (b)
+
+================================================================
+AGLA PART: Part 26 — Communication & Leadership
+================================================================

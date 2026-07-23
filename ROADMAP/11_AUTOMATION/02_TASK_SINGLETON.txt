@@ -1,0 +1,59 @@
+================================================================================
+TASK ID:     11-02
+TASK NAME:   Singleton Guard
+PHASE:       11 — Automation
+================================================================================
+
+OBJECTIVE:
+    Implement a singleton guard that prevents multiple bot instances from
+    running simultaneously, using a lock file on Windows.
+
+CONTEXT:
+    Running two bot instances simultaneously would cause duplicate orders,
+    conflicting position management, and potential margin issues.
+
+    IMPLEMENTATION:
+    - Lock file: data/bot.lock (path configurable)
+    - On startup: attempt to create lock file with exclusive lock
+    - If lock file exists and process is alive: exit with clear error message
+    - If lock file exists but process is dead: remove stale lock, proceed
+    - On shutdown: always release and delete lock file
+
+DEPENDENCIES:
+    - Phase 02 config (lock file path)
+
+FILES TO CREATE:
+    app/automation/singleton.py
+    tests/test_automation/test_singleton.py
+
+FILES FORBIDDEN TO MODIFY:
+    app/mt5/
+    ROADMAP/
+
+DETAILED REQUIREMENTS:
+    class SingletonGuard:
+        acquire() -> bool     # True = acquired, False = already running
+        release() -> None
+        is_stale() -> bool    # lock file exists but process dead
+
+    Use as context manager:
+        with SingletonGuard() as guard:
+            if not guard.acquired: sys.exit(1)
+            main_loop.run()
+
+TEST REQUIREMENTS:
+    - test_first_instance_acquires()
+    - test_stale_lock_cleaned_up()
+    - test_acquire_returns_false_if_locked()
+
+ACCEPTANCE CRITERIA:
+    [ ] Second instance blocked immediately with clear message
+    [ ] Stale locks from crashed instances cleaned up
+    [ ] All tests pass
+
+DEFINITION OF DONE:
+    [ ] singleton.py created and tested
+    [ ] ROADMAP/00_PROJECT_STATUS.txt updated
+
+NEXT TASK: 11-03 — TASK_WATCHDOG.txt
+================================================================================
