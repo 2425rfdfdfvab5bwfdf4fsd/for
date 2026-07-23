@@ -61,6 +61,19 @@ data/                          ← historical/ screenshots/ reports/
 logs/                          ← app.log trading.log errors.log strategy.log
 ```
 
+## How to Run on Replit
+
+```bash
+# Run all tests (503 tests, Phases 01–08 complete)
+python -m pytest tests/ -v --tb=short
+
+# Or use the "Run Tests" workflow in the Replit UI
+```
+
+**Note:** MetaTrader5 is Windows-only and is mocked in all tests. The full bot
+runs on Windows; Replit is used for development, testing, and code review only.
+MT5_LOGIN / MT5_PASSWORD / MT5_SERVER are not needed for testing.
+
 ## How to Run (Windows)
 
 ```bat
