@@ -22,7 +22,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   02  | Project Foundation      | [✓]    | 2026-07-23   | Complete — all files created
   03  | MT5 Integration         | [✓]    | 2026-07-23   | Complete — 86/86 tests pass
   04  | Data Layer              | [✓]    | 2026-07-23   | Complete — 70/70 tests pass
-  05  | Strategy Engine         | [ ]    | -            | Depends on 03 + 04
+  05  | Strategy Engine         | [✓]    | 2026-07-23   | Complete — 134/134 tests pass
   06  | Confluence Engine       | [ ]    | -            | Depends on Phase 05
   07  | Risk Engine             | [ ]    | -            | Depends on 03 + 04
   08  | Filters                 | [ ]    | -            | Depends on Phase 03
@@ -364,12 +364,61 @@ PHASE 04 STATUS: [✓] COMPLETE
 ================================================================================
 PHASE 05 — STRATEGY ENGINE
 ================================================================================
-Status:          [ ] NOT STARTED
-Last Updated:    -
-Completed Tasks: None
+Status:          [✓] COMPLETE
+Last Updated:    2026-07-23
+Updated By:      Replit Agent — Phase 05 Strategy Engine
+Completed Tasks: 05-01 MARKET STRUCTURE
+                 05-02 BOS/CHoCH DETECTION
+                 05-03 LIQUIDITY DETECTION
+                 05-04 ORDER BLOCKS
+                 05-05 FAIR VALUE GAP
+                 05-06 DISPLACEMENT
+                 05-07 EMA/ATR INDICATORS
+                 05-08 MARKET REGIME
+                 05-09 SIGNAL ENGINE
 Failed Tasks:    None
-Known Issues:    None
-Next Action:     Complete Phases 03 + 04 first.
+
+Files Created:
+  app/strategy/market_structure.py  — SwingPoint, detect_swing_highs/lows, get_market_structure
+  app/strategy/bos_choch.py         — StructureBreak, detect_structure_breaks, has_recent_bos
+  app/strategy/liquidity.py         — LiquidityLevel, LiquiditySweep, detect_liquidity_levels/sweeps
+  app/strategy/order_blocks.py      — OrderBlock, detect_order_blocks, update_ob_status
+  app/strategy/fvg.py               — FairValueGap, detect_fvgs, update_fvg_status
+  app/strategy/displacement.py      — Displacement, detect_displacement, has_recent_displacement
+  app/strategy/indicators.py        — calculate_ema/atr, get_current_atr, calculate_ema_alignment
+  app/strategy/market_regime.py     — MarketRegime, classify_market_regime (8 regimes)
+  app/strategy/signal_engine.py     — TradeSetup, SignalEngine, analyze_symbol, scan_all_symbols
+  tests/unit/test_market_structure.py  — 16 tests
+  tests/unit/test_bos_choch.py         — 10 tests
+  tests/unit/test_liquidity.py         — tests
+  tests/unit/test_order_blocks.py      — tests
+  tests/unit/test_fvg.py               — 11 tests
+  tests/unit/test_displacement.py      — 15 tests
+  tests/unit/test_indicators.py        — 20 tests
+  tests/unit/test_market_regime.py     — 13 tests
+  tests/unit/test_signal_engine.py     — 12 tests
+  tests/unit/helpers/make_ohlcv.py     — Synthetic OHLCV generator (shared test helper)
+
+Test Results:    134/134 tests pass (Python 3.12, pandas 2+, numpy)
+
+Key Decisions Implemented:
+  Decision-017: SWING_LOOKBACK_CANDLES=2 confirmation window (prevent lookahead)
+  Decision-019: Equal highs/lows within ATR * EQUAL_LEVEL_ATR_MULTIPLIER tolerance
+  Decision-020: Single-candle displacement — all 4 criteria required (body, ratio, close pos, closed)
+  Decision-021: 8 market regime labels with priority classification order
+  Decision-022: M5 confirmation — BOS > DISPLACEMENT > CHoCH priority
+  Decision-023: TP targets equal levels first, fallback to swing
+  CHG-012: OB = full wick range [candle.low, candle.high], not body-only
+  CHG-013: BOS/CHoCH confirmed only on candle CLOSE, never intrabar wick
+
+Known Issues / Notes:
+  - config.EMA_FAST/EMA_SLOW retained as-is (roadmap says EMA_FAST_PERIOD=21 but
+    .env.example uses EMA_FAST=20; kept existing config keys for consistency)
+  - SignalEngine requires MarketDataFetcher/SymbolManager from Phase 03 for live use;
+    tests inject DataFrames directly (no MT5 needed)
+
+Next Action:     → Phase 06: ROADMAP/06_CONFLUENCE_ENGINE/01_PHASE_OVERVIEW.txt
+                    (Phase 07 RISK ENGINE and Phase 08 FILTERS can also start now)
 
 ================================================================================
 PHASE 06 — CONFLUENCE ENGINE
