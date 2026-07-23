@@ -1,0 +1,40 @@
+# =============================================================================
+# MT5 Automated Forex Trading Bot — Python Dependencies
+# =============================================================================
+# Install on Windows: pip install -r requirements.txt
+#
+# NOTE: MetaTrader5 is a Windows-only package. It will fail to install on
+# Linux/macOS. In Replit (Linux), it is mocked in all tests — do not attempt
+# to import it outside of the app/mt5/ module or a pytest mock context.
+# =============================================================================
+
+# --- MetaTrader 5 ---
+MetaTrader5>=5.0.45           # MT5 Python API (Windows only)
+
+# --- Data Processing ---
+pandas>=2.0.0                 # OHLCV data processing, time-series operations
+numpy>=1.24.0                 # Numerical calculations (indicators, position sizing)
+
+# --- Web Dashboard ---
+fastapi>=0.109.0              # Local web dashboard API (async REST endpoints)
+uvicorn[standard]>=0.27.0    # ASGI server for FastAPI dashboard
+
+# --- Configuration ---
+python-dotenv>=1.0.0          # Load .env file into environment variables
+
+# --- Notifications ---
+python-telegram-bot>=20.0    # Telegram bot for trade notifications (optional)
+requests>=2.31.0              # HTTP client used by news filter + fallback Telegram
+
+# --- Testing ---
+pytest>=7.4.0                 # Test runner
+pytest-cov>=4.1.0             # Code coverage reporting
+pytest-mock>=3.11.0           # Provides 'mocker' fixture for MT5 mocking
+
+# --- Charts / Screenshots ---
+matplotlib>=3.7.0             # Backtest charts and optional trade screenshots
+                              # (uses OHLCV data — no GUI/MT5 screenshot automation)
+
+# --- EXCLUDED (see DECISION-001) ---
+# pystray — system tray application — NOT included; future/optional Phase 18+
+#   Only add if user explicitly requests system tray feature.
