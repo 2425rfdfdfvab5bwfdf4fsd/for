@@ -1,0 +1,1 @@
+- [Phase 06 Confluence Engine](phase06-confluence.md) — weight sum is 9.0 not 10.0; A+ threshold set to 9.0 (achievable max); M15 bar fingerprinting floors to 15-min bucket

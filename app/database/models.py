@@ -349,9 +349,33 @@ ALL_TABLES: list[str] = [
 
 @dataclass
 class ScoredSignal:
-    """Completed by Phase 06 (Confluence Engine)."""
-    # Phase 06 will add: signal, total_score, factor_scores, status, quality_grade
-    pass
+    """
+    A TradeSetup decorated with confluence scoring results.
+
+    Produced by ConfluenceScorer (Phase 06). Consumed by the Risk Engine
+    (Phase 07) and downstream phases. Only ACCEPTED signals reach execution.
+
+    Fields:
+        signal        — The original TradeSetup from the Strategy Engine.
+        total_score   — Float in [0.0, 10.0], rounded to 1 decimal place.
+        factor_scores — Dict mapping ConfluenceFactor.value → score float.
+        status        — "ACCEPTED" (score >= MIN_CONFLUENCE_SCORE) or "REJECTED".
+        quality_grade — "A+" | "A" | "B" | "REJECTED" | "DUPLICATE"
+    """
+
+    signal: object = None                          # TradeSetup (typed as object to avoid circular import)
+    total_score: float = 0.0
+    factor_scores: dict = field(default_factory=dict)
+    status: str = "REJECTED"                       # "ACCEPTED" | "REJECTED"
+    quality_grade: str = "REJECTED"                # "A+" | "A" | "B" | "REJECTED" | "DUPLICATE"
+
+    def is_accepted(self) -> bool:
+        """Return True if this signal passed the confluence threshold."""
+        return self.status == "ACCEPTED"
+
+    def is_premium(self) -> bool:
+        """Return True if this is an A+ quality signal."""
+        return self.quality_grade == "A+"
 
 
 @dataclass

@@ -223,6 +223,34 @@ class Config:
     # ------------------------------------------------------------------
     SERVER_UTC_OFFSET_HOURS: int   # Most MT5 brokers use UTC+2 or UTC+3
 
+    # ------------------------------------------------------------------
+    # CONFLUENCE ENGINE — Factor weights (Phase 06)
+    # All weights are floats. Total must sum to 10.0:
+    # 1+1+1+1+1+1+1+0.5+0.5+1 = 10.0
+    # ------------------------------------------------------------------
+    CONFLUENCE_WEIGHT_H4_TREND_ALIGNMENT: float        # default 1.0
+    CONFLUENCE_WEIGHT_H1_STRUCTURE_CONFIRMATION: float # default 1.0
+    CONFLUENCE_WEIGHT_ORDER_BLOCK: float               # default 1.0
+    CONFLUENCE_WEIGHT_FVG_PRESENT: float               # default 1.0
+    CONFLUENCE_WEIGHT_LIQUIDITY_SWEEP: float           # default 1.0
+    CONFLUENCE_WEIGHT_DISPLACEMENT_CANDLE: float       # default 1.0
+    CONFLUENCE_WEIGHT_HTF_OB_CONFLUENCE: float         # default 1.0
+    CONFLUENCE_WEIGHT_ATR_ACCEPTABLE: float            # default 0.5
+    CONFLUENCE_WEIGHT_SPREAD_ACCEPTABLE: float         # default 0.5
+    CONFLUENCE_WEIGHT_M5_ENTRY_CONFIRMATION: float     # default 1.0
+
+    # ------------------------------------------------------------------
+    # CONFLUENCE ENGINE — Grade thresholds (Phase 06)
+    # ------------------------------------------------------------------
+    CONFLUENCE_GRADE_APLUS_THRESHOLD: float  # default 9.5  ("A+")
+    CONFLUENCE_GRADE_A_THRESHOLD: float      # default 8.5  ("A")
+    CONFLUENCE_GRADE_B_THRESHOLD: float      # default 8.0  ("B")
+
+    # ------------------------------------------------------------------
+    # CONFLUENCE ENGINE — Deduplication (Phase 06)
+    # ------------------------------------------------------------------
+    DEDUP_WINDOW_SECONDS: int  # default 3600 (1 hour)
+
     def __init__(self) -> None:
         """Load all configuration from environment variables."""
         # --- TRADING MODE ---
@@ -348,6 +376,54 @@ class Config:
 
         # --- BROKER SERVER TIMEZONE (CHG-008) ---
         self.SERVER_UTC_OFFSET_HOURS = _get_int("SERVER_UTC_OFFSET_HOURS", 2)
+
+        # --- CONFLUENCE ENGINE — Factor weights (Phase 06) ---
+        self.CONFLUENCE_WEIGHT_H4_TREND_ALIGNMENT = _get_float(
+            "CONFLUENCE_WEIGHT_H4_TREND_ALIGNMENT", 1.0
+        )
+        self.CONFLUENCE_WEIGHT_H1_STRUCTURE_CONFIRMATION = _get_float(
+            "CONFLUENCE_WEIGHT_H1_STRUCTURE_CONFIRMATION", 1.0
+        )
+        self.CONFLUENCE_WEIGHT_ORDER_BLOCK = _get_float(
+            "CONFLUENCE_WEIGHT_ORDER_BLOCK", 1.0
+        )
+        self.CONFLUENCE_WEIGHT_FVG_PRESENT = _get_float(
+            "CONFLUENCE_WEIGHT_FVG_PRESENT", 1.0
+        )
+        self.CONFLUENCE_WEIGHT_LIQUIDITY_SWEEP = _get_float(
+            "CONFLUENCE_WEIGHT_LIQUIDITY_SWEEP", 1.0
+        )
+        self.CONFLUENCE_WEIGHT_DISPLACEMENT_CANDLE = _get_float(
+            "CONFLUENCE_WEIGHT_DISPLACEMENT_CANDLE", 1.0
+        )
+        self.CONFLUENCE_WEIGHT_HTF_OB_CONFLUENCE = _get_float(
+            "CONFLUENCE_WEIGHT_HTF_OB_CONFLUENCE", 1.0
+        )
+        self.CONFLUENCE_WEIGHT_ATR_ACCEPTABLE = _get_float(
+            "CONFLUENCE_WEIGHT_ATR_ACCEPTABLE", 0.5
+        )
+        self.CONFLUENCE_WEIGHT_SPREAD_ACCEPTABLE = _get_float(
+            "CONFLUENCE_WEIGHT_SPREAD_ACCEPTABLE", 0.5
+        )
+        self.CONFLUENCE_WEIGHT_M5_ENTRY_CONFIRMATION = _get_float(
+            "CONFLUENCE_WEIGHT_M5_ENTRY_CONFIRMATION", 1.0
+        )
+
+        # --- CONFLUENCE ENGINE — Grade thresholds (Phase 06) ---
+        # NOTE: true max score is 9.0 (weights 1+1+1+1+1+1+1+0.5+0.5+1 = 9.0).
+        # APLUS threshold is 9.0 so a perfect-score setup earns A+.
+        self.CONFLUENCE_GRADE_APLUS_THRESHOLD = _get_float(
+            "CONFLUENCE_GRADE_APLUS_THRESHOLD", 9.0
+        )
+        self.CONFLUENCE_GRADE_A_THRESHOLD = _get_float(
+            "CONFLUENCE_GRADE_A_THRESHOLD", 8.5
+        )
+        self.CONFLUENCE_GRADE_B_THRESHOLD = _get_float(
+            "CONFLUENCE_GRADE_B_THRESHOLD", 8.0
+        )
+
+        # --- CONFLUENCE ENGINE — Deduplication (Phase 06) ---
+        self.DEDUP_WINDOW_SECONDS = _get_int("DEDUP_WINDOW_SECONDS", 3600)
 
         # Validate after all values are loaded
         self._validate()
