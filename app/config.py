@@ -261,6 +261,10 @@ class Config:
         self.ATR_SL_BUFFER_MULT = _get_float("ATR_SL_BUFFER_MULT", 0.3)
         self.EQUAL_LEVEL_ATR_MULTIPLIER = _get_float("EQUAL_LEVEL_ATR_MULTIPLIER", 0.1)
         self.DISPLACEMENT_CLOSE_RATIO = _get_float("DISPLACEMENT_CLOSE_RATIO", 0.75)
+        self.DISPLACEMENT_BODY_MULTIPLIER = _get_float("DISPLACEMENT_BODY_MULTIPLIER", 1.5)
+        self.DISPLACEMENT_BODY_RATIO = _get_float("DISPLACEMENT_BODY_RATIO", 0.60)
+        self.OB_MAX_AGE_CANDLES = _get_int("OB_MAX_AGE_CANDLES", 50)
+        self.MIN_FVG_SIZE_MULT = _get_float("MIN_FVG_SIZE_MULT", 0.1)
         self.M5_CONFIRMATION_LOOKBACK_CANDLES = _get_int(
             "M5_CONFIRMATION_LOOKBACK_CANDLES", 5
         )
