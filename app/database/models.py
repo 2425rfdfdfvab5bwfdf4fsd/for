@@ -379,10 +379,200 @@ class ScoredSignal:
 
 
 @dataclass
+class SymbolInfo:
+    """
+    Broker-provided symbol constraints needed by the Risk Engine.
+
+    Populated from MT5 symbol_info() at runtime; supplied directly in tests.
+    """
+
+    symbol: str = ""
+    volume_min: float = 0.01          # Minimum lot size
+    volume_max: float = 500.0         # Maximum lot size
+    volume_step: float = 0.01         # Lot size increment
+    contract_size: float = 100_000.0  # Standard contract size in base currency
+    pip_value_per_lot: float = 10.0   # Value of 1 pip per 1 standard lot in account currency
+    pip_size: float = 0.0001          # 0.0001 for 5-digit pairs; 0.01 for 3-digit (USDJPY)
+    digits: int = 5                   # Price decimal places
+
+
+@dataclass
+class AccountInfo:
+    """
+    Account snapshot from MT5 needed by the Risk Engine.
+
+    Populated from MT5 account_info() at runtime; supplied directly in tests.
+    """
+
+    equity: float = 0.0           # Account equity (includes floating P&L)
+    balance: float = 0.0          # Account balance (closed trades only)
+    margin: float = 0.0           # Used margin
+    margin_free: float = 0.0      # Free margin available
+    margin_level: float = 500.0   # Margin level as a percentage
+    currency: str = "USD"
+
+
+@dataclass
+class Position:
+    """
+    An open market position — used by the Correlation Filter.
+
+    Populated from MT5 positions_get() at runtime; supplied directly in tests.
+    """
+
+    symbol: str = ""
+    direction: str = ""   # "BUY" | "SELL"
+    lot_size: float = 0.0
+    ticket: int = 0
+
+
+@dataclass
+class DailyStats:
+    """
+    Daily trading statistics read from the daily_stats table.
+
+    Used by DailyLimitsChecker. The caller (RiskManager or DailyLimitsChecker)
+    is responsible for reading this from the database.
+    """
+
+    date: str = ""
+    starting_equity: float = 0.0   # day_start_equity from DB
+    trades_today: int = 0          # trades_count from DB
+    realized_pnl_today: float = 0.0
+
+
+# ---------------------------------------------------------------------------
+# Phase 07 result dataclasses
+# ---------------------------------------------------------------------------
+
+@dataclass
 class PositionSizeResult:
-    """Completed by Phase 07 (Risk Engine)."""
-    # Phase 07 will add: lot_size, risk_amount, pip_value, sl_pips, max_loss, within_margin
-    pass
+    """Result of PositionSizer.calculate() — Phase 07 (Risk Engine)."""
+
+    lot_size: float = 0.0
+    risk_amount: float = 0.0
+    pip_value_per_lot: float = 0.0
+    sl_pips: float = 0.0
+    max_loss_amount: float = 0.0
+    within_margin: bool = True
+    below_min_lot: bool = False
+    reason: Optional[str] = None
+
+
+@dataclass
+class SLTPResult:
+    """Result of SLTPCalculator.calculate() — Phase 07 (Risk Engine)."""
+
+    entry_price: float = 0.0
+    sl_price: float = 0.0
+    tp1_price: float = 0.0          # 1R target (50% partial close)
+    tp2_price: float = 0.0          # Structural target (full close)
+    sl_pips: float = 0.0
+    tp2_pips: float = 0.0
+    rr_ratio: float = 0.0
+    valid: bool = False
+    rejection_reason: Optional[str] = None
+
+
+@dataclass
+class RRValidationResult:
+    """Result of RRValidator.validate() — Phase 07 (Risk Engine)."""
+
+    approved: bool = False
+    actual_rr: float = 0.0
+    required_rr: float = 2.0
+    reason: Optional[str] = None
+
+
+@dataclass
+class LimitCheckResult:
+    """Result of DailyLimitsChecker.check() — Phase 07 (Risk Engine)."""
+
+    allowed: bool = True
+    reason: Optional[str] = None    # "DAILY_LOSS_LIMIT" | "DAILY_TRADE_LIMIT" | None
+
+
+@dataclass
+class ConsecutiveLossResult:
+    """Result of ConsecutiveLossChecker.check() — Phase 07 (Risk Engine)."""
+
+    allowed: bool = True
+    consecutive_losses: int = 0
+    reason: Optional[str] = None    # "CONSECUTIVE_LOSS_LIMIT" | None
+
+
+@dataclass
+class CorrelationCheckResult:
+    """Result of CorrelationFilter.check() — Phase 07 (Risk Engine)."""
+
+    allowed: bool = True
+    correlated_with: Optional[str] = None  # Symbol that caused the block
+    reason: Optional[str] = None           # "CORRELATED_POSITION" | "SAME_PAIR_OPEN" | None
+
+
+@dataclass
+class MarginCheckResult:
+    """Result of MarginSafetyChecker.check() — Phase 07 (Risk Engine)."""
+
+    allowed: bool = True
+    free_margin: float = 0.0
+    margin_level: float = 0.0
+    reason: Optional[str] = None    # "INSUFFICIENT_FREE_MARGIN" | "MARGIN_LEVEL_TOO_LOW" | None
+
+
+@dataclass
+class TradeParameters:
+    """
+    Fully validated trade parameters produced when RiskManager approves a signal.
+
+    Passed directly to the Execution Engine (Phase 09).
+    """
+
+    symbol: str = ""
+    direction: str = ""          # "BUY" | "SELL"
+    lot_size: float = 0.0
+    entry_price: float = 0.0
+    sl_price: float = 0.0
+    tp1_price: float = 0.0
+    tp2_price: float = 0.0
+    sl_pips: float = 0.0
+    rr_ratio: float = 0.0
+    risk_amount: float = 0.0
+
+
+@dataclass
+class RiskValidationResult:
+    """
+    Output of RiskManager.validate() — the go/no-go decision for a trade.
+
+    approved=True means all 7 sub-checks passed and trade_params is populated.
+    approved=False means at least one check failed; trade_params is None.
+    """
+
+    approved: bool = False
+    rejection_reason: Optional[str] = None
+    failed_check: Optional[str] = None
+    trade_params: Optional[TradeParameters] = None
+
+
+@dataclass
+class RiskContext:
+    """
+    All runtime context required by RiskManager.validate().
+
+    The caller assembles this from MT5 account_info, positions_get,
+    database daily_stats, and strategy ATR/pip_size values.
+    """
+
+    current_equity: float = 0.0
+    open_positions: list = field(default_factory=list)   # list[Position]
+    daily_stats: Optional[DailyStats] = None
+    account_info: Optional[AccountInfo] = None
+    symbol_info: Optional[SymbolInfo] = None
+    atr: float = 0.0
+    pip_size: float = 0.0001
+    equal_levels: list = field(default_factory=list)     # list[float] for TP Priority 1
+    swing_levels: list = field(default_factory=list)     # list[float] for TP Priority 2
 
 
 @dataclass

@@ -251,6 +251,16 @@ class Config:
     # ------------------------------------------------------------------
     DEDUP_WINDOW_SECONDS: int  # default 3600 (1 hour)
 
+    # ------------------------------------------------------------------
+    # RISK ENGINE — Phase 07
+    # ------------------------------------------------------------------
+    MIN_SL_PIPS: float                  # default 10.0 — reject setups tighter than this
+    MARGIN_SAFETY_FACTOR: float         # default 3.0 — free_margin must be >= required * factor
+    CORRELATION_BLOCK_THRESHOLD: float  # default 0.80 — correlation level that triggers a block
+    BLOCK_USDJPY_WITH_EURUSD: bool      # default False — block USDJPY when EURUSD open
+    BLOCK_USDJPY_WITH_GBPUSD: bool      # default False — block USDJPY when GBPUSD open
+    MAX_CORRELATED_POSITIONS: int       # default 1 — max correlated concurrent positions
+
     def __init__(self) -> None:
         """Load all configuration from environment variables."""
         # --- TRADING MODE ---
@@ -424,6 +434,14 @@ class Config:
 
         # --- CONFLUENCE ENGINE — Deduplication (Phase 06) ---
         self.DEDUP_WINDOW_SECONDS = _get_int("DEDUP_WINDOW_SECONDS", 3600)
+
+        # --- RISK ENGINE (Phase 07) ---
+        self.MIN_SL_PIPS = _get_float("MIN_SL_PIPS", 10.0)
+        self.MARGIN_SAFETY_FACTOR = _get_float("MARGIN_SAFETY_FACTOR", 3.0)
+        self.CORRELATION_BLOCK_THRESHOLD = _get_float("CORRELATION_BLOCK_THRESHOLD", 0.80)
+        self.BLOCK_USDJPY_WITH_EURUSD = _get_bool("BLOCK_USDJPY_WITH_EURUSD", False)
+        self.BLOCK_USDJPY_WITH_GBPUSD = _get_bool("BLOCK_USDJPY_WITH_GBPUSD", False)
+        self.MAX_CORRELATED_POSITIONS = _get_int("MAX_CORRELATED_POSITIONS", 1)
 
         # Validate after all values are loaded
         self._validate()
