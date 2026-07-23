@@ -1,1 +1,2 @@
 - [Phase 06 Confluence Engine](phase06-confluence.md) — weight sum is 9.0 not 10.0; A+ threshold set to 9.0 (achievable max); M15 bar fingerprinting floors to 15-min bucket
+- [Phase 09 Execution Engine](phase09-execution.md) — Decimal for lot-step validation; datetime.now(UTC) not utcnow(); SymbolInfo extended with stops_level/point/trade_mode

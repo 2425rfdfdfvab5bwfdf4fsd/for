@@ -394,6 +394,10 @@ class SymbolInfo:
     pip_value_per_lot: float = 10.0   # Value of 1 pip per 1 standard lot in account currency
     pip_size: float = 0.0001          # 0.0001 for 5-digit pairs; 0.01 for 3-digit (USDJPY)
     digits: int = 5                   # Price decimal places
+    # Phase 09 additions — broker execution constraints
+    stops_level: int = 0              # Minimum stop distance in points (broker rule)
+    point: float = 0.00001           # One point (= pip for 5-digit; 0.001 for USDJPY)
+    trade_mode: int = 4               # 4 = SYMBOL_TRADE_MODE_FULL (tradeable)
 
 
 @dataclass
@@ -598,9 +602,100 @@ class FilterResult:
 
 @dataclass
 class ExecutionResult:
-    """Completed by Phase 09 (Execution Engine)."""
-    # Phase 09 will add: success, ticket, fill_price, slippage, retcode, execution_time
-    pass
+    """
+    Result of OrderExecutor.execute() — Phase 09 (Execution Engine).
+
+    success=True means the order was accepted by the broker (retcode 10009 or 10010).
+    On failure, ticket and fill_price are None.
+    """
+
+    success: bool = False
+    ticket: Optional[int] = None
+    fill_price: Optional[float] = None
+    requested_price: Optional[float] = None
+    slippage_pips: Optional[float] = None
+    retcode: int = 0
+    retcode_description: str = ""
+    execution_time_utc: Optional[str] = None   # ISO 8601 UTC string
+    error_details: Optional[str] = None
+    partial_fill: bool = False                  # True when retcode==10010
+    actual_volume: Optional[float] = None       # Filled volume (may differ from requested)
+
+
+@dataclass
+class OrderValidationResult:
+    """
+    Result of OrderValidator.validate() — Phase 09 Task 09-01.
+
+    passed=True means all broker-level pre-flight checks succeeded.
+    On failure, failed_checks lists the violated constraint names.
+    """
+
+    passed: bool = False
+    failed_checks: list = field(default_factory=list)  # list[str] — names of failed checks
+    symbol: str = ""
+    lot_size: float = 0.0
+    reason: Optional[str] = None   # Human-readable summary of the first failure
+
+
+@dataclass
+class ReconciliationResult:
+    """
+    Result of ExecutionReconciler.verify_after_execution() — Phase 09 Task 09-03.
+
+    ticket_found=True means the position exists in MT5 positions after execution.
+    discrepancies is a list of DISCREPANCY_TYPE strings.
+    """
+
+    ticket_found: bool = False
+    position_matches: bool = False
+    discrepancies: list = field(default_factory=list)  # list[str]
+
+
+@dataclass
+class ReconciliationReport:
+    """
+    Result of ExecutionReconciler.reconcile_all() — Phase 09 Task 09-03.
+
+    Compares all DB-open trades against live MT5 positions.
+    """
+
+    matched: list = field(default_factory=list)            # tickets matched OK
+    position_missing: list = field(default_factory=list)   # in DB, not in MT5
+    unexpected_positions: list = field(default_factory=list)  # in MT5, not in DB
+    lot_mismatch: list = field(default_factory=list)       # lot size differs
+    direction_mismatch: list = field(default_factory=list) # BUY/SELL differs
+    discrepancy_count: int = 0
+
+
+@dataclass
+class DuplicateCheckResult:
+    """
+    Result of DuplicateTradeProtection.check() — Phase 09 Task 09-04.
+
+    allowed=True means no conflicting position found and the trade may proceed.
+    reason is one of: None | "DUPLICATE_POSITION" | "OPPOSITE_HEDGE_NOT_ALLOWED"
+    """
+
+    allowed: bool = True
+    reason: Optional[str] = None   # None when allowed=True
+
+
+@dataclass
+class OrphanReport:
+    """
+    Result of OrphanPositionRecovery.scan_on_startup() — Phase 09 Task 09-05.
+
+    orphan_positions — all MT5 positions with no matching DB record.
+    adopted          — positions inserted into DB under 'adopt' policy.
+    flagged          — positions marked for human review under 'alert' policy.
+    action_taken     — "none" | "alert" | "adopt" | "close"
+    """
+
+    orphan_positions: list = field(default_factory=list)  # list[Position]
+    adopted: list = field(default_factory=list)
+    flagged: list = field(default_factory=list)
+    action_taken: str = "none"
 
 
 class PositionStatus:

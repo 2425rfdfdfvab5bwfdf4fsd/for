@@ -273,6 +273,16 @@ class Config:
     BLOCK_USDJPY_WITH_GBPUSD: bool      # default False — block USDJPY when GBPUSD open
     MAX_CORRELATED_POSITIONS: int       # default 1 — max correlated concurrent positions
 
+    # ------------------------------------------------------------------
+    # EXECUTION ENGINE — Phase 09
+    # ------------------------------------------------------------------
+    EXECUTION_ENABLED: bool             # Safety switch — False blocks ALL order placement
+    PRICE_STALENESS_PIPS: float         # Reject if entry price is stale by more than this
+    MAX_EXECUTION_RETRIES: int          # Max retries on REQUOTE/PRICE_CHANGED (max 2)
+    RETRY_DELAY_SECONDS: float          # Delay between execution retries
+    ORDER_FILLING_MODE: str             # FOK | IOC | RETURN
+    ORPHAN_POLICY: str                  # alert | close | adopt
+
     def __init__(self) -> None:
         """Load all configuration from environment variables."""
         # --- TRADING MODE ---
@@ -466,6 +476,14 @@ class Config:
         self.BLOCK_USDJPY_WITH_EURUSD = _get_bool("BLOCK_USDJPY_WITH_EURUSD", False)
         self.BLOCK_USDJPY_WITH_GBPUSD = _get_bool("BLOCK_USDJPY_WITH_GBPUSD", False)
         self.MAX_CORRELATED_POSITIONS = _get_int("MAX_CORRELATED_POSITIONS", 1)
+
+        # --- EXECUTION ENGINE (Phase 09) ---
+        self.EXECUTION_ENABLED = _get_bool("EXECUTION_ENABLED", True)
+        self.PRICE_STALENESS_PIPS = _get_float("PRICE_STALENESS_PIPS", 2.0)
+        self.MAX_EXECUTION_RETRIES = _get_int("MAX_EXECUTION_RETRIES", 1)
+        self.RETRY_DELAY_SECONDS = _get_float("RETRY_DELAY_SECONDS", 0.5)
+        self.ORDER_FILLING_MODE = _get_str("ORDER_FILLING_MODE", "FOK")
+        self.ORPHAN_POLICY = _get_str("ORPHAN_POLICY", "alert")
 
         # Validate after all values are loaded
         self._validate()
