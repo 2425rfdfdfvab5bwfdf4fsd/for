@@ -3,7 +3,7 @@ PROJECT STATUS TRACKER
 ================================================================================
 Project: MT5 Automated Forex Trading Bot
 Last Updated: 2026-07-23
-Updated By: Replit Agent — Phase 02 Project Foundation
+Updated By: Replit Agent — Phase 08 Filters
 
 STATUS LEGEND:
   [ ] NOT STARTED
@@ -25,7 +25,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   05  | Strategy Engine         | [✓]    | 2026-07-23   | Complete — 134/134 tests pass
   06  | Confluence Engine       | [✓]    | 2026-07-23   | Complete — 35/35 tests pass
   07  | Risk Engine             | [✓]    | 2026-07-23   | Complete — 54/54 tests pass
-  08  | Filters                 | [ ]    | -            | Depends on Phase 03
+  08  | Filters                 | [✓]    | 2026-07-23   | Complete — 119/119 tests pass
   09  | Execution Engine        | [ ]    | -            | Depends on 03+04+07
   10  | Position Management     | [ ]    | -            | Depends on Phase 09
   11  | Automation              | [ ]    | -            | Depends on 05-10
@@ -443,12 +443,61 @@ Next Action:     Complete Phases 03 + 04 first.
 ================================================================================
 PHASE 08 — FILTERS
 ================================================================================
-Status:          [ ] NOT STARTED
-Last Updated:    -
-Completed Tasks: None
+Status:          [✓] COMPLETE
+Last Updated:    2026-07-23
+Updated By:      Replit Agent — Phase 08 Filters
+Completed Tasks: 08-01 SESSION FILTER (DST-aware, London + NY)
+                 08-02 SPREAD FILTER (per-symbol thresholds)
+                 08-03 NEWS FILTER + NEWS CACHE (ForexFactory RSS, fail-safe)
+                 08-04 VOLATILITY FILTER (ATR bounds)
+                 08-05 TRADING CUTOFFS + FILTER PIPELINE
 Failed Tasks:    None
-Known Issues:    None
-Next Action:     Complete Phase 03 first.
+
+Files Created:
+  app/filters/session_filter.py
+  app/filters/spread_filter.py
+  app/filters/news_filter.py
+  app/filters/news_cache.py
+  app/filters/volatility_filter.py
+  app/filters/trading_cutoffs.py
+  app/filters/filter_pipeline.py
+  app/filters/__init__.py
+  tests/test_filters/__init__.py
+  tests/test_filters/test_session.py
+  tests/test_filters/test_spread.py
+  tests/test_filters/test_news.py
+  tests/test_filters/test_volatility.py
+  tests/test_filters/test_cutoffs.py
+  tests/test_filters/test_pipeline.py
+
+Files Modified:
+  app/database/models.py    — added FilterResult dataclass
+  app/config.py             — added 12 new filter config settings
+                              (ENABLE_*_FILTER flags, NEWS_FILTER_FAIL_SAFE,
+                               NEWS_CACHE_TTL_HOURS, MIN/MAX_ATR_PIPS,
+                               EOD_CUTOFF_UTC, MONDAY_OPEN_UTC, FRIDAY_CLOSE_UTC)
+
+Known Issues / Notes:
+  - ForexFactory RSS feed is live-only; tests use MockNewsCache (no HTTP)
+  - EOD cutoff skipped on Fridays — Friday has its own dedicated cutoff rule
+  - DST handling uses Python stdlib zoneinfo (Python 3.9+, no extra deps)
+  - All filters individually disableable via config for debugging
+
+Validation:
+  ✓ python3 -m pytest tests/test_filters/ — 119/119 pass
+  ✓ FilterPipeline.run(symbol, time, spread_pips, atr_pips) operational
+  ✓ All 5 filters individually tested
+  ✓ Pipeline integration test passing
+  ✓ DST boundary tests: EU spring/fall, US spring/fall
+
+PHASE 08 ACCEPTANCE CRITERIA:
+  [✓] Correct session window detection for London and New York (DST-aware)
+  [✓] Spread above threshold blocks scanning
+  [✓] High-impact news within ±30 minutes blocks scanning
+  [✓] End-of-day and weekend cutoffs enforced
+  [✓] All unit tests pass (119/119)
+
+Next Action:     → Phase 09: ROADMAP/09_EXECUTION_ENGINE/01_PHASE_OVERVIEW.txt
 
 ================================================================================
 PHASE 09 — EXECUTION ENGINE

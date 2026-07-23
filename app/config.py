@@ -168,14 +168,26 @@ class Config:
     # ------------------------------------------------------------------
     # FILTERS
     # ------------------------------------------------------------------
+    ENABLE_SESSION_FILTER: bool
+    ENABLE_SPREAD_FILTER: bool
     ENABLE_NEWS_FILTER: bool
+    ENABLE_VOLATILITY_FILTER: bool
+    ENABLE_CUTOFF_FILTER: bool
     NEWS_FILTER_MINUTES_BEFORE: int
     NEWS_FILTER_MINUTES_AFTER: int
+    NEWS_FILTER_FAIL_SAFE: str           # "BLOCK" | "ALLOW"
+    NEWS_CACHE_TTL_HOURS: int
+    NEWS_REQUEST_TIMEOUT_SECONDS: int
     MAX_SPREAD_EURUSD: float
     MAX_SPREAD_GBPUSD: float
     MAX_SPREAD_USDJPY: float
     VOLATILITY_MIN_ATR_MULT: float
     VOLATILITY_MAX_ATR_MULT: float
+    MIN_ATR_PIPS: float
+    MAX_ATR_PIPS: float
+    EOD_CUTOFF_UTC: str                  # "HH:MM" — stop new entries after this time
+    MONDAY_OPEN_UTC: str                 # "HH:MM" — allow entries after this time on Monday
+    FRIDAY_CLOSE_UTC: str                # "HH:MM" — close existing positions before this time
 
     # ------------------------------------------------------------------
     # TELEGRAM
@@ -342,14 +354,26 @@ class Config:
         self.TP_FALLBACK_TO_SWING = _get_bool("TP_FALLBACK_TO_SWING", True)
 
         # --- FILTERS ---
+        self.ENABLE_SESSION_FILTER = _get_bool("ENABLE_SESSION_FILTER", True)
+        self.ENABLE_SPREAD_FILTER = _get_bool("ENABLE_SPREAD_FILTER", True)
         self.ENABLE_NEWS_FILTER = _get_bool("ENABLE_NEWS_FILTER", True)
+        self.ENABLE_VOLATILITY_FILTER = _get_bool("ENABLE_VOLATILITY_FILTER", True)
+        self.ENABLE_CUTOFF_FILTER = _get_bool("ENABLE_CUTOFF_FILTER", True)
         self.NEWS_FILTER_MINUTES_BEFORE = _get_int("NEWS_FILTER_MINUTES_BEFORE", 30)
         self.NEWS_FILTER_MINUTES_AFTER = _get_int("NEWS_FILTER_MINUTES_AFTER", 30)
+        self.NEWS_FILTER_FAIL_SAFE = _get_str("NEWS_FILTER_FAIL_SAFE", "BLOCK")
+        self.NEWS_CACHE_TTL_HOURS = _get_int("NEWS_CACHE_TTL_HOURS", 4)
+        self.NEWS_REQUEST_TIMEOUT_SECONDS = _get_int("NEWS_REQUEST_TIMEOUT_SECONDS", 5)
         self.MAX_SPREAD_EURUSD = _get_float("MAX_SPREAD_EURUSD", 3.0)
         self.MAX_SPREAD_GBPUSD = _get_float("MAX_SPREAD_GBPUSD", 4.0)
         self.MAX_SPREAD_USDJPY = _get_float("MAX_SPREAD_USDJPY", 3.0)
         self.VOLATILITY_MIN_ATR_MULT = _get_float("VOLATILITY_MIN_ATR_MULT", 0.5)
         self.VOLATILITY_MAX_ATR_MULT = _get_float("VOLATILITY_MAX_ATR_MULT", 3.0)
+        self.MIN_ATR_PIPS = _get_float("MIN_ATR_PIPS", 5.0)
+        self.MAX_ATR_PIPS = _get_float("MAX_ATR_PIPS", 80.0)
+        self.EOD_CUTOFF_UTC = _get_str("EOD_CUTOFF_UTC", "19:30")
+        self.MONDAY_OPEN_UTC = _get_str("MONDAY_OPEN_UTC", "07:00")
+        self.FRIDAY_CLOSE_UTC = _get_str("FRIDAY_CLOSE_UTC", "19:30")
 
         # --- TELEGRAM ---
         self.TELEGRAM_ENABLED = _get_bool("TELEGRAM_ENABLED", False)

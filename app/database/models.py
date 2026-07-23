@@ -576,6 +576,27 @@ class RiskContext:
 
 
 @dataclass
+class FilterResult:
+    """
+    Output of any filter check (SessionFilter, SpreadFilter, NewsFilter,
+    VolatilityFilter, TradingCutoffFilter, FilterPipeline).
+
+    passed=True  — the filter allows scanning to continue.
+    passed=False — the filter blocks scanning; reason explains why.
+    active_session is populated only by SessionFilter when passed=True.
+    filter_name identifies which filter produced this result.
+    """
+
+    passed: bool = False
+    reason: Optional[str] = None          # "OUTSIDE_SESSION" | "SPREAD_TOO_WIDE" | …
+    active_session: Optional[str] = None  # "LONDON" | "NEW_YORK" | "OVERLAP" | None
+    filter_name: str = ""                 # "SESSION" | "SPREAD" | "NEWS" | "VOLATILITY" | …
+
+    def __bool__(self) -> bool:
+        return self.passed
+
+
+@dataclass
 class ExecutionResult:
     """Completed by Phase 09 (Execution Engine)."""
     # Phase 09 will add: success, ticket, fill_price, slippage, retcode, execution_time
