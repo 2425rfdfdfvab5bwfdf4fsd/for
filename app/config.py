@@ -218,6 +218,11 @@ class Config:
     ENABLE_SCREENSHOTS: bool
     SCREENSHOT_DIR: str
 
+    # ------------------------------------------------------------------
+    # BROKER SERVER TIMEZONE (CHG-008)
+    # ------------------------------------------------------------------
+    SERVER_UTC_OFFSET_HOURS: int   # Most MT5 brokers use UTC+2 or UTC+3
+
     def __init__(self) -> None:
         """Load all configuration from environment variables."""
         # --- TRADING MODE ---
@@ -336,6 +341,9 @@ class Config:
         # --- SCREENSHOTS ---
         self.ENABLE_SCREENSHOTS = _get_bool("ENABLE_SCREENSHOTS", False)
         self.SCREENSHOT_DIR = _get_str("SCREENSHOT_DIR", "data/screenshots")
+
+        # --- BROKER SERVER TIMEZONE (CHG-008) ---
+        self.SERVER_UTC_OFFSET_HOURS = _get_int("SERVER_UTC_OFFSET_HOURS", 2)
 
         # Validate after all values are loaded
         self._validate()

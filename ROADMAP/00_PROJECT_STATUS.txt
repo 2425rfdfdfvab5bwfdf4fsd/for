@@ -20,7 +20,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
 ------|-------------------------|--------|--------------|------------------------
   01  | Project Discovery       | [✓]    | 2026-07-23   | Complete — fresh project
   02  | Project Foundation      | [✓]    | 2026-07-23   | Complete — all files created
-  03  | MT5 Integration         | [ ]    | -            | Depends on Phase 02
+  03  | MT5 Integration         | [✓]    | 2026-07-23   | Complete — 86/86 tests pass
   04  | Data Layer              | [ ]    | -            | Depends on Phase 02
   05  | Strategy Engine         | [ ]    | -            | Depends on 03 + 04
   06  | Confluence Engine       | [ ]    | -            | Depends on Phase 05
@@ -70,9 +70,54 @@ Known Issues / Notes:
     via uv into /home/runner/workspace/.pythonlibs (Replit user site-packages)
   - Full requirements.txt is for Windows deployment — only dev deps active here
 
-Next Action:     → Phase 03: ROADMAP/03_MT5_INTEGRATION/01_PHASE_OVERVIEW.txt
-                 → Phase 04: ROADMAP/04_DATA_LAYER/01_PHASE_OVERVIEW.txt
-                   (03 and 04 may run in parallel — different file sets)
+Next Action:     → Phase 04: ROADMAP/04_DATA_LAYER/01_PHASE_OVERVIEW.txt
+
+================================================================================
+PHASE 03 — MT5 INTEGRATION
+================================================================================
+Status:          [✓] COMPLETE
+Last Updated:    2026-07-23
+Updated By:      Replit Agent — Phase 03 MT5 Integration
+Completed Tasks: 03-01 MT5 CONNECTION
+                 03-02 SYMBOL DISCOVERY
+                 03-03 MARKET DATA
+                 03-04 CONNECTION RECOVERY
+                 03-05 ACCOUNT VALIDATION
+Failed Tasks:    None
+
+Files Created:
+  app/mt5/_mt5_mock.py         — Complete MT5 mock for Linux/test use
+  app/mt5/connection.py        — MT5Connection (connect/disconnect/status)
+  app/mt5/symbols.py           — SymbolManager + broker suffix detection
+  app/mt5/market_data.py       — MarketDataFetcher with OHLCV caching
+  app/mt5/recovery.py          — MT5RecoveryManager (exponential backoff)
+  app/mt5/account.py           — AccountManager + live-trading safety guards
+  app/mt5/execution.py         — MT5Executor stub (Phase 09 placeholder)
+  tests/unit/test_mt5_connection.py    — 18 tests
+  tests/unit/test_mt5_symbols.py       — 15 tests
+  tests/unit/test_mt5_market_data.py   — 19 tests
+  tests/unit/test_mt5_recovery.py      — 14 tests
+  tests/unit/test_mt5_account.py       — 20 tests
+  tests/unit/helpers/__init__.py
+  tests/unit/helpers/make_ohlcv.py     — Synthetic OHLCV test data generator
+
+Files Modified:
+  app/config.py                — Added SERVER_UTC_OFFSET_HOURS (CHG-008)
+  .env.example                 — Added SERVER_UTC_OFFSET_HOURS section
+  tests/conftest.py            — Fixed mock_mt5 fixture for pytest-mock 3.x
+
+Test Results:    86/86 tests pass (Python 3.12, pytest-mock 3.15, pandas 2+)
+
+Known Issues / Notes:
+  - MetaTrader5 package unavailable on Linux — all MT5 calls routed via
+    sys.modules.get("MetaTrader5") so pytest fixtures can inject the mock
+  - Python 3.12 deprecation warnings for utcnow()/utcfromtimestamp() in
+    account.py detect_server_timezone() — harmless; can be updated in Phase 07
+  - conftest.py mock_mt5 fixture updated: mocker.patch.dict() no longer supports
+    context-manager protocol in pytest-mock 3.x
+
+Next Action:     → Phase 04: ROADMAP/04_DATA_LAYER/01_PHASE_OVERVIEW.txt
+                   (Phase 04 can now start — it uses different file sets)
 
 --------------------------------------------------------------------------------
 TASK 02-01 — PROJECT STRUCTURE: [✓] COMPLETE (2026-07-23)

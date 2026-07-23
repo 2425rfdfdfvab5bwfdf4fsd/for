@@ -31,106 +31,125 @@ def mock_mt5(mocker):
             mock_mt5.initialize.return_value = False
             ...
 
-    The patch targets 'MetaTrader5' at the top level so it intercepts
-    imports in app/mt5/ modules.
+    The patch targets sys.modules["MetaTrader5"] so it intercepts
+    imports in app/mt5/ modules (which use sys.modules.get("MetaTrader5")).
+    The mocker fixture automatically tears down the patch after each test.
     """
-    with mocker.patch.dict("sys.modules", {"MetaTrader5": MagicMock()}) as mock_modules:
-        mt5_mock = mock_modules["MetaTrader5"]
+    mt5_mock = MagicMock()
 
-        # --- Initialisation ---
-        mt5_mock.initialize.return_value = True
-        mt5_mock.login.return_value = True
-        mt5_mock.shutdown.return_value = None
+    # Inject into sys.modules so that _mt5() helper functions find it
+    mocker.patch.dict("sys.modules", {"MetaTrader5": mt5_mock})
 
-        # --- Connection info ---
-        mt5_mock.last_error.return_value = (0, "No error")
-        mt5_mock.terminal_info.return_value = MagicMock(
-            connected=True,
-            trade_allowed=True,
-        )
+    # --- Initialisation ---
+    mt5_mock.initialize.return_value = True
+    mt5_mock.login.return_value = True
+    mt5_mock.shutdown.return_value = None
 
-        # --- Account info ---
-        mt5_mock.account_info.return_value = MagicMock(
-            login=12345678,
-            balance=10_000.0,
-            equity=10_000.0,
-            margin=0.0,
-            margin_free=10_000.0,
-            margin_level=500.0,
-            profit=0.0,
-            currency="USD",
-            server="TestBroker-Demo",
-            trade_mode=0,        # 0 = DEMO
-            leverage=100,
-        )
+    # --- Connection info ---
+    mt5_mock.last_error.return_value = (0, "No error")
+    mt5_mock.terminal_info.return_value = MagicMock(
+        connected=True,
+        trade_allowed=True,
+        name="MetaTrader 5",
+        build=3815,
+        path="C:\\Program Files\\MetaTrader 5",
+    )
+    mt5_mock.version.return_value = (5, 0, 3815, "2026-07-23")
 
-        # --- Symbol info ---
-        mt5_mock.symbol_info.return_value = MagicMock(
-            name="EURUSD",
-            visible=True,
-            trade_mode=4,        # SYMBOL_TRADE_MODE_FULL
-            spread=10,           # 1.0 pip
-            digits=5,
-            point=0.00001,
-            trade_tick_size=0.00001,
-            trade_contract_size=100_000.0,
-            volume_min=0.01,
-            volume_max=500.0,
-            volume_step=0.01,
-        )
-        mt5_mock.symbol_info_tick.return_value = MagicMock(
-            bid=1.10000,
-            ask=1.10010,
-            time=1_700_000_000,
-            spread=10,
-        )
-        mt5_mock.symbols_get.return_value = [
-            MagicMock(name="EURUSD"),
-            MagicMock(name="GBPUSD"),
-            MagicMock(name="USDJPY"),
-        ]
+    # --- Account info ---
+    mt5_mock.account_info.return_value = MagicMock(
+        login=12345678,
+        balance=10_000.0,
+        equity=10_000.0,
+        margin=0.0,
+        margin_free=10_000.0,
+        margin_level=500.0,
+        profit=0.0,
+        currency="USD",
+        server="TestBroker-Demo",
+        name="Test Account",
+        trade_mode=0,        # 0 = DEMO
+        leverage=100,
+        trade_allowed=True,
+    )
 
-        # --- Market data ---
-        mt5_mock.copy_rates_from_pos.return_value = None  # overridden per test
-        mt5_mock.copy_rates_range.return_value = None
+    # --- Symbol info ---
+    mt5_mock.symbol_info.return_value = MagicMock(
+        name="EURUSD",
+        visible=True,
+        trade_mode=4,        # SYMBOL_TRADE_MODE_FULL
+        spread=10,           # 1.0 pip
+        digits=5,
+        point=0.00001,
+        trade_tick_size=0.00001,
+        trade_contract_size=100_000.0,
+        volume_min=0.01,
+        volume_max=500.0,
+        volume_step=0.01,
+        trade_stops_level=0,
+        trade_freeze_level=0,
+        description="Euro vs US Dollar",
+    )
+    mt5_mock.symbol_info_tick.return_value = MagicMock(
+        bid=1.10000,
+        ask=1.10010,
+        time=1_700_000_000,
+        spread=10,
+    )
+    mt5_mock.symbol_select.return_value = True
+    mt5_mock.symbols_get.return_value = [
+        MagicMock(name="EURUSD"),
+        MagicMock(name="GBPUSD"),
+        MagicMock(name="USDJPY"),
+    ]
 
-        # --- Positions (empty by default) ---
-        mt5_mock.positions_get.return_value = []
-        mt5_mock.positions_total.return_value = 0
+    # --- Market data ---
+    mt5_mock.copy_rates_from_pos.return_value = None  # overridden per test
+    mt5_mock.copy_rates_range.return_value = None
 
-        # --- Orders (empty by default) ---
-        mt5_mock.orders_get.return_value = []
-        mt5_mock.orders_total.return_value = 0
+    # --- Positions (empty by default) ---
+    mt5_mock.positions_get.return_value = []
+    mt5_mock.positions_total.return_value = 0
 
-        # --- Order constants ---
-        mt5_mock.ORDER_TYPE_BUY = 0
-        mt5_mock.ORDER_TYPE_SELL = 1
-        mt5_mock.TRADE_ACTION_DEAL = 1
-        mt5_mock.ORDER_FILLING_IOC = 1
-        mt5_mock.TRADE_RETCODE_DONE = 10009
+    # --- Orders (empty by default) ---
+    mt5_mock.orders_get.return_value = []
+    mt5_mock.orders_total.return_value = 0
 
-        # --- Order send (success by default) ---
-        mt5_mock.order_send.return_value = MagicMock(
-            retcode=10009,       # TRADE_RETCODE_DONE
-            order=12345,
-            volume=0.01,
-            price=1.10000,
-            bid=1.10000,
-            ask=1.10010,
-            comment="",
-            request_id=1,
-        )
+    # --- Order constants ---
+    mt5_mock.ORDER_TYPE_BUY = 0
+    mt5_mock.ORDER_TYPE_SELL = 1
+    mt5_mock.TRADE_ACTION_DEAL = 1
+    mt5_mock.ORDER_FILLING_IOC = 1
+    mt5_mock.TRADE_RETCODE_DONE = 10009
 
-        # --- Order check ---
-        mt5_mock.order_check.return_value = MagicMock(
-            retcode=0,
-            margin=100.0,
-            margin_free=9900.0,
-            margin_level=500.0,
-            comment="",
-        )
+    # Timeframe constants
+    mt5_mock.TIMEFRAME_M5 = 5
+    mt5_mock.TIMEFRAME_M15 = 15
+    mt5_mock.TIMEFRAME_H1 = 60
+    mt5_mock.TIMEFRAME_H4 = 240
 
-        yield mt5_mock
+    # --- Order send (success by default) ---
+    mt5_mock.order_send.return_value = MagicMock(
+        retcode=10009,       # TRADE_RETCODE_DONE
+        order=12345,
+        volume=0.01,
+        price=1.10000,
+        bid=1.10000,
+        ask=1.10010,
+        comment="",
+        request_id=1,
+    )
+
+    # --- Order check ---
+    mt5_mock.order_check.return_value = MagicMock(
+        retcode=0,
+        margin=100.0,
+        margin_free=9900.0,
+        margin_level=500.0,
+        comment="",
+    )
+
+    yield mt5_mock
 
 
 # ---------------------------------------------------------------------------
