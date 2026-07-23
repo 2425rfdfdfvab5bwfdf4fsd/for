@@ -148,9 +148,13 @@ class Config:
     BREAK_EVEN_BUFFER_PIPS: int
     ENABLE_TRAILING_STOP: bool
     TRAILING_STOP_TYPE: str
+    TRAIL_ATR_MULTIPLIER: float
     ENABLE_PARTIAL_PROFIT: bool
     PARTIAL_PROFIT_R_TRIGGER: float
     PARTIAL_PROFIT_PCT: float
+    MAX_TRADE_DURATION_HOURS: int
+    EOD_CLOSE_ENABLED: bool
+    FRIDAY_CLOSE_ENABLED: bool
 
     # ------------------------------------------------------------------
     # OVERNIGHT / WEEKEND
@@ -350,9 +354,13 @@ class Config:
         self.BREAK_EVEN_BUFFER_PIPS = _get_int("BREAK_EVEN_BUFFER_PIPS", 2)
         self.ENABLE_TRAILING_STOP = _get_bool("ENABLE_TRAILING_STOP", True)
         self.TRAILING_STOP_TYPE = _get_str("TRAILING_STOP_TYPE", "structure")
+        self.TRAIL_ATR_MULTIPLIER = _get_float("TRAIL_ATR_MULTIPLIER", 1.5)
         self.ENABLE_PARTIAL_PROFIT = _get_bool("ENABLE_PARTIAL_PROFIT", False)
         self.PARTIAL_PROFIT_R_TRIGGER = _get_float("PARTIAL_PROFIT_R_TRIGGER", 1.0)
         self.PARTIAL_PROFIT_PCT = _get_float("PARTIAL_PROFIT_PCT", 0.5)
+        self.MAX_TRADE_DURATION_HOURS = _get_int("MAX_TRADE_DURATION_HOURS", 48)
+        self.EOD_CLOSE_ENABLED = _get_bool("EOD_CLOSE_ENABLED", True)
+        self.FRIDAY_CLOSE_ENABLED = _get_bool("FRIDAY_CLOSE_ENABLED", True)
 
         # --- OVERNIGHT / WEEKEND ---
         self.ALLOW_OVERNIGHT = _get_bool("ALLOW_OVERNIGHT", False)

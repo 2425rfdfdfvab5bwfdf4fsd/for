@@ -78,7 +78,7 @@ class TradeRepository:
                 entry_time, exit_time, exit_reason,
                 profit_loss, r_multiple,
                 mt5_ticket, magic_number,
-                status, created_at, updated_at
+                status, partial_closed, created_at, updated_at
             ) VALUES (
                 ?, ?, ?,
                 ?, ?, ?,
@@ -91,7 +91,7 @@ class TradeRepository:
                 ?, ?, ?,
                 ?, ?,
                 ?, ?,
-                ?, ?, ?
+                ?, ?, ?, ?
             )
         """
         params = (
@@ -108,7 +108,8 @@ class TradeRepository:
             trade.entry_time, trade.exit_time, trade.exit_reason,
             trade.profit_loss, trade.r_multiple,
             trade.mt5_ticket, trade.magic_number,
-            trade.status, trade.created_at, trade.updated_at,
+            trade.status, _bool_to_int(trade.partial_closed),
+            trade.created_at, trade.updated_at,
         )
         try:
             self._db.execute(sql, params)
@@ -165,6 +166,24 @@ class TradeRepository:
         except DatabaseError:
             logger.error("Failed to fetch trades for date %s", date)
             return []
+
+    def mark_partial_closed(self, trade_id: str) -> None:
+        """
+        Persist partial_closed=True for a trade after a confirmed partial close.
+
+        Called immediately after the MT5 partial-close order is accepted so that
+        subsequent process_all() cycles cannot re-trigger the partial close.
+        """
+        try:
+            self._db.execute(
+                "UPDATE trades SET partial_closed = 1, updated_at = ? WHERE trade_id = ?",
+                (_now_iso(), trade_id),
+            )
+            self._db.get_connection().commit()
+            logger.debug("Trade %s marked partial_closed=True", trade_id)
+        except DatabaseError:
+            logger.error("Failed to mark partial_closed for trade %s", trade_id)
+            raise
 
     def update_status(self, trade_id: str, status: str) -> None:
         """Update the status of a trade."""
@@ -286,6 +305,7 @@ class TradeRepository:
             mt5_ticket=d.get("mt5_ticket"),
             magic_number=d.get("magic_number", 0),
             status=d["status"],
+            partial_closed=bool(d.get("partial_closed", 0)),
             created_at=d["created_at"],
             updated_at=d["updated_at"],
         )

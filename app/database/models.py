@@ -104,6 +104,9 @@ class Trade:
     # State
     status: str = "OPEN"         # "OPEN" | "CLOSED" | "CANCELLED"
 
+    # Phase 10 — position management state
+    partial_closed: bool = False  # True after 50% partial close is executed
+
     # Audit
     created_at: str = field(default_factory=_now_iso)
     updated_at: str = field(default_factory=_now_iso)
@@ -230,6 +233,7 @@ CREATE TABLE IF NOT EXISTS trades (
     mt5_ticket        INTEGER,
     magic_number      INTEGER NOT NULL DEFAULT 0,
     status            TEXT NOT NULL DEFAULT 'OPEN',
+    partial_closed    INTEGER NOT NULL DEFAULT 0,
     created_at        TEXT NOT NULL,
     updated_at        TEXT NOT NULL
 );
@@ -329,6 +333,22 @@ CREATE TABLE IF NOT EXISTS consecutive_loss_state (
 # Master list consumed by DatabaseManager.initialize()
 # ---------------------------------------------------------------------------
 
+CREATE_POSITION_MANAGEMENT_EVENTS_TABLE = """
+CREATE TABLE IF NOT EXISTS position_management_events (
+    event_id    TEXT PRIMARY KEY,
+    trade_id    TEXT NOT NULL,
+    ticket      INTEGER NOT NULL,
+    symbol      TEXT NOT NULL,
+    event_type  TEXT NOT NULL,
+    old_sl      REAL,
+    new_sl      REAL,
+    close_lots  REAL,
+    reason      TEXT NOT NULL DEFAULT '',
+    executed    INTEGER NOT NULL DEFAULT 0,
+    timestamp   TEXT NOT NULL
+);
+"""
+
 ALL_TABLES: list[str] = [
     CREATE_SCHEMA_VERSION_TABLE,
     CREATE_TRADES_TABLE,
@@ -338,6 +358,7 @@ ALL_TABLES: list[str] = [
     CREATE_PERFORMANCE_SNAPSHOTS_TABLE,
     CREATE_DAILY_STATS_TABLE,
     CREATE_CONSECUTIVE_LOSS_STATE_TABLE,
+    CREATE_POSITION_MANAGEMENT_EVENTS_TABLE,
 ]
 
 
@@ -425,9 +446,14 @@ class Position:
     """
 
     symbol: str = ""
-    direction: str = ""   # "BUY" | "SELL"
+    direction: str = ""        # "BUY" | "SELL"
     lot_size: float = 0.0
     ticket: int = 0
+    # Phase 10 — live position state from MT5
+    open_price: float = 0.0    # MT5 price_open
+    current_sl: float = 0.0    # MT5 sl (may differ from original sl_price after BE/trail)
+    current_tp: float = 0.0    # MT5 tp
+    open_time_utc: Optional[str] = None  # ISO 8601 UTC string of position open time
 
 
 @dataclass
@@ -696,6 +722,35 @@ class OrphanReport:
     adopted: list = field(default_factory=list)
     flagged: list = field(default_factory=list)
     action_taken: str = "none"
+
+
+@dataclass
+class PositionManagementEvent:
+    """
+    Records a position management action applied to an open trade.
+
+    Produced by BreakEvenManager, PartialProfitManager, TrailingStopManager,
+    and TradeExpirationManager. Written to the database by PositionManager.
+
+    event_type values:
+        "BREAK_EVEN"       — SL moved to break-even
+        "PARTIAL_CLOSE"    — 50% of position closed at TP1
+        "TRAIL_UPDATE"     — Trailing stop tightened
+        "EXPIRATION_CLOSE" — Position closed due to expiration rule
+        "ORPHAN_FLAG"      — MT5 position not found in database
+    """
+
+    event_id: str = field(default_factory=_new_uuid)
+    trade_id: str = ""
+    ticket: int = 0
+    symbol: str = ""
+    event_type: str = ""   # "BREAK_EVEN" | "PARTIAL_CLOSE" | "TRAIL_UPDATE" | "EXPIRATION_CLOSE" | "ORPHAN_FLAG"
+    old_sl: Optional[float] = None
+    new_sl: Optional[float] = None
+    close_lots: Optional[float] = None
+    reason: str = ""
+    executed: bool = False
+    timestamp: str = field(default_factory=_now_iso)
 
 
 class PositionStatus:

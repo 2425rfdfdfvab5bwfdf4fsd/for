@@ -50,7 +50,7 @@ class DatabaseManager:
     blocking each other.
     """
 
-    SCHEMA_VERSION: int = 1
+    SCHEMA_VERSION: int = 2
 
     def __init__(self, config) -> None:
         """
@@ -111,8 +111,10 @@ class DatabaseManager:
 
         conn.commit()
 
+        current_version = self.get_schema_version()
+
         # Stamp schema version on first use
-        if self.get_schema_version() == 0:
+        if current_version == 0:
             conn.execute(
                 "INSERT OR IGNORE INTO schema_version (version, applied_at) VALUES (?, ?)",
                 (self.SCHEMA_VERSION, datetime.now(timezone.utc).isoformat()),
@@ -124,6 +126,8 @@ class DatabaseManager:
                 self._db_path,
             )
         else:
+            # Apply incremental migrations for existing databases
+            self._run_migrations(conn, current_version)
             logger.info(
                 "Database opened — schema_version=%d, path=%s",
                 self.get_schema_version(),
@@ -234,6 +238,54 @@ class DatabaseManager:
         except sqlite3.Error:
             # Table may not exist yet on very first call inside initialize()
             return 0
+
+    # ------------------------------------------------------------------
+    # Schema migrations
+    # ------------------------------------------------------------------
+
+    def _run_migrations(self, conn: sqlite3.Connection, current_version: int) -> None:
+        """
+        Apply incremental schema migrations for databases created before the
+        current SCHEMA_VERSION.
+
+        Each migration block is guarded by a version comparison so it runs
+        exactly once and is idempotent if re-run (ALTER TABLE … ADD COLUMN
+        with a DEFAULT handles pre-existing rows automatically).
+        """
+        if current_version < 2:
+            # Phase 10: add partial_closed column to trades table
+            self._add_column_if_missing(
+                conn,
+                table="trades",
+                column="partial_closed",
+                definition="INTEGER NOT NULL DEFAULT 0",
+            )
+            conn.execute(
+                "INSERT OR IGNORE INTO schema_version (version, applied_at) VALUES (?, ?)",
+                (2, datetime.now(timezone.utc).isoformat()),
+            )
+            conn.commit()
+            logger.info("Migration applied: schema_version 1 → 2 (trades.partial_closed)")
+
+    @staticmethod
+    def _add_column_if_missing(
+        conn: sqlite3.Connection,
+        table: str,
+        column: str,
+        definition: str,
+    ) -> None:
+        """
+        Add a column to an existing table only when it does not already exist.
+
+        Uses PRAGMA table_info to introspect current columns; issues
+        ALTER TABLE … ADD COLUMN when the column is absent.  Safe to call
+        on fresh databases where CREATE TABLE already included the column.
+        """
+        cursor = conn.execute(f"PRAGMA table_info({table})")
+        existing_columns = {row[1] for row in cursor.fetchall()}
+        if column not in existing_columns:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+            logger.debug("Added column '%s' to table '%s'", column, table)
 
     # ------------------------------------------------------------------
     # Transaction context manager

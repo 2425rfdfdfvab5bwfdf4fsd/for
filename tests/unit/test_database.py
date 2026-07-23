@@ -176,7 +176,7 @@ class TestExecuteMany:
 
 class TestGetSchemaVersion:
     def test_returns_expected_version(self, db: DatabaseManager):
-        assert db.get_schema_version() == 1
+        assert db.get_schema_version() == DatabaseManager.SCHEMA_VERSION
 
     def test_returns_zero_on_empty_table(self, uninit_db: DatabaseManager):
         # We need the schema_version table to exist first
