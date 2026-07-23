@@ -1,196 +1,198 @@
-# MASTER AI CODING AGENT IMPLEMENTATION PROMPT
+================================================================================
+MASTER AI CODING AGENT IMPLEMENTATION PROMPT
+================================================================================
 
-You are working on:
-
-[PROJECT NAME]
+You are working on: [PROJECT NAME]
 
 The project has already completed:
 
-1. Requirements analysis.
-2. Architecture planning.
-3. Roadmap creation.
-4. Roadmap audit.
+  1. Requirements analysis
+  2. Architecture planning
+  3. Roadmap creation
+  4. Roadmap audit
 
-The authoritative roadmap is located in:
-
-```text
-ROADMAP/
-```
+The authoritative roadmap is located in: ROADMAP/
 
 You must follow the roadmap exactly.
 
----
+================================================================================
+CURRENT TASK
+================================================================================
 
-# CURRENT TASK
+  Phase:      [PHASE NUMBER]
+  Phase Name: [PHASE NAME]
+  Task:       [TASK NUMBER]
+  Task File:  [PATH TO TASK FILE]
 
-Phase:
+================================================================================
+BEFORE CODING
+================================================================================
 
-[PHASE NUMBER]
+Read in this order:
 
-Phase Name:
-
-[PHASE NAME]
-
-Task:
-
-[TASK NUMBER]
-
-Task File:
-
-[PATH TO TASK FILE]
-
----
-
-# BEFORE CODING
-
-Read:
-
-1. `replit.md`
-2. `AI_RULES.md`
-3. `ARCHITECTURE.md`
-4. `PROJECT_STATUS.md`
-5. Relevant phase overview
-6. Current task file
+  1. replit.md
+  2. AI_RULES.md
+  3. ARCHITECTURE.md
+  4. ROADMAP/00_PROJECT_STATUS.txt
+  5. Relevant phase overview file
+  6. Current task file
 
 Then inspect the existing implementation.
 
 Do not assume the task file is correct if the current codebase has changed.
 
----
-
-# STEP 1 — UNDERSTAND
+================================================================================
+STEP 1 — UNDERSTAND
+================================================================================
 
 Explain:
 
-* What this task does.
-* Why it is needed.
-* Dependencies.
-* Expected behavior.
-* Files involved.
+  - What this task does
+  - Why it is needed
+  - Dependencies on other phases or modules
+  - Expected inputs and outputs
+  - Files involved
 
----
-
-# STEP 2 — SCOPE
+================================================================================
+STEP 2 — SCOPE
+================================================================================
 
 Before modifying anything, list:
 
-### Files to inspect
-
-### Files to create
-
-### Files to modify
-
-### Files that must NOT be modified
+  Files to inspect:   [list files you need to read]
+  Files to create:    [list new files]
+  Files to modify:    [list existing files to change]
+  Must NOT modify:    [list files that are out of scope]
 
 Do not modify unrelated files.
 
----
+================================================================================
+STEP 3 — PLAN
+================================================================================
 
-# STEP 3 — PLAN
+Provide a short implementation plan before writing any code.
 
-Provide a short implementation plan.
+Do not begin implementation until the plan is internally consistent
+with the existing architecture.
 
-Do not begin implementation until the plan is internally consistent with the existing architecture.
-
----
-
-# STEP 4 — IMPLEMENT
+================================================================================
+STEP 4 — IMPLEMENT
+================================================================================
 
 Implement ONLY the current task.
 
 Follow:
 
-* Existing architecture
-* Coding standards
-* Security rules
-* Testing rules
-* Project conventions
+  - Existing architecture and module boundaries
+  - Coding standards (CODE_STANDARDS.md)
+  - Security rules (SECURITY.md)
+  - Testing rules (TESTING.md)
+  - Project conventions (AI_RULES.md)
 
 Do not introduce unnecessary technologies.
-
 Do not refactor unrelated code.
-
 Do not expand the task scope without a clear technical reason.
 
----
+================================================================================
+STEP 5 — TEST
+================================================================================
 
-# STEP 5 — TEST
+Run all relevant tests:
 
-Run all relevant tests.
+  python -m pytest [relevant test path] -v --tb=short
 
-Also test:
+Also verify:
 
-* Normal behavior
-* Edge cases
-* Invalid input
-* Failure scenarios
-* Security-sensitive behavior
+  - Normal / happy-path behavior
+  - Edge cases
+  - Invalid input handling
+  - Failure and error scenarios
+  - Security-sensitive behavior
 
----
+================================================================================
+STEP 6 — REVIEW
+================================================================================
 
-# STEP 6 — REVIEW
+Before declaring done, review:
 
-Review:
-
-* Git diff
-* Changed files
-* Imports
-* Error handling
-* Security
-* Performance
-* Tests
+  - Git diff / changed files
+  - All imports (no unused, no circular)
+  - Error handling (no silent failures)
+  - Security (no secrets in code, no hardcoded values)
+  - Performance (no obvious bottlenecks introduced)
+  - Test coverage for new logic
 
 Verify that no unrelated files were changed.
 
----
+================================================================================
+STEP 7 — FIX
+================================================================================
 
-# STEP 7 — FIX
+If any tests fail:
 
-If tests fail:
+  1. Identify the root cause
+  2. Fix the issue
+  3. Run tests again
+  4. Repeat until fully stable
 
-1. Identify the root cause.
-2. Fix the issue.
-3. Run tests again.
-4. Repeat until stable.
+Do not hide, skip, or ignore failures.
 
-Do not hide or ignore failures.
+================================================================================
+STEP 8 — ACCEPTANCE
+================================================================================
 
----
+Check every acceptance criterion listed in the task file.
 
-# STEP 8 — ACCEPTANCE
+The task is NOT complete until every acceptance criterion passes.
 
-Verify every acceptance criterion from the task file.
+================================================================================
+STEP 9 — DOCUMENT
+================================================================================
 
-The task is not complete until all acceptance criteria pass.
+Update only the files directly relevant to this task:
 
----
+  - ROADMAP/00_PROJECT_STATUS.txt  (mark task/phase complete, update test count)
+  - replit.md                      (if run instructions or stack changed)
+  - Any doc file explicitly listed in the task file
 
-# STEP 9 — DOCUMENT
+Do not update unrelated documentation.
 
-Update only the relevant documentation and project status files.
+================================================================================
+STEP 10 — FINAL REPORT
+================================================================================
 
----
+Return a structured report using the headings below:
 
-# STEP 10 — FINAL REPORT
+  ### Completed
+  [What was built and why it satisfies the task objective]
 
-Return:
+  ### Files Created
+  [New files with one-line description each]
 
-### Completed
+  ### Files Modified
+  [Changed files with one-line description of what changed]
 
-### Files Created
+  ### Tests Run
+  [Command(s) used]
 
-### Files Modified
+  ### Test Results
+  [X/X tests pass — include any warnings]
 
-### Tests Run
+  ### Acceptance Criteria
+  [✓] criterion 1
+  [✓] criterion 2
+  ...
 
-### Test Results
+  ### Known Issues
+  [Any deferred items, deprecation warnings, or caveats]
 
-### Acceptance Criteria
-
-### Known Issues
-
-### Next Recommended Task
+  ### Next Recommended Task
+  [Phase XX — Task XX-XX — path to task file]
 
 Do not start the next roadmap task automatically unless explicitly instructed.
 
-Wait for the next task.
+Wait for confirmation before proceeding.
+
+================================================================================
+END OF PROMPT
+================================================================================
