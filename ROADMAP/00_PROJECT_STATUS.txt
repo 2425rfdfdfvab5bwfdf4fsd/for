@@ -21,7 +21,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   01  | Project Discovery       | [✓]    | 2026-07-23   | Complete — fresh project
   02  | Project Foundation      | [✓]    | 2026-07-23   | Complete — all files created
   03  | MT5 Integration         | [✓]    | 2026-07-23   | Complete — 86/86 tests pass
-  04  | Data Layer              | [ ]    | -            | Depends on Phase 02
+  04  | Data Layer              | [✓]    | 2026-07-23   | Complete — 70/70 tests pass
   05  | Strategy Engine         | [ ]    | -            | Depends on 03 + 04
   06  | Confluence Engine       | [ ]    | -            | Depends on Phase 05
   07  | Risk Engine             | [ ]    | -            | Depends on 03 + 04
@@ -256,13 +256,110 @@ Next Action:     Open ROADMAP/03_MT5_INTEGRATION/01_PHASE_OVERVIEW.txt
 ================================================================================
 PHASE 04 — DATA LAYER
 ================================================================================
-Status:          [ ] NOT STARTED
-Last Updated:    -
-Completed Tasks: None
+Status:          [✓] COMPLETE
+Last Updated:    2026-07-23
+Updated By:      Replit Agent — Phase 04 Data Layer
+Completed Tasks: 04-01 DATA MODELS
+                 04-02 SQLITE DATABASE
+                 04-03 REPOSITORIES
+                 04-04 PERSISTENCE RECOVERY
 Failed Tasks:    None
-Known Issues:    None
-Next Action:     Open ROADMAP/04_DATA_LAYER/01_PHASE_OVERVIEW.txt
-                 then ROADMAP/04_DATA_LAYER/01_TASK_DATA_MODELS.txt
+
+Files Created:
+  app/database/models.py          — All dataclasses, SQL CREATE TABLE strings,
+                                    ALL_TABLES list, stub dataclasses
+                                    (ScoredSignal, PositionSizeResult,
+                                    ExecutionResult), PositionStatus class
+  app/database/database.py        — DatabaseManager (WAL, transactions, execute)
+  app/database/repositories.py    — TradeRepository, RejectedSignalRepository,
+                                    DailyRiskRepository, SystemEventRepository,
+                                    PerformanceRepository, Repositories facade
+  app/database/state_recovery.py  — StateRecovery (daily state, open trades,
+                                    consecutive losses, new-day reset)
+  tests/unit/test_database.py     — 18 tests
+  tests/unit/test_repositories.py — 36 tests
+  tests/unit/test_state_recovery.py — 16 tests
+
+Test Results:    70/70 tests pass
+
+Known Issues / Notes:
+  - WAL mode requires a file-based database — :memory: uses "memory" mode
+    (expected SQLite behaviour; tests verify WAL on a temp file db)
+  - daily_stats and consecutive_loss_state tables created in Phase 04
+    (required by Phase 07 DailyLimitsChecker — CHG-003)
+
+Next Action:     → Phase 05: ROADMAP/05_STRATEGY_ENGINE/01_PHASE_OVERVIEW.txt
+
+--------------------------------------------------------------------------------
+TASK 04-01 — DATA MODELS: [✓] COMPLETE (2026-07-23)
+--------------------------------------------------------------------------------
+Files created:
+  app/database/models.py
+Tables defined: trades, rejected_signals, daily_risk_state, system_events,
+                performance_snapshots, schema_version, daily_stats,
+                consecutive_loss_state (8 total)
+Stub dataclasses: ScoredSignal, PositionSizeResult, ExecutionResult
+PositionStatus class: OPEN, CLOSED, CANCELLED, SUSPICIOUS
+
+Validation:
+  ✓ python -m py_compile app/database/models.py — no errors
+  ✓ from app.database.models import Trade, RejectedSignal, DailyRiskState — OK
+  ✓ len(ALL_TABLES) == 8
+
+--------------------------------------------------------------------------------
+TASK 04-02 — SQLITE DATABASE: [✓] COMPLETE (2026-07-23)
+--------------------------------------------------------------------------------
+Files created:
+  app/database/database.py
+  tests/unit/test_database.py (18 tests)
+
+Validation:
+  ✓ python -m py_compile app/database/database.py — no errors
+  ✓ pytest tests/unit/test_database.py — 18/18 pass
+  ✓ WAL mode verified on file-based database
+  ✓ Transactions: commit on success, rollback on exception
+
+--------------------------------------------------------------------------------
+TASK 04-03 — REPOSITORIES: [✓] COMPLETE (2026-07-23)
+--------------------------------------------------------------------------------
+Files created:
+  app/database/repositories.py
+  tests/unit/test_repositories.py (36 tests)
+
+Validation:
+  ✓ python -m py_compile app/database/repositories.py — no errors
+  ✓ pytest tests/unit/test_repositories.py — 36/36 pass
+  ✓ All CRUD operations verified with in-memory SQLite
+  ✓ Boolean fields round-trip correctly (SQLite INTEGER ↔ Python bool)
+  ✓ Repositories facade exposes all 5 repositories
+
+--------------------------------------------------------------------------------
+TASK 04-04 — PERSISTENCE RECOVERY: [✓] COMPLETE (2026-07-23)
+--------------------------------------------------------------------------------
+Files created:
+  app/database/state_recovery.py
+  tests/unit/test_state_recovery.py (16 tests)
+
+Validation:
+  ✓ python -m py_compile app/database/state_recovery.py — no errors
+  ✓ pytest tests/unit/test_state_recovery.py — 16/16 pass
+  ✓ Daily state recovered after simulated restart
+  ✓ Conservative fallback (current equity) when no DB record exists
+  ✓ Consecutive losses persist via dedicated table
+  ✓ New day detection and reset work correctly
+  ✓ Open trades loaded from database on restart
+
+================================================================================
+PHASE 04 ACCEPTANCE CRITERIA
+================================================================================
+  [✓] Database initialises and creates all 8 tables
+  [✓] All repositories work with in-memory SQLite
+  [✓] State persists and reloads correctly
+  [✓] daily_stats table exists (required by Phase 07)
+  [✓] consecutive_loss_state table exists (required by Phase 07)
+  [✓] 70/70 tests pass
+
+PHASE 04 STATUS: [✓] COMPLETE
 
 ================================================================================
 PHASE 05 — STRATEGY ENGINE
