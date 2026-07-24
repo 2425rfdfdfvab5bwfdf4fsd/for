@@ -38,3 +38,14 @@ matplotlib>=3.7.0             # Backtest charts and optional trade screenshots
 # --- EXCLUDED (see DECISION-001) ---
 # pystray — system tray application — NOT included; future/optional Phase 18+
 #   Only add if user explicitly requests system tray feature.
+fastapi
+matplotlib
+numpy
+pandas
+pytest
+pytest-cov
+pytest-mock
+python-dotenv
+python-telegram-bot
+requests
+uvicorn

@@ -2,8 +2,8 @@
 PROJECT STATUS TRACKER
 ================================================================================
 Project: MT5 Automated Forex Trading Bot
-Last Updated: 2026-07-23
-Updated By: Replit Agent — Phase 10 Position Management
+Last Updated: 2026-07-24
+Updated By: Replit Agent — Phase 11 Task 11-04 Heartbeat
 
 STATUS LEGEND:
   [ ] NOT STARTED
@@ -28,7 +28,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   08  | Filters                 | [✓]    | 2026-07-23   | Complete — 119/119 tests pass
   09  | Execution Engine        | [✓]    | 2026-07-23   | Complete — 65/65 tests pass
   10  | Position Management     | [✓]    | 2026-07-23   | Complete — 60/60 tests pass
-  11  | Automation              | [~]    | 2026-07-24   | In progress — 11-01 + 11-02 + 11-03 complete (55 tests)
+  11  | Automation              | [~]    | 2026-07-24   | In progress — 11-01–11-04 complete (73 tests)
   12  | Notifications           | [ ]    | -            | Depends on 04+11
   13  | Trade Journal           | [ ]    | -            | Depends on 04+09
   14  | Dashboard               | [ ]    | -            | Depends on 04+11
@@ -708,15 +708,16 @@ PHASE 10 STATUS: [✓] COMPLETE
 PHASE 11 — AUTOMATION
 ================================================================================
 Status:          [~] IN PROGRESS
-Last Updated:    2026-07-23
-Completed Tasks: 11-01 MAIN LOOP, 11-02 SINGLETON GUARD, 11-03 WATCHDOG
+Last Updated:    2026-07-24
+Completed Tasks: 11-01 MAIN LOOP, 11-02 SINGLETON GUARD, 11-03 WATCHDOG,
+                 11-04 HEARTBEAT
 Failed Tasks:    None
 Known Issues:    ATR pips uses a static default (15 pips) — live MarketDataFetcher
                  wiring deferred to Phase 11 polish.
                  daily_stats in RiskContext is None — Phase 13 will wire repos.
                  OrderValidator not called before OrderExecutor (pre-approved
                  OrderValidationResult used) — full wiring deferred.
-Next Action:     → Task 11-04: ROADMAP/11_AUTOMATION/04_TASK_HEARTBEAT.txt
+Next Action:     → Task 11-05: ROADMAP/11_AUTOMATION/05_TASK_AUTO_RECOVERY.txt
 
 TASK 11-01 — MAIN LOOP: [✓] COMPLETE (2026-07-23)
   Files Created:
@@ -763,6 +764,19 @@ TASK 11-03 — WATCHDOG: [✓] COMPLETE (2026-07-24)
     [✓] MAX_RESTARTS limit respected — loop stops after threshold
     [✓] Exponential backoff: 30 → 60 → 120 → 240 → 480s, capped at 480
     [✓] All 4 required tests pass (plus 17 additional coverage tests)
+
+TASK 11-04 — HEARTBEAT SYSTEM: [✓] COMPLETE (2026-07-24)
+  Files Created:
+    app/automation/heartbeat.py              — Heartbeat + HeartbeatData; update/read/is_fresh
+    tests/test_automation/test_heartbeat.py  — 18 tests (all pass)
+  Files Modified:
+    None (all required config keys already added in task 11-03)
+  Tests: 18/18 pass
+  Acceptance Criteria:
+    [✓] Heartbeat file written with all 13 fields + timestamp
+    [✓] Watchdog (and any reader) can read and parse it via Heartbeat.read()
+    [✓] Freshness detection works — is_fresh() correctly gates on max_age_seconds
+    [✓] All 4 required tests pass (plus 14 additional coverage tests)
 
 ================================================================================
 PHASE 12 — NOTIFICATIONS
@@ -883,7 +897,7 @@ In Progress:          0
 Blocked:              0
 In Progress:          1   (Phase 11 — Automation, task 11-01 done)
 Not Started:          11  (Phases 12–22)
-Tests Passing:        683/683  (100% — Python 3.12, pytest 9.x, pandas 3+)
+Tests Passing:        701/701  (100% — Python 3.12, pytest 9.x, pandas 3+)
 Log Files Active:     4  (app.log, trading.log, errors.log, strategy.log)
 
 Per-Phase Test Counts (verified 2026-07-23):
@@ -895,11 +909,11 @@ Per-Phase Test Counts (verified 2026-07-23):
   Phase 08 (Filters):           119 tests
   Phase 09 (Execution Engine):   65 tests
   Phase 10 (Position Mgmt):      60 tests
-  Phase 11 (Automation):         55 tests  (11-01: 18, 11-02: 16, 11-03: 21)
-  TOTAL:                        683 tests (all pass)
+  Phase 11 (Automation):         73 tests  (11-01: 18, 11-02: 16, 11-03: 21, 11-04: 18)
+  TOTAL:                        701 tests (all pass)
 
-Current Phase:        11 — AUTOMATION (tasks 11-01–11-03 complete; next: 11-04 HEARTBEAT)
-Recommended Action:   Open ROADMAP/11_AUTOMATION/04_TASK_HEARTBEAT.txt
+Current Phase:        11 — AUTOMATION (tasks 11-01–11-04 complete; next: 11-05 AUTO_RECOVERY)
+Recommended Action:   Open ROADMAP/11_AUTOMATION/05_TASK_AUTO_RECOVERY.txt
 
 ================================================================================
 ROADMAP AUDIT — COMPLETE (2026-07-23)
