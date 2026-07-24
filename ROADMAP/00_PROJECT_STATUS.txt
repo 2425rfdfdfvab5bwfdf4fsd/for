@@ -3,7 +3,7 @@ PROJECT STATUS TRACKER
 ================================================================================
 Project: MT5 Automated Forex Trading Bot
 Last Updated: 2026-07-24
-Updated By: Replit Agent — Phase 15 Task 15-04 COMPLETE
+Updated By: Replit Agent — Phase 16 Task 16-02 COMPLETE
 
 STATUS LEGEND:
   [ ] NOT STARTED
@@ -33,7 +33,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   13  | Trade Journal           | [✓]    | 2026-07-24   | Complete — all 4 tasks done (50 tests)
   14  | Dashboard               | [✓]    | 2026-07-24   | Complete — all 8 tasks done (26 tests)
   15  | Backtesting             | [✓]    | 2026-07-24   | All 5 tasks complete
-  16  | Validation              | [ ]    | -            | Depends on Phase 15
+  16  | Validation              | [~]    | 2026-07-24   | 2/5 tasks done (16-01, 16-02)
   17  | Self-Improvement        | [ ]    | -            | Depends on 04+15
   18  | Windows Automation      | [ ]    | -            | Depends on 11+14
   19  | Testing                 | [ ]    | -            | Depends on all phases
@@ -1263,10 +1263,10 @@ OVERALL PROJECT METRICS
 ================================================================================
 Total Phases:         22
 Completed Phases:     15  (Phases 01–15)
-In Progress:          1   (Phase 16)
+In Progress:          1   (Phase 16 — tasks 16-01, 16-02 done)
 Blocked:              0
 Not Started:          6   (Phases 17–22)
-Tests Passing:        1065/1065  (100% — Python 3.12, pytest 9.x, pandas 3+)
+Tests Passing:        1104/1104  (100% — Python 3.12, pytest 9.x, pandas 3+)
 Log Files Active:     4  (app.log, trading.log, errors.log, strategy.log)
 
 Per-Phase Test Counts (verified 2026-07-24):

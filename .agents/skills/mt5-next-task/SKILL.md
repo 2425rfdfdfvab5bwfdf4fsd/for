@@ -112,7 +112,7 @@ Before declaring done, verify every item:
 
 Update **only** these two files (no others):
 
-**`ROADMAP/00_PROJECT_STATUS.txt`** — update the Phase 11 section:
+**`ROADMAP/00_PROJECT_STATUS.txt`** — update the relevant phase section:
 - Add the new task entry with `[✓] COMPLETE (YYYY-MM-DD)`
 - List files created/modified
 - Update test count
@@ -126,7 +126,31 @@ Do **NOT** modify `MASTER_AGENT_PROMPT.txt` or any ROADMAP task files.
 
 ---
 
-## Step 7 — Final Report
+## Step 7 — Update ROADMAP/00_PROJECT_STATUS.txt (top-level tracking)
+
+After documenting the task details, update the **top-level tracking fields** in `ROADMAP/00_PROJECT_STATUS.txt`:
+
+1. **Header block** (lines 5–6):
+   - `Last Updated:` → today's date (`YYYY-MM-DD`)
+   - `Updated By:` → `Replit Agent — Phase N Task N-NN COMPLETE`
+
+2. **PHASE STATUS OVERVIEW table** (near top):
+   - Change the current phase row from `[ ]` → `[~]` if still in progress, or `[✓]` if all tasks in that phase are now done
+   - Set the `LAST UPDATED` column to today's date
+   - Update the `NOTES` column to reflect tasks completed so far (e.g. `2/5 tasks done (16-01, 16-02)`)
+
+3. **OVERALL PROJECT METRICS section** (near bottom):
+   - `Tests Passing:` → new total
+   - `In Progress:` note → update to name completed tasks
+   - `Completed Phases:` → increment if a phase just finished
+   - `Current Phase:` → update task list and `next:` pointer
+   - `Recommended Action:` → point to the next task file
+
+This step is **mandatory** — even if Step 6 already touched the phase-detail block, the top-level header and overview table must also reflect the latest state.
+
+---
+
+## Step 8 — Final Report
 
 Deliver this exact report format:
 
