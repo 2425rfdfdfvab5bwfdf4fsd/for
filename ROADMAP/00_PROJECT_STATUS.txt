@@ -3,7 +3,7 @@ PROJECT STATUS TRACKER
 ================================================================================
 Project: MT5 Automated Forex Trading Bot
 Last Updated: 2026-07-24
-Updated By: Replit Agent — Phase 12 COMPLETE
+Updated By: Replit Agent — Phase 13 Task 13-01 COMPLETE
 
 STATUS LEGEND:
   [ ] NOT STARTED
@@ -30,7 +30,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   10  | Position Management     | [✓]    | 2026-07-23   | Complete — 60/60 tests pass
   11  | Automation              | [✓]    | 2026-07-24   | Complete — all 5 tasks done (92 tests)
   12  | Notifications           | [✓]    | 2026-07-24   | Complete — 47 tests (12-01: 21, 12-02: 26)
-  13  | Trade Journal           | [ ]    | -            | Depends on 04+09
+  13  | Trade Journal           | [~]    | 2026-07-24   | 13-01 complete; 13-02–04 pending
   14  | Dashboard               | [ ]    | -            | Depends on 04+11
   15  | Backtesting             | [ ]    | -            | Depends on 05+07+08
   16  | Validation              | [ ]    | -            | Depends on Phase 15
@@ -839,12 +839,34 @@ PHASE 12 STATUS: [✓] COMPLETE
 ================================================================================
 PHASE 13 — TRADE JOURNAL
 ================================================================================
-Status:          [ ] NOT STARTED
-Last Updated:    -
-Completed Tasks: None
+Status:          [~] IN PROGRESS
+Last Updated:    2026-07-24
+Completed Tasks: 13-01 TRADE JOURNAL — [✓] COMPLETE (2026-07-24)
+                   Files created: app/journal/trade_journal.py
+                                  app/journal/__init__.py (updated)
+                                  tests/test_journal/__init__.py
+                                  tests/test_journal/test_trade_journal.py
+                   Files modified: app/database/models.py (TradeJournalEntry + SQL table)
+                                   app/database/repositories.py (TradeJournalRepository)
+                   Tests added: 13 (780 total, all pass)
 Failed Tasks:    None
 Known Issues:    None
-Next Action:     Complete Phases 04 + 09 first.
+Next Action:     13-02 — ROADMAP/13_TRADE_JOURNAL/02_TASK_REJECTION_JOURNAL.txt
+
+TASK 13-01 — TRADE JOURNAL: [✓] COMPLETE (2026-07-24)
+  Files Created:
+    app/journal/trade_journal.py   — TradeJournal class (record_entry/exit/mgmt_event/get)
+    app/journal/__init__.py        — updated module docstring
+    tests/test_journal/__init__.py
+    tests/test_journal/test_trade_journal.py — 13 tests (all pass)
+  Files Modified:
+    app/database/models.py         — added TradeJournalEntry dataclass + SQL table
+    app/database/repositories.py  — added TradeJournalRepository + wired into Repositories
+  Tests: 13/13 pass
+  Acceptance Criteria:
+    [✓] Complete trade lifecycle recorded (entry → management events → exit)
+    [✓] R-multiple calculated correctly (pnl / risk_amount)
+    [✓] All tests pass (780/780 full suite, zero regressions)
 
 ================================================================================
 PHASE 14 — DASHBOARD
@@ -958,10 +980,11 @@ Per-Phase Test Counts (verified 2026-07-24):
   Phase 10 (Position Mgmt):      60 tests
   Phase 11 (Automation):         92 tests  (11-01: 18, 11-02: 16, 11-03: 21, 11-04: 18, 11-05: 19)
   Phase 12 (Notifications):      47 tests  (12-01: 21, 12-02: 26)
-  TOTAL:                        767 tests (all pass)
+  Phase 13 (Trade Journal):      13 tests  (13-01: 13)
+  TOTAL:                        780 tests (all pass)
 
-Current Phase:        13 — TRADE JOURNAL (Phase 12 complete; ready to begin Phase 13)
-Recommended Action:   Open ROADMAP/13_TRADE_JOURNAL/01_PHASE_OVERVIEW.txt
+Current Phase:        13 — TRADE JOURNAL (task 13-01 complete; next: 13-02 REJECTION_JOURNAL)
+Recommended Action:   Open ROADMAP/13_TRADE_JOURNAL/02_TASK_REJECTION_JOURNAL.txt
 
 ================================================================================
 ROADMAP AUDIT — COMPLETE (2026-07-23)

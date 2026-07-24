@@ -35,6 +35,7 @@ from app.database.models import (
     RejectedSignal,
     SystemEvent,
     Trade,
+    TradeJournalEntry,
 )
 from app.logger import get_logger
 
@@ -706,6 +707,192 @@ class PerformanceRepository:
 
 
 # ===========================================================================
+# TradeJournalRepository
+# ===========================================================================
+
+class TradeJournalRepository:
+    """CRUD operations for the trade_journal_entries table."""
+
+    def __init__(self, db: DatabaseManager) -> None:
+        self._db = db
+
+    def create(self, entry: TradeJournalEntry) -> None:
+        """Insert a new journal entry (open trade state)."""
+        sql = """
+            INSERT INTO trade_journal_entries (
+                id, symbol, direction,
+                entry_price, exit_price, sl_price, tp1_price, tp2_price,
+                lot_size, risk_amount,
+                pnl, pnl_pct, r_multiple,
+                confluence_score, quality_grade, factor_breakdown,
+                entry_time_utc, exit_time_utc, duration_minutes,
+                exit_reason, management_events,
+                slippage_pips, execution_ticket,
+                session, mode, notes,
+                created_at, updated_at
+            ) VALUES (
+                ?, ?, ?,
+                ?, ?, ?, ?, ?,
+                ?, ?,
+                ?, ?, ?,
+                ?, ?, ?,
+                ?, ?, ?,
+                ?, ?,
+                ?, ?,
+                ?, ?, ?,
+                ?, ?
+            )
+        """
+        params = (
+            entry.id, entry.symbol, entry.direction,
+            entry.entry_price, entry.exit_price, entry.sl_price,
+            entry.tp1_price, entry.tp2_price,
+            entry.lot_size, entry.risk_amount,
+            entry.pnl, entry.pnl_pct, entry.r_multiple,
+            entry.confluence_score, entry.quality_grade, entry.factor_breakdown,
+            entry.entry_time_utc, entry.exit_time_utc, entry.duration_minutes,
+            entry.exit_reason, entry.management_events,
+            entry.slippage_pips, entry.execution_ticket,
+            entry.session, entry.mode, entry.notes,
+            entry.created_at, entry.updated_at,
+        )
+        try:
+            self._db.execute(sql, params)
+            self._db.get_connection().commit()
+            logger.debug(
+                "Journal entry created: %s %s %s ticket=%s",
+                entry.id, entry.symbol, entry.direction, entry.execution_ticket,
+            )
+        except DatabaseError:
+            logger.error("Failed to create journal entry %s", entry.id)
+            raise
+
+    def update_exit(
+        self,
+        entry_id: str,
+        exit_price: float,
+        exit_time_utc: str,
+        exit_reason: str,
+        pnl: float,
+        pnl_pct: float,
+        r_multiple: float,
+        duration_minutes: float,
+    ) -> None:
+        """Persist exit data after a trade closes."""
+        try:
+            self._db.execute(
+                """
+                UPDATE trade_journal_entries
+                   SET exit_price       = ?,
+                       exit_time_utc    = ?,
+                       exit_reason      = ?,
+                       pnl              = ?,
+                       pnl_pct          = ?,
+                       r_multiple       = ?,
+                       duration_minutes = ?,
+                       updated_at       = ?
+                 WHERE id = ?
+                """,
+                (
+                    exit_price, exit_time_utc, exit_reason,
+                    pnl, pnl_pct, r_multiple, duration_minutes,
+                    _now_iso(), entry_id,
+                ),
+            )
+            self._db.get_connection().commit()
+            logger.debug(
+                "Journal entry exited: %s pnl=%.2f R=%.2f", entry_id, pnl, r_multiple
+            )
+        except DatabaseError:
+            logger.error("Failed to update exit for journal entry %s", entry_id)
+            raise
+
+    def update_management_events(
+        self, entry_id: str, management_events_json: str
+    ) -> None:
+        """Replace the management_events JSON blob for an entry."""
+        try:
+            self._db.execute(
+                """
+                UPDATE trade_journal_entries
+                   SET management_events = ?,
+                       updated_at        = ?
+                 WHERE id = ?
+                """,
+                (management_events_json, _now_iso(), entry_id),
+            )
+            self._db.get_connection().commit()
+            logger.debug("Management events updated for journal entry %s", entry_id)
+        except DatabaseError:
+            logger.error(
+                "Failed to update management events for journal entry %s", entry_id
+            )
+            raise
+
+    def get_by_id(self, entry_id: str) -> Optional[TradeJournalEntry]:
+        """Return a single journal entry by ID, or None."""
+        try:
+            cursor = self._db.execute(
+                "SELECT * FROM trade_journal_entries WHERE id = ?", (entry_id,)
+            )
+            row = cursor.fetchone()
+            return self._row_to_entry(row) if row else None
+        except DatabaseError:
+            logger.error("Failed to fetch journal entry %s", entry_id)
+            return None
+
+    def get_by_date(self, date: str) -> list[TradeJournalEntry]:
+        """Return all journal entries whose entry_time_utc starts with date (YYYY-MM-DD)."""
+        try:
+            cursor = self._db.execute(
+                """
+                SELECT * FROM trade_journal_entries
+                 WHERE entry_time_utc LIKE ?
+                 ORDER BY entry_time_utc ASC
+                """,
+                (f"{date}%",),
+            )
+            return [self._row_to_entry(row) for row in cursor.fetchall()]
+        except DatabaseError:
+            logger.error("Failed to fetch journal entries for date %s", date)
+            return []
+
+    @staticmethod
+    def _row_to_entry(row) -> TradeJournalEntry:
+        d = dict(row)
+        return TradeJournalEntry(
+            id=d["id"],
+            symbol=d["symbol"],
+            direction=d["direction"],
+            entry_price=d["entry_price"],
+            exit_price=d.get("exit_price"),
+            sl_price=d["sl_price"],
+            tp1_price=d["tp1_price"],
+            tp2_price=d["tp2_price"],
+            lot_size=d["lot_size"],
+            risk_amount=d["risk_amount"],
+            pnl=d.get("pnl"),
+            pnl_pct=d.get("pnl_pct"),
+            r_multiple=d.get("r_multiple"),
+            confluence_score=d["confluence_score"],
+            quality_grade=d["quality_grade"],
+            factor_breakdown=d.get("factor_breakdown", "{}"),
+            entry_time_utc=d["entry_time_utc"],
+            exit_time_utc=d.get("exit_time_utc"),
+            duration_minutes=d.get("duration_minutes"),
+            exit_reason=d.get("exit_reason"),
+            management_events=d.get("management_events", "[]"),
+            slippage_pips=d.get("slippage_pips"),
+            execution_ticket=d.get("execution_ticket"),
+            session=d.get("session", ""),
+            mode=d.get("mode", "DEMO"),
+            notes=d.get("notes", ""),
+            created_at=d["created_at"],
+            updated_at=d["updated_at"],
+        )
+
+
+# ===========================================================================
 # Repositories — facade
 # ===========================================================================
 
@@ -725,3 +912,4 @@ class Repositories:
         self.daily_risk = DailyRiskRepository(db)
         self.system_events = SystemEventRepository(db)
         self.performance = PerformanceRepository(db)
+        self.trade_journal = TradeJournalRepository(db)

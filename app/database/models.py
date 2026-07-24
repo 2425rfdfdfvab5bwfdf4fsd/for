@@ -349,6 +349,39 @@ CREATE TABLE IF NOT EXISTS position_management_events (
 );
 """
 
+CREATE_TRADE_JOURNAL_ENTRIES_TABLE = """
+CREATE TABLE IF NOT EXISTS trade_journal_entries (
+    id                 TEXT PRIMARY KEY,
+    symbol             TEXT NOT NULL,
+    direction          TEXT NOT NULL,
+    entry_price        REAL NOT NULL,
+    exit_price         REAL,
+    sl_price           REAL NOT NULL,
+    tp1_price          REAL NOT NULL,
+    tp2_price          REAL NOT NULL,
+    lot_size           REAL NOT NULL,
+    risk_amount        REAL NOT NULL,
+    pnl                REAL,
+    pnl_pct            REAL,
+    r_multiple         REAL,
+    confluence_score   REAL NOT NULL,
+    quality_grade      TEXT NOT NULL,
+    factor_breakdown   TEXT NOT NULL DEFAULT '{}',
+    entry_time_utc     TEXT NOT NULL,
+    exit_time_utc      TEXT,
+    duration_minutes   REAL,
+    exit_reason        TEXT,
+    management_events  TEXT NOT NULL DEFAULT '[]',
+    slippage_pips      REAL,
+    execution_ticket   INTEGER,
+    session            TEXT NOT NULL DEFAULT '',
+    mode               TEXT NOT NULL DEFAULT 'DEMO',
+    notes              TEXT NOT NULL DEFAULT '',
+    created_at         TEXT NOT NULL,
+    updated_at         TEXT NOT NULL
+);
+"""
+
 ALL_TABLES: list[str] = [
     CREATE_SCHEMA_VERSION_TABLE,
     CREATE_TRADES_TABLE,
@@ -359,6 +392,7 @@ ALL_TABLES: list[str] = [
     CREATE_DAILY_STATS_TABLE,
     CREATE_CONSECUTIVE_LOSS_STATE_TABLE,
     CREATE_POSITION_MANAGEMENT_EVENTS_TABLE,
+    CREATE_TRADE_JOURNAL_ENTRIES_TABLE,
 ]
 
 
@@ -760,3 +794,66 @@ class PositionStatus:
     CLOSED = "CLOSED"
     CANCELLED = "CANCELLED"
     SUSPICIOUS = "SUSPICIOUS"   # Phase 09-03: position missing from MT5 and history
+
+
+# ===========================================================================
+# Phase 13 — Trade Journal
+# ===========================================================================
+
+@dataclass
+class TradeJournalEntry:
+    """
+    Complete lifecycle record for a single executed trade.
+
+    Populated in stages:
+      1. record_entry()  — fills entry-side fields from ScoredSignal + ExecutionResult
+      2. record_management_event() — appends to management_events JSON array
+      3. record_exit()   — fills exit-side fields and computes P&L / R-multiple
+    """
+
+    id: str = field(default_factory=_new_uuid)
+    symbol: str = ""
+    direction: str = ""                 # "BUY" | "SELL"
+
+    # Prices
+    entry_price: float = 0.0
+    exit_price: Optional[float] = None
+    sl_price: float = 0.0
+    tp1_price: float = 0.0
+    tp2_price: float = 0.0
+
+    # Sizing & risk
+    lot_size: float = 0.0
+    risk_amount: float = 0.0           # Monetary risk (from PositionSizeResult)
+
+    # Outcome (populated on exit)
+    pnl: Optional[float] = None
+    pnl_pct: Optional[float] = None    # pnl / risk_amount * 100
+    r_multiple: Optional[float] = None # pnl / risk_amount
+
+    # Confluence
+    confluence_score: float = 0.0
+    quality_grade: str = ""            # "A+" | "A" | "B" | "REJECTED"
+    factor_breakdown: str = "{}"       # JSON: factor_name → score
+
+    # Timestamps
+    entry_time_utc: str = field(default_factory=_now_iso)
+    exit_time_utc: Optional[str] = None
+    duration_minutes: Optional[float] = None
+
+    # Exit metadata
+    exit_reason: Optional[str] = None
+    management_events: str = "[]"      # JSON array of management event dicts
+
+    # Execution
+    slippage_pips: Optional[float] = None
+    execution_ticket: Optional[int] = None
+
+    # Context
+    session: str = ""
+    mode: str = "DEMO"                 # "DEMO" | "LIVE"
+    notes: str = ""
+
+    # Audit
+    created_at: str = field(default_factory=_now_iso)
+    updated_at: str = field(default_factory=_now_iso)
