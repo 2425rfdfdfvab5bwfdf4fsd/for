@@ -14,6 +14,10 @@
             <span class="header-title">MT5 Trading Bot</span>
             <span id="header-mode" class="badge badge-demo">DEMO</span>
         </div>
+        <nav class="header-nav">
+            <a href="/" class="nav-link{% if active_page == 'overview' %} nav-active{% endif %}">Overview</a>
+            <a href="/scanner" class="nav-link{% if active_page == 'scanner' %} nav-active{% endif %}">Scanner</a>
+        </nav>
         <div class="header-right">
             <span class="status-dot" id="header-status-dot"></span>
             <span id="header-status-text" class="header-status-text">—</span>

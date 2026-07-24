@@ -66,7 +66,12 @@ def create_app(
     # Root route — serves the overview dashboard page
     @app.route("/")
     def index():  # pylint: disable=unused-variable
-        return render_template("index.html")
+        return render_template("index.html", active_page="overview")
+
+    # Scanner route — market scanner view
+    @app.route("/scanner")
+    def scanner():  # pylint: disable=unused-variable
+        return render_template("scanner.html", active_page="scanner")
 
     logger.info(
         "Dashboard app created — host=%s port=%s",

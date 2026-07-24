@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Market Scanner — MT5 Trading Bot{% endblock %}
+
+{% block content %}
+<!-- Loading spinner -->
+<div id="loading-spinner" class="spinner-wrap">
+    <div class="spinner"></div>
+</div>
+
+<!-- ── Symbol cards ───────────────────────────────────────────── -->
+<section class="section-header">
+    <h2 class="section-title">Symbol Scanner</h2>
+    <span class="section-sub">Last signal data from today's scan</span>
+</section>
+
+<section class="symbol-grid" id="symbol-grid">
+    <!-- Populated by scanner.js -->
+</section>
+
+<!-- ── Signal history table ───────────────────────────────────── -->
+<section class="panel" id="signals-panel">
+    <div class="panel-header">
+        <span class="panel-title">Today's Signal History</span>
+        <span class="panel-badge" id="signals-count">0</span>
+    </div>
+    <div class="table-wrap">
+        <table class="data-table" id="signals-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Symbol</th>
+                    <th>Dir</th>
+                    <th>Score</th>
+                    <th>Grade</th>
+                    <th>Outcome</th>
+                    <th>Detail</th>
+                </tr>
+            </thead>
+            <tbody id="signals-tbody">
+                <tr><td colspan="7" class="empty-row">No signals today</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

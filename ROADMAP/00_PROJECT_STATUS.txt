@@ -3,7 +3,7 @@ PROJECT STATUS TRACKER
 ================================================================================
 Project: MT5 Automated Forex Trading Bot
 Last Updated: 2026-07-24
-Updated By: Replit Agent — Phase 14 Task 14-02 COMPLETE
+Updated By: Replit Agent — Phase 14 Task 14-03 COMPLETE
 
 STATUS LEGEND:
   [ ] NOT STARTED
@@ -31,7 +31,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   11  | Automation              | [✓]    | 2026-07-24   | Complete — all 5 tasks done (92 tests)
   12  | Notifications           | [✓]    | 2026-07-24   | Complete — 47 tests (12-01: 21, 12-02: 26)
   13  | Trade Journal           | [✓]    | 2026-07-24   | Complete — all 4 tasks done (50 tests)
-  14  | Dashboard               | [~]    | 2026-07-24   | 14-01–02 complete; 14-03–08 pending
+  14  | Dashboard               | [~]    | 2026-07-24   | 14-01–03 complete; 14-04–08 pending
   15  | Backtesting             | [ ]    | -            | Depends on 05+07+08
   16  | Validation              | [ ]    | -            | Depends on Phase 15
   17  | Self-Improvement        | [ ]    | -            | Depends on 04+15
@@ -915,7 +915,7 @@ Completed Tasks: 14-01 BACKEND API — [✓] COMPLETE (2026-07-24)
                  14-02 OVERVIEW UI — [✓] COMPLETE (2026-07-24)
 Failed Tasks:    None
 Known Issues:    None
-Next Action:     14-03 — ROADMAP/14_DASHBOARD/03_TASK_MARKET_SCANNER.txt
+Next Action:     14-04 — ROADMAP/14_DASHBOARD/04_TASK_OPEN_POSITIONS.txt
 
 TASK 14-01 — DASHBOARD BACKEND API: [✓] COMPLETE (2026-07-24)
   Files Created:
@@ -948,6 +948,21 @@ TASK 14-02 — DASHBOARD OVERVIEW UI: [✓] COMPLETE (2026-07-24)
     [✓] Status cards update on refresh
     [✓] Open positions table populated
     [✓] Bot offline state handled gracefully (BOT OFFLINE banner)
+
+TASK 14-03 — MARKET SCANNER VIEW: [✓] COMPLETE (2026-07-24)
+  Files Created:
+    app/dashboard/templates/scanner.html — symbol cards + signal history table
+    app/dashboard/static/js/scanner.js   — vanilla JS, 30s auto-refresh, per-symbol derivation
+  Files Modified:
+    app/dashboard/app.py                 — added GET /scanner route
+    app/dashboard/templates/base.html   — added nav links (Overview / Scanner)
+    app/dashboard/static/css/dashboard.css — added nav, symbol card, filter tag styles
+  Tests: 0 new (UI-only task; existing 834 pass, zero regressions)
+  Acceptance Criteria:
+    [✓] All 3 symbol cards rendered (EURUSD, GBPUSD, USDJPY)
+    [✓] Filter status icons shown correctly (✓ pass / ⚠ blocked)
+    [✓] Signal history table populated from /api/signals/history
+    [✓] Auto-refresh every 30 seconds
 
 ================================================================================
 PHASE 15 — BACKTESTING
@@ -1052,11 +1067,11 @@ Per-Phase Test Counts (verified 2026-07-24):
   Phase 11 (Automation):         92 tests  (11-01: 18, 11-02: 16, 11-03: 21, 11-04: 18, 11-05: 19)
   Phase 12 (Notifications):      47 tests  (12-01: 21, 12-02: 26)
   Phase 13 (Trade Journal):      50 tests  (13-01: 13, 13-02: 11, 13-03: 13, 13-04: 13)
-  Phase 14 (Dashboard):          17 tests  (14-01: 17, 14-02: 0 UI-only)
+  Phase 14 (Dashboard):          17 tests  (14-01: 17, 14-02–03: 0 UI-only)
   TOTAL:                        834 tests (all pass)
 
-Current Phase:        14 — DASHBOARD (tasks 14-01–02 complete; next: 14-03 MARKET_SCANNER)
-Recommended Action:   Open ROADMAP/14_DASHBOARD/03_TASK_MARKET_SCANNER.txt
+Current Phase:        14 — DASHBOARD (tasks 14-01–03 complete; next: 14-04 OPEN_POSITIONS)
+Recommended Action:   Open ROADMAP/14_DASHBOARD/04_TASK_OPEN_POSITIONS.txt
 
 ================================================================================
 ROADMAP AUDIT — COMPLETE (2026-07-23)
