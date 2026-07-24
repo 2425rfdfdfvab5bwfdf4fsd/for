@@ -256,6 +256,11 @@ class Config:
     ROBUSTNESS_DEGRADATION_THRESHOLD: float  # Max allowed P&L degradation % before a test fails (default 50.0)
 
     # ------------------------------------------------------------------
+    # SELF-IMPROVEMENT ANALYTICS (Phase 17)
+    # ------------------------------------------------------------------
+    MINIMUM_SEGMENT_SAMPLE: int  # Minimum trades per segment to flag as statistically sufficient (default 15)
+
+    # ------------------------------------------------------------------
     # SCREENSHOTS
     # ------------------------------------------------------------------
     ENABLE_SCREENSHOTS: bool
@@ -481,6 +486,9 @@ class Config:
 
         # --- ROBUSTNESS TESTING ---
         self.ROBUSTNESS_DEGRADATION_THRESHOLD = _get_float("ROBUSTNESS_DEGRADATION_THRESHOLD", 50.0)
+
+        # --- SELF-IMPROVEMENT ANALYTICS ---
+        self.MINIMUM_SEGMENT_SAMPLE = _get_int("MINIMUM_SEGMENT_SAMPLE", 15)
 
         # --- SCREENSHOTS ---
         self.ENABLE_SCREENSHOTS = _get_bool("ENABLE_SCREENSHOTS", False)
