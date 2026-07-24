@@ -32,7 +32,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   12  | Notifications           | [✓]    | 2026-07-24   | Complete — 47 tests (12-01: 21, 12-02: 26)
   13  | Trade Journal           | [✓]    | 2026-07-24   | Complete — all 4 tasks done (50 tests)
   14  | Dashboard               | [✓]    | 2026-07-24   | Complete — all 8 tasks done (26 tests)
-  15  | Backtesting             | [~]    | 2026-07-24   | 15-01–04 complete; task 15-05 pending
+  15  | Backtesting             | [✓]    | 2026-07-24   | All 5 tasks complete
   16  | Validation              | [ ]    | -            | Depends on Phase 15
   17  | Self-Improvement        | [ ]    | -            | Depends on 04+15
   18  | Windows Automation      | [ ]    | -            | Depends on 11+14
@@ -1061,15 +1061,17 @@ TASK 14-08 — WHY NO TRADE EXPLAINER: [✓] COMPLETE (2026-07-24)
 ================================================================================
 PHASE 15 — BACKTESTING
 ================================================================================
-Status:          [~] IN PROGRESS
+Status:          [✓] COMPLETE
 Last Updated:    2026-07-24
+Updated By:      Replit Agent — Phase 15 Task 15-05 COMPLETE
 Completed Tasks: 15-01 HISTORICAL DATA      — [✓] COMPLETE (2026-07-24)
                  15-02 BACKTEST ENGINE      — [✓] COMPLETE (2026-07-24)
                  15-03 REALISTIC EXECUTION  — [✓] COMPLETE (2026-07-24)
                  15-04 METRICS CALCULATOR   — [✓] COMPLETE (2026-07-24)
+                 15-05 BACKTEST REPORTS     — [✓] COMPLETE (2026-07-24)
 Failed Tasks:    None
 Known Issues:    None
-Next Action:     ROADMAP/15_BACKTESTING/05_TASK_REPORTS.txt
+Next Action:     Begin Phase 16 — ROADMAP/16_VALIDATION/01_PHASE_OVERVIEW.txt
 
 TASK 15-01 — HISTORICAL DATA MANAGER: [✓] COMPLETE (2026-07-24)
   Files Created:
@@ -1130,6 +1132,27 @@ TASK 15-04 — PERFORMANCE METRICS CALCULATOR: [✓] COMPLETE (2026-07-24)
     [✓] All metrics calculated correctly (verified against known inputs)
     [✓] Low sample size triggers warning (< BACKTEST_MIN_SAMPLE_TRADES)
     [✓] All tests pass with known mathematical results (992/992, zero regressions)
+
+TASK 15-05 — BACKTEST REPORTS: [✓] COMPLETE (2026-07-24)
+  Files Created:
+    backtesting/reports.py                      — BacktestReporter, DISCLAIMER,
+                                                  _compute_drawdown_curve,
+                                                  _compute_monthly_returns,
+                                                  _pnl_histogram, _confluence_histogram,
+                                                  _render_trade_log, _render_warnings,
+                                                  _HTML_TEMPLATE (Chart.js embedded)
+    run_backtest.py                             — CLI entry point (run_backtest.bat)
+    tests/test_backtesting/test_reports.py      — 41 tests (all pass)
+  Files Modified:
+    ROADMAP/00_PROJECT_STATUS.txt               — this file
+    replit.md                                   — updated test count
+  Tests: 41 new / 1033 total (all pass, zero regressions)
+  Acceptance Criteria:
+    [✓] HTML report opens in browser without errors (Chart.js, 11 sections)
+    [✓] Disclaimer present on all reports (top + footer)
+    [✓] CSV exports correctly (all SimulatedTrade fields + summary metrics)
+    [✓] run_backtest.py entry point functional (argparse, error handling)
+    [✓] Phase 15 COMPLETE in ROADMAP/00_PROJECT_STATUS.txt
 
 ================================================================================
 PHASE 16 — VALIDATION
@@ -1205,11 +1228,11 @@ Next Action:     Complete all phases first.
 OVERALL PROJECT METRICS
 ================================================================================
 Total Phases:         22
-Completed Phases:     14  (Phases 01–14)
-In Progress:          1   (Phase 15)
+Completed Phases:     15  (Phases 01–15)
+In Progress:          0
 Blocked:              0
 Not Started:          7   (Phases 16–22)
-Tests Passing:        992/992  (100% — Python 3.12, pytest 9.x, pandas 3+)
+Tests Passing:        1033/1033  (100% — Python 3.12, pytest 9.x, pandas 3+)
 Log Files Active:     4  (app.log, trading.log, errors.log, strategy.log)
 
 Per-Phase Test Counts (verified 2026-07-24):
@@ -1225,11 +1248,11 @@ Per-Phase Test Counts (verified 2026-07-24):
   Phase 12 (Notifications):      47 tests  (12-01: 21, 12-02: 26)
   Phase 13 (Trade Journal):      50 tests  (13-01: 13, 13-02: 11, 13-03: 13, 13-04: 13)
   Phase 14 (Dashboard):          26 tests  (14-01: 17, 14-02–07: 0 UI-only, 14-08: 9)
-  Phase 15 (Backtesting):       149 tests  (15-01: 23, 15-02: 29, 15-03: 36, 15-04: 61)
-  TOTAL:                        992 tests (all pass)
+  Phase 15 (Backtesting):       190 tests  (15-01: 23, 15-02: 29, 15-03: 36, 15-04: 61, 15-05: 41)
+  TOTAL:                        1033 tests (all pass)
 
-Current Phase:        15 — BACKTESTING (tasks 15-01–04 complete; next: 15-05 REPORTS)
-Recommended Action:   Open ROADMAP/15_BACKTESTING/05_TASK_REPORTS.txt
+Current Phase:        16 — VALIDATION
+Recommended Action:   Open ROADMAP/16_VALIDATION/01_PHASE_OVERVIEW.txt
 
 ================================================================================
 ROADMAP AUDIT — COMPLETE (2026-07-23)
