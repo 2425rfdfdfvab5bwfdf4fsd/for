@@ -429,6 +429,131 @@ body {
 .font-bold { font-weight: 700; }
 .font-mono { font-family: var(--font-mono); }
 
+/* ── Expand cell & expanded row ─────────────────────────────── */
+.expand-cell {
+    width: 28px;
+    color: var(--text-dim);
+    font-size: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.pos-row { cursor: pointer; }
+.pos-row:hover { background: #1c2535 !important; }
+.row-expanded { background: #1a2233 !important; border-bottom: none !important; }
+
+.detail-row td { padding: 0 !important; border-bottom: 1px solid var(--border); }
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--border);
+}
+
+.detail-block {
+    padding: 14px 18px;
+    border-right: 1px solid var(--border);
+}
+.detail-block:last-child { border-right: none; }
+
+.detail-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+/* Score bar */
+.score-bar-wrap  { display: flex; align-items: center; gap: 10px; }
+.score-bar-track { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.score-bar-fill  { height: 100%; border-radius: 4px; transition: width 0.4s; }
+.score-bar-label { font-size: 13px; font-weight: 700; color: var(--text); min-width: 44px; }
+
+/* Detail key-value table */
+.detail-kv { width: 100%; border-collapse: collapse; font-size: 13px; }
+.detail-kv td { padding: 4px 0; vertical-align: middle; }
+.detail-kv td:first-child { color: var(--text-muted); width: 90px; }
+
+/* Indicator pills */
+.indicator-pill {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+}
+.pill-blue    { background: #0d2a4a; color: var(--blue);   border: 1px solid var(--blue);   }
+.pill-orange  { background: #3d2800; color: #e8941a;       border: 1px solid #e8941a;       }
+.pill-neutral { background: var(--bg-table-hd); color: var(--text-dim); border: 1px solid var(--border); }
+
+/* Panel hint */
+.panel-hint { margin-left: auto; font-size: 11px; color: var(--text-dim); font-style: italic; }
+
+/* ── Period selector ─────────────────────────────────────────── */
+.period-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.period-label { font-size: 13px; color: var(--text-muted); }
+.period-tabs  { display: flex; gap: 4px; }
+.period-btn {
+    padding: 5px 16px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-card);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.period-btn:hover   { background: var(--bg-table-hd); color: var(--text); }
+.period-active      { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
+
+/* ── Chart row + panel ───────────────────────────────────────── */
+.chart-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+}
+.chart-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.chart-body {
+    padding: 16px;
+    position: relative;
+    height: 240px;
+}
+.chart-body-small { height: 200px; }
+
+/* ── Sortable table ──────────────────────────────────────────── */
+th.sortable:hover { color: var(--text); background: #1c2535; }
+.sort-icon        { font-size: 10px; color: var(--text-dim); }
+
+/* ── CSV export button ───────────────────────────────────────── */
+.csv-btn {
+    margin-left: auto;
+    padding: 3px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+.csv-btn:hover { background: var(--bg-table-hd); color: var(--text); }
+
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 900px) {
     .card-row { grid-template-columns: repeat(2, 1fr); }

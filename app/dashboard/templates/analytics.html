@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics — MT5 Trading Bot{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Loading spinner -->
+<div id="loading-spinner" class="spinner-wrap">
+    <div class="spinner"></div>
+</div>
+
+<!-- ── Period selector ────────────────────────────────────────── -->
+<section class="period-bar">
+    <span class="period-label">Period:</span>
+    <div class="period-tabs" id="period-tabs" role="group">
+        <button class="period-btn" data-period="1d">1D</button>
+        <button class="period-btn period-active" data-period="7d">7D</button>
+        <button class="period-btn" data-period="30d">30D</button>
+        <button class="period-btn" data-period="all">ALL</button>
+    </div>
+</section>
+
+<!-- ── Key metrics ────────────────────────────────────────────── -->
+<section class="card-row" id="metrics-row">
+    <div class="card">
+        <div class="card-label">TOTAL TRADES</div>
+        <div class="card-value" id="val-total-trades">—</div>
+    </div>
+    <div class="card">
+        <div class="card-label">WIN RATE</div>
+        <div class="card-value" id="val-win-rate">—</div>
+    </div>
+    <div class="card">
+        <div class="card-label">TOTAL P&amp;L</div>
+        <div class="card-value" id="val-total-pnl">—</div>
+    </div>
+    <div class="card">
+        <div class="card-label">AVG R:R</div>
+        <div class="card-value" id="val-avg-rr">—</div>
+    </div>
+    <div class="card">
+        <div class="card-label">AVG SCORE</div>
+        <div class="card-value" id="val-avg-score">—</div>
+    </div>
+    <div class="card">
+        <div class="card-label">WIN / LOSS</div>
+        <div class="card-value" id="val-win-loss">—</div>
+    </div>
+</section>
+
+<!-- ── Charts row 1: equity + win/loss ───────────────────────── -->
+<div class="chart-row">
+    <div class="chart-panel">
+        <div class="panel-header">
+            <span class="panel-title">Equity Curve</span>
+            <span class="panel-badge" id="equity-points">0 pts</span>
+        </div>
+        <div class="chart-body">
+            <canvas id="equityChart"></canvas>
+        </div>
+    </div>
+    <div class="chart-panel">
+        <div class="panel-header">
+            <span class="panel-title">Win / Loss by Symbol</span>
+        </div>
+        <div class="chart-body">
+            <canvas id="winLossChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ── Charts row 2: score distribution + rejections ─────────── -->
+<div class="chart-row">
+    <div class="chart-panel">
+        <div class="panel-header">
+            <span class="panel-title">Confluence Score Distribution</span>
+        </div>
+        <div class="chart-body">
+            <canvas id="scoreChart"></canvas>
+        </div>
+    </div>
+    <div class="chart-panel">
+        <div class="panel-header">
+            <span class="panel-title">Rejection Categories</span>
+        </div>
+        <div class="chart-body chart-body-small">
+            <canvas id="rejectionChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ── Session performance table ─────────────────────────────── -->
+<section class="panel" id="session-panel">
+    <div class="panel-header">
+        <span class="panel-title">Session Performance</span>
+    </div>
+    <div class="table-wrap">
+        <table class="data-table" id="session-table">
+            <thead>
+                <tr>
+                    <th>Session</th>
+                    <th>Trades</th>
+                    <th>Wins</th>
+                    <th>Losses</th>
+                    <th>Win Rate</th>
+                    <th>Total P&amp;L</th>
+                    <th>Avg P&amp;L</th>
+                </tr>
+            </thead>
+            <tbody id="session-tbody">
+                <tr><td colspan="7" class="empty-row">No session data</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- ── Trade history table ────────────────────────────────────── -->
+<section class="panel" id="history-panel">
+    <div class="panel-header">
+        <span class="panel-title">Trade History</span>
+        <span class="panel-badge" id="history-count">0</span>
+        <button class="csv-btn" id="csv-export-btn" title="Export to CSV">⬇ CSV</button>
+    </div>
+    <div class="table-wrap">
+        <table class="data-table sortable-table" id="history-table">
+            <thead>
+                <tr>
+                    <th data-col="entry_time_utc" class="sortable">Date <span class="sort-icon">⇅</span></th>
+                    <th data-col="symbol"         class="sortable">Symbol <span class="sort-icon">⇅</span></th>
+                    <th>Dir</th>
+                    <th data-col="confluence_score" class="sortable">Score <span class="sort-icon">⇅</span></th>
+                    <th>Entry</th>
+                    <th>Exit</th>
+                    <th data-col="pnl"          class="sortable">P&amp;L <span class="sort-icon">⇅</span></th>
+                    <th data-col="r_multiple"   class="sortable">R <span class="sort-icon">⇅</span></th>
+                    <th>Duration</th>
+                </tr>
+            </thead>
+            <tbody id="history-tbody">
+                <tr><td colspan="9" class="empty-row">No trade history</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+{% endblock %}

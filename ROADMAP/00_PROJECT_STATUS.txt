@@ -3,7 +3,7 @@ PROJECT STATUS TRACKER
 ================================================================================
 Project: MT5 Automated Forex Trading Bot
 Last Updated: 2026-07-24
-Updated By: Replit Agent — Phase 14 Task 14-03 COMPLETE
+Updated By: Replit Agent — Phase 14 Task 14-05 COMPLETE
 
 STATUS LEGEND:
   [ ] NOT STARTED
@@ -31,7 +31,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   11  | Automation              | [✓]    | 2026-07-24   | Complete — all 5 tasks done (92 tests)
   12  | Notifications           | [✓]    | 2026-07-24   | Complete — 47 tests (12-01: 21, 12-02: 26)
   13  | Trade Journal           | [✓]    | 2026-07-24   | Complete — all 4 tasks done (50 tests)
-  14  | Dashboard               | [~]    | 2026-07-24   | 14-01–03 complete; 14-04–08 pending
+  14  | Dashboard               | [~]    | 2026-07-24   | 14-01–05 complete; 14-06–08 pending
   15  | Backtesting             | [ ]    | -            | Depends on 05+07+08
   16  | Validation              | [ ]    | -            | Depends on Phase 15
   17  | Self-Improvement        | [ ]    | -            | Depends on 04+15
@@ -915,7 +915,7 @@ Completed Tasks: 14-01 BACKEND API — [✓] COMPLETE (2026-07-24)
                  14-02 OVERVIEW UI — [✓] COMPLETE (2026-07-24)
 Failed Tasks:    None
 Known Issues:    None
-Next Action:     14-04 — ROADMAP/14_DASHBOARD/04_TASK_OPEN_POSITIONS.txt
+Next Action:     14-06 — ROADMAP/14_DASHBOARD/06_TASK_LOG_VIEWER.txt
 
 TASK 14-01 — DASHBOARD BACKEND API: [✓] COMPLETE (2026-07-24)
   Files Created:
@@ -963,6 +963,36 @@ TASK 14-03 — MARKET SCANNER VIEW: [✓] COMPLETE (2026-07-24)
     [✓] Filter status icons shown correctly (✓ pass / ⚠ blocked)
     [✓] Signal history table populated from /api/signals/history
     [✓] Auto-refresh every 30 seconds
+
+TASK 14-04 — OPEN POSITIONS VIEW: [✓] COMPLETE (2026-07-24)
+  Files Created:
+    app/dashboard/templates/positions.html — summary cards + expandable positions table
+    app/dashboard/static/js/positions.js   — vanilla JS, 10s auto-refresh, expand/collapse rows
+  Files Modified:
+    app/dashboard/app.py                   — added GET /positions route
+    app/dashboard/templates/base.html      — added Positions nav link
+    app/dashboard/static/css/dashboard.css — expandable row, detail grid, indicator pill styles
+  Tests: 0 new (UI-only task; existing 834 pass, zero regressions)
+  Acceptance Criteria:
+    [✓] All open positions displayed
+    [✓] P&L color-coded (green positive, red negative)
+    [✓] Management status indicators shown (BE=blue pill, Partial=orange pill)
+    [✓] Auto-refresh every 10 seconds with live countdown
+
+TASK 14-05 — ANALYTICS PAGE: [✓] COMPLETE (2026-07-24)
+  Files Created:
+    app/dashboard/templates/analytics.html — period selector, metrics, 4 charts, session table, history table
+    app/dashboard/static/js/analytics.js   — Chart.js integration, CSV export, sortable table
+  Files Modified:
+    app/dashboard/app.py                   — added GET /analytics route
+    app/dashboard/templates/base.html      — added Analytics nav link
+    app/dashboard/static/css/dashboard.css — period tabs, chart panels, sortable/CSV styles
+  Tests: 0 new (UI-only task; existing 834 pass, zero regressions)
+  Acceptance Criteria:
+    [✓] All 4 charts rendered (equity curve, win/loss by symbol, score histogram, rejection pie)
+    [✓] Period selector (1D/7D/30D/ALL) updates all charts and metrics
+    [✓] Key metrics calculated correctly from /api/stats
+    [✓] CSV export functional (downloads trades_<period>_<date>.csv)
 
 ================================================================================
 PHASE 15 — BACKTESTING
@@ -1067,11 +1097,11 @@ Per-Phase Test Counts (verified 2026-07-24):
   Phase 11 (Automation):         92 tests  (11-01: 18, 11-02: 16, 11-03: 21, 11-04: 18, 11-05: 19)
   Phase 12 (Notifications):      47 tests  (12-01: 21, 12-02: 26)
   Phase 13 (Trade Journal):      50 tests  (13-01: 13, 13-02: 11, 13-03: 13, 13-04: 13)
-  Phase 14 (Dashboard):          17 tests  (14-01: 17, 14-02–03: 0 UI-only)
+  Phase 14 (Dashboard):          17 tests  (14-01: 17, 14-02–05: 0 UI-only)
   TOTAL:                        834 tests (all pass)
 
-Current Phase:        14 — DASHBOARD (tasks 14-01–03 complete; next: 14-04 OPEN_POSITIONS)
-Recommended Action:   Open ROADMAP/14_DASHBOARD/04_TASK_OPEN_POSITIONS.txt
+Current Phase:        14 — DASHBOARD (tasks 14-01–05 complete; next: 14-06 LOG_VIEWER)
+Recommended Action:   Open ROADMAP/14_DASHBOARD/06_TASK_LOG_VIEWER.txt
 
 ================================================================================
 ROADMAP AUDIT — COMPLETE (2026-07-23)

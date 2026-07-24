@@ -73,6 +73,16 @@ def create_app(
     def scanner():  # pylint: disable=unused-variable
         return render_template("scanner.html", active_page="scanner")
 
+    # Positions route — open positions detail view
+    @app.route("/positions")
+    def positions():  # pylint: disable=unused-variable
+        return render_template("positions.html", active_page="positions")
+
+    # Analytics route — performance charts and statistics
+    @app.route("/analytics")
+    def analytics():  # pylint: disable=unused-variable
+        return render_template("analytics.html", active_page="analytics")
+
     logger.info(
         "Dashboard app created — host=%s port=%s",
         config.DASHBOARD_HOST,

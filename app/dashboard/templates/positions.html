@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Open Positions — MT5 Trading Bot{% endblock %}
+
+{% block content %}
+<!-- Loading spinner -->
+<div id="loading-spinner" class="spinner-wrap">
+    <div class="spinner"></div>
+</div>
+
+<!-- ── Summary bar ────────────────────────────────────────────── -->
+<section class="card-row" id="pos-summary-row">
+    <div class="card">
+        <div class="card-label">OPEN POSITIONS</div>
+        <div class="card-value" id="val-pos-count">—</div>
+    </div>
+    <div class="card">
+        <div class="card-label">TOTAL P&amp;L</div>
+        <div class="card-value" id="val-pos-pnl">—</div>
+    </div>
+    <div class="card">
+        <div class="card-label">TOTAL LOTS</div>
+        <div class="card-value" id="val-pos-lots">—</div>
+    </div>
+    <div class="card">
+        <div class="card-label">REFRESH</div>
+        <div class="card-value text-muted" id="val-pos-refresh">10s</div>
+        <div class="card-sub" id="val-pos-next-refresh"></div>
+    </div>
+</section>
+
+<!-- ── Positions table ────────────────────────────────────────── -->
+<section class="panel" id="positions-panel">
+    <div class="panel-header">
+        <span class="panel-title">Open Positions</span>
+        <span class="panel-badge" id="positions-count">0</span>
+        <span class="panel-hint">Click any row to expand details</span>
+    </div>
+    <div class="table-wrap">
+        <table class="data-table" id="positions-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Symbol</th>
+                    <th>Dir</th>
+                    <th>Lots</th>
+                    <th>Entry</th>
+                    <th>SL</th>
+                    <th>TP</th>
+                    <th>P&amp;L</th>
+                    <th>Duration</th>
+                    <th>Score</th>
+                    <th>Grade</th>
+                    <th>BE</th>
+                    <th>Partial</th>
+                </tr>
+            </thead>
+            <tbody id="positions-tbody">
+                <tr><td colspan="13" class="empty-row">No open positions</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
