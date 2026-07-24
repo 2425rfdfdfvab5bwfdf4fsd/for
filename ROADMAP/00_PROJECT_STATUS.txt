@@ -3,7 +3,7 @@ PROJECT STATUS TRACKER
 ================================================================================
 Project: MT5 Automated Forex Trading Bot
 Last Updated: 2026-07-24
-Updated By: Replit Agent — Phase 13 Task 13-02 COMPLETE
+Updated By: Replit Agent — Phase 13 Task 13-03 COMPLETE
 
 STATUS LEGEND:
   [ ] NOT STARTED
@@ -851,7 +851,7 @@ Completed Tasks: 13-01 TRADE JOURNAL — [✓] COMPLETE (2026-07-24)
                    Tests added: 13 (780 total, all pass)
 Failed Tasks:    None
 Known Issues:    None
-Next Action:     13-03 — ROADMAP/13_TRADE_JOURNAL/03_TASK_SCREENSHOTS.txt
+Next Action:     13-04 — ROADMAP/13_TRADE_JOURNAL/04_TASK_MISSED_TRADE_ANALYSIS.txt
 
 TASK 13-01 — TRADE JOURNAL: [✓] COMPLETE (2026-07-24)
   Files Created:
@@ -881,6 +881,16 @@ TASK 13-02 — REJECTION JOURNAL: [✓] COMPLETE (2026-07-24)
     [✓] All 11 rejection categories stored and retrievable
     [✓] Summary statistics queryable (counts_by_category, total, most_common_reason)
     [✓] All tests pass (791/791 full suite, zero regressions)
+
+TASK 13-03 — CHART SCREENSHOTS: [✓] COMPLETE (2026-07-24)
+  Files Created:
+    app/journal/screenshot_manager.py  — ScreenshotManager (capture_entry/capture_exit/is_enabled)
+    tests/test_journal/test_screenshots.py — 13 tests (all pass)
+  Tests: 13/13 pass
+  Acceptance Criteria:
+    [✓] Disabled mode is a complete no-op (returns None, creates no files)
+    [✓] Path format is consistent: {SCREENSHOT_DIR}/{YYYY-MM-DD}/{symbol}_{ticket}_{event}.png
+    [✓] All tests pass (804/804 full suite, zero regressions)
 
 ================================================================================
 PHASE 14 — DASHBOARD
@@ -994,11 +1004,11 @@ Per-Phase Test Counts (verified 2026-07-24):
   Phase 10 (Position Mgmt):      60 tests
   Phase 11 (Automation):         92 tests  (11-01: 18, 11-02: 16, 11-03: 21, 11-04: 18, 11-05: 19)
   Phase 12 (Notifications):      47 tests  (12-01: 21, 12-02: 26)
-  Phase 13 (Trade Journal):      24 tests  (13-01: 13, 13-02: 11)
-  TOTAL:                        791 tests (all pass)
+  Phase 13 (Trade Journal):      37 tests  (13-01: 13, 13-02: 11, 13-03: 13)
+  TOTAL:                        804 tests (all pass)
 
-Current Phase:        13 — TRADE JOURNAL (tasks 13-01–02 complete; next: 13-03 SCREENSHOTS)
-Recommended Action:   Open ROADMAP/13_TRADE_JOURNAL/03_TASK_SCREENSHOTS.txt
+Current Phase:        13 — TRADE JOURNAL (tasks 13-01–03 complete; next: 13-04 MISSED_TRADE_ANALYSIS)
+Recommended Action:   Open ROADMAP/13_TRADE_JOURNAL/04_TASK_MISSED_TRADE_ANALYSIS.txt
 
 ================================================================================
 ROADMAP AUDIT — COMPLETE (2026-07-23)
