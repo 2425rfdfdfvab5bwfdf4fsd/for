@@ -251,6 +251,11 @@ class Config:
     SENSITIVITY_THRESHOLD: float  # Max allowed % performance change per parameter variation (default 50.0)
 
     # ------------------------------------------------------------------
+    # ROBUSTNESS TESTING (Phase 16-05)
+    # ------------------------------------------------------------------
+    ROBUSTNESS_DEGRADATION_THRESHOLD: float  # Max allowed P&L degradation % before a test fails (default 50.0)
+
+    # ------------------------------------------------------------------
     # SCREENSHOTS
     # ------------------------------------------------------------------
     ENABLE_SCREENSHOTS: bool
@@ -473,6 +478,9 @@ class Config:
 
         # --- OVERFITTING CHECK ---
         self.SENSITIVITY_THRESHOLD = _get_float("SENSITIVITY_THRESHOLD", 50.0)
+
+        # --- ROBUSTNESS TESTING ---
+        self.ROBUSTNESS_DEGRADATION_THRESHOLD = _get_float("ROBUSTNESS_DEGRADATION_THRESHOLD", 50.0)
 
         # --- SCREENSHOTS ---
         self.ENABLE_SCREENSHOTS = _get_bool("ENABLE_SCREENSHOTS", False)
