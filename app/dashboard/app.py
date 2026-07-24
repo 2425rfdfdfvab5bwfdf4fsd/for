@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from flask import Flask
+from flask import Flask, render_template
 
 from app.config import Config
 from app.dashboard.api.routes import api_bp
@@ -62,6 +62,11 @@ def create_app(
 
     # Register the API blueprint
     app.register_blueprint(api_bp)
+
+    # Root route — serves the overview dashboard page
+    @app.route("/")
+    def index():  # pylint: disable=unused-variable
+        return render_template("index.html")
 
     logger.info(
         "Dashboard app created — host=%s port=%s",

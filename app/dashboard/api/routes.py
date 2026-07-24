@@ -18,7 +18,7 @@ Endpoints:
 
 from __future__ import annotations
 
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, render_template, request
 
 from app.logger import get_logger
 

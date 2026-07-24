@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Overview — MT5 Trading Bot{% endblock %}
+
+{% block content %}
+<!-- Loading spinner -->
+<div id="loading-spinner" class="spinner-wrap">
+    <div class="spinner"></div>
+</div>
+
+<!-- ── Section 2: Status cards ───────────────────────────────────────── -->
+<section class="card-row" id="status-cards">
+    <div class="card" id="card-bot-status">
+        <div class="card-label">BOT STATUS</div>
+        <div class="card-value" id="val-bot-status">—</div>
+    </div>
+    <div class="card" id="card-mt5-status">
+        <div class="card-label">MT5 STATUS</div>
+        <div class="card-value" id="val-mt5-status">—</div>
+    </div>
+    <div class="card" id="card-session">
+        <div class="card-label">SESSION</div>
+        <div class="card-value" id="val-session">—</div>
+    </div>
+    <div class="card" id="card-trading-allowed">
+        <div class="card-label">TRADING ALLOWED</div>
+        <div class="card-value" id="val-trading-allowed">—</div>
+    </div>
+</section>
+
+<!-- ── Section 3: Daily metrics ─────────────────────────────────────── -->
+<section class="card-row" id="metrics-cards">
+    <div class="card">
+        <div class="card-label">TRADES TODAY</div>
+        <div class="card-value" id="val-trades">—</div>
+        <div class="card-sub" id="val-trades-sub"></div>
+    </div>
+    <div class="card">
+        <div class="card-label">DAILY P&amp;L</div>
+        <div class="card-value" id="val-pnl">—</div>
+        <div class="card-sub" id="val-equity">Equity: —</div>
+    </div>
+    <div class="card">
+        <div class="card-label">DAILY LOSS</div>
+        <div class="card-value" id="val-daily-loss">—</div>
+        <div class="card-sub" id="val-daily-loss-limit"></div>
+    </div>
+    <div class="card">
+        <div class="card-label">CONSEC. LOSSES</div>
+        <div class="card-value" id="val-consec-losses">—</div>
+        <div class="card-sub" id="val-consec-losses-limit"></div>
+    </div>
+</section>
+
+<!-- ── Section 4: Open positions ────────────────────────────────────── -->
+<section class="panel" id="positions-panel">
+    <div class="panel-header">
+        <span class="panel-title">Open Positions</span>
+        <span class="panel-badge" id="positions-count">0</span>
+    </div>
+    <div class="table-wrap">
+        <table class="data-table" id="positions-table">
+            <thead>
+                <tr>
+                    <th>Symbol</th>
+                    <th>Dir</th>
+                    <th>Entry</th>
+                    <th>P&amp;L</th>
+                    <th>SL</th>
+                    <th>TP</th>
+                    <th>Duration</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody id="positions-tbody">
+                <tr><td colspan="8" class="empty-row">No open positions</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- ── Section 5: Today's trade history (collapsed) ─────────────────── -->
+<section class="panel" id="history-panel">
+    <div class="panel-header panel-toggle" id="history-toggle" role="button" tabindex="0" aria-expanded="false">
+        <span class="panel-title">Today's Trade History</span>
+        <span class="panel-badge" id="history-count">0</span>
+        <span class="panel-chevron" id="history-chevron">▶</span>
+    </div>
+    <div class="panel-body collapsed" id="history-body">
+        <div class="table-wrap">
+            <table class="data-table" id="history-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Symbol</th>
+                        <th>Dir</th>
+                        <th>Entry</th>
+                        <th>Exit</th>
+                        <th>P&amp;L</th>
+                        <th>R</th>
+                        <th>Duration</th>
+                        <th>Exit Reason</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody id="history-tbody">
+                    <tr><td colspan="10" class="empty-row">No trades today</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,311 @@
+/* ============================================================
+   MT5 Trading Bot Dashboard — Dark Theme
+   ============================================================ */
+
+:root {
+    --bg:           #0d1117;
+    --bg-card:      #161b22;
+    --bg-panel:     #161b22;
+    --bg-table-hd:  #1c2333;
+    --bg-row-alt:   #0d1117;
+    --border:       #30363d;
+    --text:         #e6edf3;
+    --text-muted:   #8b949e;
+    --text-dim:     #6e7681;
+    --green:        #3fb950;
+    --green-bg:     #1a3828;
+    --red:          #f85149;
+    --red-bg:       #3d1a1a;
+    --yellow:       #d29922;
+    --yellow-bg:    #362a00;
+    --blue:         #58a6ff;
+    --accent:       #1f6feb;
+    --radius:       8px;
+    --font:         'Segoe UI', system-ui, -apple-system, sans-serif;
+    --font-mono:    'Cascadia Code', 'Fira Code', monospace;
+}
+
+/* ── Reset ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 52px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-left  { display: flex; align-items: center; gap: 10px; }
+.header-right { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted); }
+
+.header-logo  { font-size: 20px; color: var(--blue); }
+.header-title { font-weight: 700; font-size: 15px; letter-spacing: 0.3px; }
+
+.header-status-text { font-weight: 600; color: var(--text); }
+.header-updated     { color: var(--text-dim); font-size: 12px; }
+
+/* ── Mode badge ─────────────────────────────────────────────── */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+.badge-demo { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow); }
+.badge-live { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red);    }
+
+/* ── Status dot ─────────────────────────────────────────────── */
+.status-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    display: inline-block;
+    flex-shrink: 0;
+}
+.status-dot.green  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.status-dot.red    { background: var(--red);   box-shadow: 0 0 6px var(--red);   }
+.status-dot.yellow { background: var(--yellow); }
+
+/* ── Offline banner ─────────────────────────────────────────── */
+.offline-banner {
+    background: var(--red-bg);
+    border-bottom: 2px solid var(--red);
+    color: var(--red);
+    text-align: center;
+    padding: 10px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+}
+.hidden { display: none !important; }
+
+/* ── Main content ───────────────────────────────────────────── */
+.main-content {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 20px 24px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ── Card row ───────────────────────────────────────────────── */
+.card-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+/* ── Card ───────────────────────────────────────────────────── */
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: border-color 0.2s;
+}
+
+.card-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.card-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+}
+
+.card-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* Card state variants */
+.card.green { border-color: var(--green); }
+.card.green .card-value { color: var(--green); }
+.card.red   { border-color: var(--red);   }
+.card.red   .card-value { color: var(--red);   }
+.card.yellow { border-color: var(--yellow); }
+.card.yellow .card-value { color: var(--yellow); }
+
+/* Inline colour helpers */
+.text-green  { color: var(--green)  !important; }
+.text-red    { color: var(--red)    !important; }
+.text-yellow { color: var(--yellow) !important; }
+.text-muted  { color: var(--text-muted); }
+
+/* ── Panel ──────────────────────────────────────────────────── */
+.panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    background: var(--bg-table-hd);
+    border-bottom: 1px solid var(--border);
+}
+
+.panel-toggle {
+    cursor: pointer;
+    user-select: none;
+}
+.panel-toggle:hover { background: #1c2535; }
+
+.panel-title {
+    font-weight: 600;
+    font-size: 13px;
+    flex: 1;
+}
+
+.panel-badge {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    min-width: 24px;
+    text-align: center;
+}
+
+.panel-chevron {
+    font-size: 11px;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+}
+.panel-chevron.open { transform: rotate(90deg); }
+
+/* ── Panel body collapse ────────────────────────────────────── */
+.panel-body { overflow: hidden; }
+.panel-body.collapsed { display: none; }
+
+/* ── Table ──────────────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; }
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.data-table thead th {
+    background: var(--bg-table-hd);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+.data-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+}
+.data-table tbody tr:last-child { border-bottom: none; }
+.data-table tbody tr:nth-child(even) { background: var(--bg-row-alt); }
+.data-table tbody tr:hover { background: #1c2535; }
+
+.data-table td {
+    padding: 10px 14px;
+    color: var(--text);
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.empty-row {
+    text-align: center;
+    color: var(--text-dim);
+    padding: 28px 14px !important;
+    font-style: italic;
+}
+
+/* Direction badge */
+.dir-badge {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+.dir-buy  { background: var(--green-bg); color: var(--green); }
+.dir-sell { background: var(--red-bg);   color: var(--red);   }
+
+/* Score pill */
+.score-pill {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--bg-table-hd);
+    color: var(--blue);
+}
+
+/* ── Spinner ────────────────────────────────────────────────── */
+.spinner-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 32px;
+}
+.spinner-wrap.hidden { display: none; }
+
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .card-row { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 520px) {
+    .card-row { grid-template-columns: 1fr; }
+    .header-updated { display: none; }
+    .main-content { padding: 12px 12px 32px; }
+}

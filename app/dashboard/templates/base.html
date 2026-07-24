@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MT5 Trading Bot{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <header class="header-bar">
+        <div class="header-left">
+            <span class="header-logo">⬡</span>
+            <span class="header-title">MT5 Trading Bot</span>
+            <span id="header-mode" class="badge badge-demo">DEMO</span>
+        </div>
+        <div class="header-right">
+            <span class="status-dot" id="header-status-dot"></span>
+            <span id="header-status-text" class="header-status-text">—</span>
+            <span class="header-updated">Updated: <span id="header-updated-time">—</span></span>
+        </div>
+    </header>
+
+    <div id="offline-banner" class="offline-banner hidden">
+        ⚠ BOT OFFLINE — heartbeat stale or bot not running
+    </div>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
