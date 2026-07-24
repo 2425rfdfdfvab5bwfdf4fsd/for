@@ -83,6 +83,11 @@ def create_app(
     def analytics():  # pylint: disable=unused-variable
         return render_template("analytics.html", active_page="analytics")
 
+    # Logs route — log viewer page
+    @app.route("/logs")
+    def logs_page():  # pylint: disable=unused-variable
+        return render_template("logs.html", active_page="logs")
+
     logger.info(
         "Dashboard app created — host=%s port=%s",
         config.DASHBOARD_HOST,

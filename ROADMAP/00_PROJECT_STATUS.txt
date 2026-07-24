@@ -3,7 +3,7 @@ PROJECT STATUS TRACKER
 ================================================================================
 Project: MT5 Automated Forex Trading Bot
 Last Updated: 2026-07-24
-Updated By: Replit Agent — Phase 14 Task 14-05 COMPLETE
+Updated By: Replit Agent — Phase 14 Task 14-06 COMPLETE
 
 STATUS LEGEND:
   [ ] NOT STARTED
@@ -31,7 +31,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   11  | Automation              | [✓]    | 2026-07-24   | Complete — all 5 tasks done (92 tests)
   12  | Notifications           | [✓]    | 2026-07-24   | Complete — 47 tests (12-01: 21, 12-02: 26)
   13  | Trade Journal           | [✓]    | 2026-07-24   | Complete — all 4 tasks done (50 tests)
-  14  | Dashboard               | [~]    | 2026-07-24   | 14-01–05 complete; 14-06–08 pending
+  14  | Dashboard               | [~]    | 2026-07-24   | 14-01–06 complete; 14-07–08 pending
   15  | Backtesting             | [ ]    | -            | Depends on 05+07+08
   16  | Validation              | [ ]    | -            | Depends on Phase 15
   17  | Self-Improvement        | [ ]    | -            | Depends on 04+15
@@ -913,9 +913,10 @@ Status:          [~] IN PROGRESS
 Last Updated:    2026-07-24
 Completed Tasks: 14-01 BACKEND API — [✓] COMPLETE (2026-07-24)
                  14-02 OVERVIEW UI — [✓] COMPLETE (2026-07-24)
+                 14-06 LOG VIEWER  — [✓] COMPLETE (2026-07-24)
 Failed Tasks:    None
 Known Issues:    None
-Next Action:     14-06 — ROADMAP/14_DASHBOARD/06_TASK_LOG_VIEWER.txt
+Next Action:     14-07 — ROADMAP/14_DASHBOARD/07_TASK_HEALTH_MONITOR.txt
 
 TASK 14-01 — DASHBOARD BACKEND API: [✓] COMPLETE (2026-07-24)
   Files Created:
@@ -993,6 +994,24 @@ TASK 14-05 — ANALYTICS PAGE: [✓] COMPLETE (2026-07-24)
     [✓] Period selector (1D/7D/30D/ALL) updates all charts and metrics
     [✓] Key metrics calculated correctly from /api/stats
     [✓] CSV export functional (downloads trades_<period>_<date>.csv)
+
+TASK 14-06 — LOG VIEWER: [✓] COMPLETE (2026-07-24)
+  Files Created:
+    app/dashboard/templates/logs.html        — log viewer page (filter toolbar, search, auto-scroll)
+    app/dashboard/static/js/logs.js          — vanilla JS, 15s auto-refresh, level filter, text search
+  Files Modified:
+    app/dashboard/app.py                     — added GET /logs route rendering logs.html
+    app/dashboard/templates/base.html        — added Logs nav link
+    app/dashboard/static/css/dashboard.css   — log table, level badge, filter button styles
+  Tests: 0 new (UI-only task; existing 834 pass, zero regressions)
+  Acceptance Criteria:
+    [✓] Log lines displayed with correct colors (DEBUG=gray, INFO=white, WARNING=yellow, ERROR=orange, CRITICAL=red bold)
+    [✓] Level filter works (ALL | DEBUG | INFO | WARNING | ERROR | CRITICAL)
+    [✓] Search works (client-side, real-time text filter)
+    [✓] Auto-refresh functional (every 15 seconds)
+    [✓] Auto-scroll to bottom toggle present and functional
+    [✓] Line count indicator shows "Showing last 500 lines"
+    [✓] Timestamp | Level | Module | Message columns rendered
 
 ================================================================================
 PHASE 15 — BACKTESTING
@@ -1097,11 +1116,11 @@ Per-Phase Test Counts (verified 2026-07-24):
   Phase 11 (Automation):         92 tests  (11-01: 18, 11-02: 16, 11-03: 21, 11-04: 18, 11-05: 19)
   Phase 12 (Notifications):      47 tests  (12-01: 21, 12-02: 26)
   Phase 13 (Trade Journal):      50 tests  (13-01: 13, 13-02: 11, 13-03: 13, 13-04: 13)
-  Phase 14 (Dashboard):          17 tests  (14-01: 17, 14-02–05: 0 UI-only)
+  Phase 14 (Dashboard):          17 tests  (14-01: 17, 14-02–06: 0 UI-only)
   TOTAL:                        834 tests (all pass)
 
-Current Phase:        14 — DASHBOARD (tasks 14-01–05 complete; next: 14-06 LOG_VIEWER)
-Recommended Action:   Open ROADMAP/14_DASHBOARD/06_TASK_LOG_VIEWER.txt
+Current Phase:        14 — DASHBOARD (tasks 14-01–06 complete; next: 14-07 HEALTH_MONITOR)
+Recommended Action:   Open ROADMAP/14_DASHBOARD/07_TASK_HEALTH_MONITOR.txt
 
 ================================================================================
 ROADMAP AUDIT — COMPLETE (2026-07-23)

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Log Viewer — MT5 Trading Bot{% endblock %}
+
+{% block content %}
+<!-- Loading spinner -->
+<div id="loading-spinner" class="spinner-wrap">
+    <div class="spinner"></div>
+</div>
+
+<!-- ── Toolbar ─────────────────────────────────────────────────────── -->
+<section class="logs-toolbar">
+    <!-- Level filter buttons -->
+    <div class="logs-filter-group" role="group" aria-label="Log level filter">
+        <button class="log-filter-btn log-filter-active" data-level="ALL">ALL</button>
+        <button class="log-filter-btn" data-level="DEBUG">DEBUG</button>
+        <button class="log-filter-btn" data-level="INFO">INFO</button>
+        <button class="log-filter-btn" data-level="WARNING">WARNING</button>
+        <button class="log-filter-btn" data-level="ERROR">ERROR</button>
+        <button class="log-filter-btn" data-level="CRITICAL">CRITICAL</button>
+    </div>
+
+    <!-- Search box -->
+    <div class="logs-search-wrap">
+        <input
+            type="text"
+            id="log-search"
+            class="logs-search-input"
+            placeholder="Search logs…"
+            aria-label="Search log lines"
+            autocomplete="off"
+        />
+    </div>
+
+    <!-- Controls -->
+    <div class="logs-controls">
+        <label class="logs-toggle-label" title="Pin to latest log line">
+            <input type="checkbox" id="auto-scroll-toggle" checked />
+            Auto-scroll
+        </label>
+        <span class="logs-line-count" id="logs-line-count">Showing last 500 lines</span>
+    </div>
+</section>
+
+<!-- ── Log table ───────────────────────────────────────────────────── -->
+<section class="panel logs-panel" id="logs-panel">
+    <div class="panel-header">
+        <span class="panel-title">Bot Log Output</span>
+        <span class="panel-badge" id="logs-visible-count">0</span>
+        <span class="panel-hint" id="logs-refresh-hint">Refreshes every 15 s</span>
+    </div>
+    <div class="logs-table-wrap" id="logs-table-wrap">
+        <table class="data-table logs-table" id="logs-table">
+            <thead>
+                <tr>
+                    <th class="log-col-time">Timestamp</th>
+                    <th class="log-col-level">Level</th>
+                    <th class="log-col-module">Module</th>
+                    <th class="log-col-msg">Message</th>
+                </tr>
+            </thead>
+            <tbody id="logs-tbody">
+                <tr><td colspan="4" class="empty-row">Loading…</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/logs.js') }}"></script>
+{% endblock %}
