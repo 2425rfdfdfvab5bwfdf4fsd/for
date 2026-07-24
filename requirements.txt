@@ -1,29 +1,32 @@
 # =============================================================================
 # MT5 Automated Forex Trading Bot — Python Dependencies
 # =============================================================================
-# Install on Windows: pip install -r requirements.txt
+# Install on Windows:
+#   venv\Scripts\activate
+#   pip install -r requirements.txt
 #
 # NOTE: MetaTrader5 is a Windows-only package. It will fail to install on
 # Linux/macOS. In Replit (Linux), it is mocked in all tests — do not attempt
 # to import it outside of the app/mt5/ module or a pytest mock context.
 # =============================================================================
 
-# --- MetaTrader 5 ---
-MetaTrader5>=5.0.45; sys_platform == "win32"  # MT5 Python API (Windows only)
+# --- MetaTrader 5 (Windows only) ---
+MetaTrader5>=5.0.45; sys_platform == "win32"
 
 # --- Data Processing ---
-pandas>=2.0.0                 # OHLCV data processing, time-series operations
-numpy>=1.24.0                 # Numerical calculations (indicators, position sizing)
+pandas>=2.0.0,<3.0.0          # OHLCV data processing, time-series operations
+numpy>=1.24.0,<3.0.0          # Numerical calculations (indicators, position sizing)
 
 # --- Web Dashboard ---
-fastapi>=0.109.0              # Local web dashboard API (async REST endpoints)
-uvicorn[standard]>=0.27.0    # ASGI server for FastAPI dashboard
+flask>=3.0.0,<4.0.0           # Local monitoring dashboard (Flask-based)
+fastapi>=0.109.0,<1.0.0       # REST API layer for dashboard
+uvicorn[standard]>=0.27.0     # ASGI server for FastAPI
 
 # --- Configuration ---
 python-dotenv>=1.0.0          # Load .env file into environment variables
 
 # --- Notifications ---
-python-telegram-bot>=20.0    # Telegram bot for trade notifications (optional)
+python-telegram-bot>=20.0     # Telegram bot for trade notifications (optional)
 requests>=2.31.0              # HTTP client used by news filter + fallback Telegram
 
 # --- Testing ---
@@ -33,56 +36,3 @@ pytest-mock>=3.11.0           # Provides 'mocker' fixture for MT5 mocking
 
 # --- Charts / Screenshots ---
 matplotlib>=3.7.0             # Backtest charts and optional trade screenshots
-                              # (uses OHLCV data — no GUI/MT5 screenshot automation)
-
-# --- EXCLUDED (see DECISION-001) ---
-# pystray — system tray application — NOT included; future/optional Phase 18+
-#   Only add if user explicitly requests system tray feature.
-fastapi
-matplotlib
-numpy
-pandas
-pytest
-pytest-cov
-pytest-mock
-python-dotenv
-python-telegram-bot
-requests
-uvicorn
-numpy
-pandas
-pytest
-pytest-cov
-pytest-mock
-python-dotenv
-requests
-pytest
-pytest-mock
-flask
-matplotlib
-numpy
-pandas
-pytest-cov
-python-dotenv
-python-telegram-bot
-requests
-fastapi
-numpy
-pandas
-pytest
-pytest-mock
-python-dotenv
-uvicorn
-flask
-matplotlib
-python-telegram-bot
-requests
-flask
-matplotlib
-python-telegram-bot
-requests
-pytest
-pytest-cov
-pytest-mock
-pytest
-pytest-mock
