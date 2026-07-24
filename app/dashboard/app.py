@@ -88,6 +88,11 @@ def create_app(
     def logs_page():  # pylint: disable=unused-variable
         return render_template("logs.html", active_page="logs")
 
+    # Health route — system health monitor page
+    @app.route("/health")
+    def health_page():  # pylint: disable=unused-variable
+        return render_template("health.html", active_page="health")
+
     logger.info(
         "Dashboard app created — host=%s port=%s",
         config.DASHBOARD_HOST,

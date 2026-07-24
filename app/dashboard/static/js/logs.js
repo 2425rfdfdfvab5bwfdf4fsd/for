@@ -7,12 +7,16 @@
  *
  * Log line format (from app/logger.py):
  *   "2026-07-24 10:30:00 | INFO     | app.mt5.connection                   | message"
+ *
+ * Wrapped in an IIFE to avoid global const/function name collisions with
+ * dashboard.js (which is loaded on every page via base.html).
  */
 
+(function () {
 'use strict';
 
-const REFRESH_INTERVAL_MS = 15_000;
-const LINES_TO_FETCH      = 500;
+const LOGS_REFRESH_MS = 15_000;
+const LINES_TO_FETCH  = 500;
 
 // ── State ─────────────────────────────────────────────────────────────────
 
@@ -191,5 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSearch();
     initAutoScrollToggle();
     refresh();
-    setInterval(refresh, REFRESH_INTERVAL_MS);
+    setInterval(refresh, LOGS_REFRESH_MS);
 });
+
+})(); // end IIFE

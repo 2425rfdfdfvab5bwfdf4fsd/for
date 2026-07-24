@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Health Monitor — MT5 Trading Bot{% endblock %}
+
+{% block content %}
+<!-- Loading spinner -->
+<div id="loading-spinner" class="spinner-wrap">
+    <div class="spinner"></div>
+</div>
+
+<!-- ── Overall status banner ───────────────────────────────────────── -->
+<section class="health-banner" id="health-banner">
+    <span class="health-banner-icon" id="health-banner-icon">—</span>
+    <span class="health-banner-text" id="health-banner-text">Checking system health…</span>
+    <span class="health-banner-hint" id="health-banner-hint">Refreshes every 30 s</span>
+</section>
+
+<!-- ── Check groups ────────────────────────────────────────────────── -->
+<div class="health-grid" id="health-grid">
+
+    <!-- BOT PROCESS -->
+    <div class="health-group">
+        <div class="health-group-title">Bot Process</div>
+        <ul class="health-list" id="group-bot">
+            <li class="health-item health-unknown"><span class="health-icon">—</span><span class="health-label">Loading…</span></li>
+        </ul>
+    </div>
+
+    <!-- DATA -->
+    <div class="health-group">
+        <div class="health-group-title">Data</div>
+        <ul class="health-list" id="group-data">
+            <li class="health-item health-unknown"><span class="health-icon">—</span><span class="health-label">Loading…</span></li>
+        </ul>
+    </div>
+
+    <!-- CONFIGURATION -->
+    <div class="health-group">
+        <div class="health-group-title">Configuration</div>
+        <ul class="health-list" id="group-config">
+            <li class="health-item health-unknown"><span class="health-icon">—</span><span class="health-label">Loading…</span></li>
+        </ul>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/health.js') }}"></script>
+{% endblock %}
