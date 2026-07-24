@@ -258,7 +258,11 @@ class Config:
     # ------------------------------------------------------------------
     # SELF-IMPROVEMENT ANALYTICS (Phase 17)
     # ------------------------------------------------------------------
-    MINIMUM_SEGMENT_SAMPLE: int  # Minimum trades per segment to flag as statistically sufficient (default 15)
+    MINIMUM_SEGMENT_SAMPLE: int  # Minimum trades per segment for statistical significance (default 15)
+    GLOBAL_MIN_TRADES: int       # CHG-C06: hard global gate — total closed trades needed to unlock analysis (default 20)
+    SEGMENT_MIN_TRADES: int      # CHG-C06: hard segment gate — min trades in specific segment to unlock per-segment analysis (default 8)
+    MINIMUM_PERIOD_DAYS: int     # Minimum calendar-day span of trade history required by evidence gates (default 30)
+    STATISTICAL_SIGNIFICANCE_THRESHOLD: float  # Minimum win-rate gap in percentage points to pass the significance gate (default 10.0)
 
     # ------------------------------------------------------------------
     # SCREENSHOTS
@@ -489,6 +493,10 @@ class Config:
 
         # --- SELF-IMPROVEMENT ANALYTICS ---
         self.MINIMUM_SEGMENT_SAMPLE = _get_int("MINIMUM_SEGMENT_SAMPLE", 15)
+        self.GLOBAL_MIN_TRADES = _get_int("GLOBAL_MIN_TRADES", 20)
+        self.SEGMENT_MIN_TRADES = _get_int("SEGMENT_MIN_TRADES", 8)
+        self.MINIMUM_PERIOD_DAYS = _get_int("MINIMUM_PERIOD_DAYS", 30)
+        self.STATISTICAL_SIGNIFICANCE_THRESHOLD = _get_float("STATISTICAL_SIGNIFICANCE_THRESHOLD", 10.0)
 
         # --- SCREENSHOTS ---
         self.ENABLE_SCREENSHOTS = _get_bool("ENABLE_SCREENSHOTS", False)
