@@ -3,7 +3,7 @@ PROJECT STATUS TRACKER
 ================================================================================
 Project: MT5 Automated Forex Trading Bot
 Last Updated: 2026-07-24
-Updated By: Replit Agent — Phase 13 COMPLETE (all 4 tasks done)
+Updated By: Replit Agent — Phase 14 Task 14-01 COMPLETE
 
 STATUS LEGEND:
   [ ] NOT STARTED
@@ -31,7 +31,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   11  | Automation              | [✓]    | 2026-07-24   | Complete — all 5 tasks done (92 tests)
   12  | Notifications           | [✓]    | 2026-07-24   | Complete — 47 tests (12-01: 21, 12-02: 26)
   13  | Trade Journal           | [✓]    | 2026-07-24   | Complete — all 4 tasks done (50 tests)
-  14  | Dashboard               | [ ]    | -            | Depends on 04+11
+  14  | Dashboard               | [~]    | 2026-07-24   | 14-01 complete; 14-02–08 pending
   15  | Backtesting             | [ ]    | -            | Depends on 05+07+08
   16  | Validation              | [ ]    | -            | Depends on Phase 15
   17  | Self-Improvement        | [ ]    | -            | Depends on 04+15
@@ -909,12 +909,28 @@ TASK 13-04 — MISSED TRADE ANALYSIS: [✓] COMPLETE (2026-07-24)
 ================================================================================
 PHASE 14 — DASHBOARD
 ================================================================================
-Status:          [ ] NOT STARTED
-Last Updated:    -
-Completed Tasks: None
+Status:          [~] IN PROGRESS
+Last Updated:    2026-07-24
+Completed Tasks: 14-01 BACKEND API — [✓] COMPLETE (2026-07-24)
 Failed Tasks:    None
 Known Issues:    None
-Next Action:     Complete Phases 04 + 11 first.
+Next Action:     14-02 — ROADMAP/14_DASHBOARD/02_TASK_OVERVIEW_UI.txt
+
+TASK 14-01 — DASHBOARD BACKEND API: [✓] COMPLETE (2026-07-24)
+  Files Created:
+    app/dashboard/__init__.py        — updated (Flask-based)
+    app/dashboard/api/__init__.py    — package init
+    app/dashboard/api/data_service.py — DataService (status/positions/trades/stats/logs/health)
+    app/dashboard/api/routes.py      — Flask Blueprint, 9 REST endpoints
+    app/dashboard/app.py             — create_app() factory + run_dashboard()
+    tests/test_dashboard/__init__.py
+    tests/test_dashboard/test_api.py — 17 tests (all pass)
+  Tests: 17/17 pass
+  Acceptance Criteria:
+    [✓] All 9 endpoints functional and return valid JSON
+    [✓] No secrets exposed in any response
+    [✓] Graceful offline payload when heartbeat absent
+    [✓] All tests pass (834/834 full suite, zero regressions)
 
 ================================================================================
 PHASE 15 — BACKTESTING
@@ -1019,10 +1035,11 @@ Per-Phase Test Counts (verified 2026-07-24):
   Phase 11 (Automation):         92 tests  (11-01: 18, 11-02: 16, 11-03: 21, 11-04: 18, 11-05: 19)
   Phase 12 (Notifications):      47 tests  (12-01: 21, 12-02: 26)
   Phase 13 (Trade Journal):      50 tests  (13-01: 13, 13-02: 11, 13-03: 13, 13-04: 13)
-  TOTAL:                        817 tests (all pass)
+  Phase 14 (Dashboard):          17 tests  (14-01: 17)
+  TOTAL:                        834 tests (all pass)
 
-Current Phase:        14 — DASHBOARD (Phase 13 complete; next: 14-01 PHASE_OVERVIEW)
-Recommended Action:   Open ROADMAP/14_DASHBOARD/01_PHASE_OVERVIEW.txt
+Current Phase:        14 — DASHBOARD (task 14-01 complete; next: 14-02 OVERVIEW_UI)
+Recommended Action:   Open ROADMAP/14_DASHBOARD/02_TASK_OVERVIEW_UI.txt
 
 ================================================================================
 ROADMAP AUDIT — COMPLETE (2026-07-23)
