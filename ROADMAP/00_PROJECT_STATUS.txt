@@ -3,7 +3,7 @@ PROJECT STATUS TRACKER
 ================================================================================
 Project: MT5 Automated Forex Trading Bot
 Last Updated: 2026-07-24
-Updated By: Replit Agent — Phase 13 Task 13-03 COMPLETE
+Updated By: Replit Agent — Phase 13 COMPLETE (all 4 tasks done)
 
 STATUS LEGEND:
   [ ] NOT STARTED
@@ -30,7 +30,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   10  | Position Management     | [✓]    | 2026-07-23   | Complete — 60/60 tests pass
   11  | Automation              | [✓]    | 2026-07-24   | Complete — all 5 tasks done (92 tests)
   12  | Notifications           | [✓]    | 2026-07-24   | Complete — 47 tests (12-01: 21, 12-02: 26)
-  13  | Trade Journal           | [~]    | 2026-07-24   | 13-01–02 complete; 13-03–04 pending
+  13  | Trade Journal           | [✓]    | 2026-07-24   | Complete — all 4 tasks done (50 tests)
   14  | Dashboard               | [ ]    | -            | Depends on 04+11
   15  | Backtesting             | [ ]    | -            | Depends on 05+07+08
   16  | Validation              | [ ]    | -            | Depends on Phase 15
@@ -839,7 +839,7 @@ PHASE 12 STATUS: [✓] COMPLETE
 ================================================================================
 PHASE 13 — TRADE JOURNAL
 ================================================================================
-Status:          [~] IN PROGRESS
+Status:          [✓] COMPLETE
 Last Updated:    2026-07-24
 Completed Tasks: 13-01 TRADE JOURNAL — [✓] COMPLETE (2026-07-24)
                    Files created: app/journal/trade_journal.py
@@ -851,7 +851,7 @@ Completed Tasks: 13-01 TRADE JOURNAL — [✓] COMPLETE (2026-07-24)
                    Tests added: 13 (780 total, all pass)
 Failed Tasks:    None
 Known Issues:    None
-Next Action:     13-04 — ROADMAP/13_TRADE_JOURNAL/04_TASK_MISSED_TRADE_ANALYSIS.txt
+Next Action:     Phase 14 — Dashboard (ROADMAP/14_DASHBOARD/01_PHASE_OVERVIEW.txt)
 
 TASK 13-01 — TRADE JOURNAL: [✓] COMPLETE (2026-07-24)
   Files Created:
@@ -891,6 +891,20 @@ TASK 13-03 — CHART SCREENSHOTS: [✓] COMPLETE (2026-07-24)
     [✓] Disabled mode is a complete no-op (returns None, creates no files)
     [✓] Path format is consistent: {SCREENSHOT_DIR}/{YYYY-MM-DD}/{symbol}_{ticket}_{event}.png
     [✓] All tests pass (804/804 full suite, zero regressions)
+
+TASK 13-04 — MISSED TRADE ANALYSIS: [✓] COMPLETE (2026-07-24)
+  Files Created:
+    app/journal/missed_trade_analyzer.py — MissedTradeAnalyzer + MissedTradeEntry + MissedTradeSummary
+    tests/test_journal/test_missed_trade.py — 13 tests (all pass)
+  Files Modified:
+    app/database/repositories.py — added get_missed_trades_for_date / get_missed_trades_for_range
+  Tests: 13/13 pass
+  Acceptance Criteria:
+    [✓] Missed trades correctly identified from rejection journal (DAILY_LIMIT, CONSEC_LOSS, CORR_BLOCK)
+    [✓] Correct rejections excluded (confluence, spread, session, news, filter, duplicate, RR, exec)
+    [✓] Summary queryable over date range with counts_by_reason and most_common_block()
+    [✓] All tests pass (817/817 full suite, zero regressions)
+    [✓] Phase 13 acceptance criteria met — journal system complete
 
 ================================================================================
 PHASE 14 — DASHBOARD
@@ -1004,11 +1018,11 @@ Per-Phase Test Counts (verified 2026-07-24):
   Phase 10 (Position Mgmt):      60 tests
   Phase 11 (Automation):         92 tests  (11-01: 18, 11-02: 16, 11-03: 21, 11-04: 18, 11-05: 19)
   Phase 12 (Notifications):      47 tests  (12-01: 21, 12-02: 26)
-  Phase 13 (Trade Journal):      37 tests  (13-01: 13, 13-02: 11, 13-03: 13)
-  TOTAL:                        804 tests (all pass)
+  Phase 13 (Trade Journal):      50 tests  (13-01: 13, 13-02: 11, 13-03: 13, 13-04: 13)
+  TOTAL:                        817 tests (all pass)
 
-Current Phase:        13 — TRADE JOURNAL (tasks 13-01–03 complete; next: 13-04 MISSED_TRADE_ANALYSIS)
-Recommended Action:   Open ROADMAP/13_TRADE_JOURNAL/04_TASK_MISSED_TRADE_ANALYSIS.txt
+Current Phase:        14 — DASHBOARD (Phase 13 complete; next: 14-01 PHASE_OVERVIEW)
+Recommended Action:   Open ROADMAP/14_DASHBOARD/01_PHASE_OVERVIEW.txt
 
 ================================================================================
 ROADMAP AUDIT — COMPLETE (2026-07-23)

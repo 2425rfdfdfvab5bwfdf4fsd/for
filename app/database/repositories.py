@@ -794,6 +794,77 @@ class RejectionJournalRepository:
             logger.error("Failed to fetch near-miss rejections for date %s", date)
             return []
 
+    def get_missed_trades_for_date(
+        self, date: str, min_score: float, categories: tuple
+    ) -> list[RejectionEntry]:
+        """
+        Return high-scoring rejections blocked by risk limits on a given date.
+
+        Args:
+            date:       YYYY-MM-DD string matched as prefix of timestamp_utc.
+            min_score:  Minimum confluence score to qualify as a missed trade.
+            categories: Tuple of rejection_category strings that count as blocks.
+
+        Returns:
+            List of RejectionEntry objects ordered by confluence_score descending.
+        """
+        if not categories:
+            return []
+        placeholders = ",".join("?" * len(categories))
+        sql = f"""
+            SELECT * FROM rejection_journal_entries
+             WHERE timestamp_utc LIKE ?
+               AND confluence_score >= ?
+               AND rejection_category IN ({placeholders})
+             ORDER BY confluence_score DESC
+        """
+        try:
+            cursor = self._db.execute(sql, (f"{date}%", min_score, *categories))
+            return [self._row_to_entry(row) for row in cursor.fetchall()]
+        except DatabaseError:
+            logger.error(
+                "Failed to fetch missed trades for date %s min_score=%.1f", date, min_score
+            )
+            return []
+
+    def get_missed_trades_for_range(
+        self, date_from: str, date_to: str, min_score: float, categories: tuple
+    ) -> list[RejectionEntry]:
+        """
+        Return high-scoring risk-blocked rejections across a date range.
+
+        Args:
+            date_from:  YYYY-MM-DD start date (inclusive).
+            date_to:    YYYY-MM-DD end date (inclusive, matched as prefix + 'Z').
+            min_score:  Minimum confluence score to qualify.
+            categories: Tuple of rejection_category strings that count as blocks.
+
+        Returns:
+            List of RejectionEntry objects ordered by timestamp_utc ascending.
+        """
+        if not categories:
+            return []
+        placeholders = ",".join("?" * len(categories))
+        sql = f"""
+            SELECT * FROM rejection_journal_entries
+             WHERE timestamp_utc >= ?
+               AND timestamp_utc < ?
+               AND confluence_score >= ?
+               AND rejection_category IN ({placeholders})
+             ORDER BY timestamp_utc ASC
+        """
+        try:
+            cursor = self._db.execute(
+                sql,
+                (f"{date_from}T00:00:00", f"{date_to}T23:59:59.999999Z", min_score, *categories),
+            )
+            return [self._row_to_entry(row) for row in cursor.fetchall()]
+        except DatabaseError:
+            logger.error(
+                "Failed to fetch missed trades for range %s–%s", date_from, date_to
+            )
+            return []
+
     def count_by_category_for_date(self, date: str) -> dict[str, int]:
         """Return a dict of {category: count} for all rejections on a given date."""
         try:
