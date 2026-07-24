@@ -1,0 +1,97 @@
+AI_Project_Specification_Prompt (1).md
+File
+
+I've reviewed the uploaded prompt. It is a structured, two-step prompt template for generating a complete software project specification and roadmap.
+
+The prompt is well organized and production-oriented. A few observations:
+
+Strengths
+Covers the entire software planning lifecycle from idea validation to architecture.
+Forces the AI to ask clarifying questions instead of making assumptions.
+Encourages recommendations instead of simply listing options.
+Includes architecture, database, API, security, deployment, testing, monitoring, backups, and cost estimation.
+Produces a reusable specification that can be handed to another AI.
+Areas I'd Improve
+
+As a senior software architecture prompt, I'd add several sections that are missing:
+
+Functional Requirements
+Explicit business rules
+Edge cases
+Validation rules
+User stories
+Non-Functional Requirements
+Availability target
+Performance SLA
+Browser support
+Accessibility (WCAG)
+Localization/i18n
+Domain Model
+Entity diagrams
+Relationships
+State machines
+Security
+Threat model
+OWASP checklist
+Audit logging
+Secrets rotation
+Password policy
+DevOps
+Branch strategy
+CI/CD pipeline
+Environment variables
+Docker
+Infrastructure
+Project Management
+MVP scope
+Milestones
+Estimated timeline
+Risk register
+Technical debt strategy
+AI Guidance
+Ask the AI to avoid overengineering.
+Prefer modular monolith before microservices.
+Recommend battle-tested libraries.
+Explain trade-offs whenever choosing technologies.
+One Important Change
+
+I'd also change the workflow slightly.
+
+Instead of:
+
+Questions
+↓
+Recommendations
+↓
+Specification
+
+I'd use:
+
+Understand Idea
+↓
+Identify Risks
+↓
+Ask Questions
+↓
+Recommend Best Architecture
+↓
+Finalize Decisions
+↓
+Generate Specification
+↓
+Generate Development Roadmap
+
+This produces better architectural decisions because risks are identified before recommendations.
+
+Overall Rating
+Area	Rating
+Structure	10/10
+Coverage	9.5/10
+Software Architecture	9.5/10
+Scalability Planning	9/10
+Security Planning	8.5/10
+Production Readiness	9.5/10
+
+Overall: 9.6/10
+
+It's one of the better project-specification prompts I've seen. With the additions above, it could serve as a comprehensive software architecture prompt suitable for planning production-grade applications.
