@@ -3,7 +3,7 @@ PROJECT STATUS TRACKER
 ================================================================================
 Project: MT5 Automated Forex Trading Bot
 Last Updated: 2026-07-24
-Updated By: Replit Agent — Phase 18 Task 18-03 COMPLETE
+Updated By: Replit Agent — Phase 18 Task 18-04 COMPLETE
 
 STATUS LEGEND:
   [ ] NOT STARTED
@@ -35,7 +35,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   15  | Backtesting             | [✓]    | 2026-07-24   | All 5 tasks complete
   16  | Validation              | [✓]    | 2026-07-24   | Complete — all 5 tasks done (175 tests)
   17  | Self-Improvement        | [✓]    | 2026-07-24   | Complete — all 4 tasks done (17-01–17-04)
-  18  | Windows Automation      | [~]    | 2026-07-24   | 3/6 tasks done (18-01, 18-02, 18-03)
+  18  | Windows Automation      | [~]    | 2026-07-24   | 4/6 tasks done (18-01–18-04)
   19  | Testing                 | [ ]    | -            | Depends on all phases
   20  | Security                | [ ]    | -            | Depends on 02+09
   21  | Final Validation        | [ ]    | -            | Depends on all phases
@@ -1348,10 +1348,11 @@ PHASE 18 — WINDOWS AUTOMATION
 ================================================================================
 Status:          [~] IN PROGRESS
 Last Updated:    2026-07-24
-Updated By:      Replit Agent — Phase 18 Task 18-03 COMPLETE
+Updated By:      Replit Agent — Phase 18 Task 18-04 COMPLETE
 Completed Tasks: 18-01 SETUP_BAT
                  18-02 CONFIGURE_BAT
                  18-03 START_STOP_RESTART
+                 18-04 STATUS_BAT
 Failed Tasks:    None
 
 Files Created:
@@ -1376,7 +1377,7 @@ Known Issues / Notes:
   - health_check.py reports flask missing on fresh Linux env; flask now installed
   - .env.example already existed and was complete — no changes needed
 
-Next Action:     → Task 18-04: ROADMAP/18_WINDOWS_AUTOMATION/04_TASK_STATUS_BAT.txt
+Next Action:     → Task 18-05: ROADMAP/18_WINDOWS_AUTOMATION/05_TASK_AUTOSTART.txt
 
 --------------------------------------------------------------------------------
 TASK 18-01 — SETUP_BAT: [✓] COMPLETE (2026-07-24)
@@ -1447,6 +1448,34 @@ Acceptance Criteria:
   [✓] update.bat stops bot → git pull → pip install → test → restart
   [✓] All 7 .bat files created
 
+--------------------------------------------------------------------------------
+TASK 18-04 — STATUS_BAT: [✓] COMPLETE (2026-07-24)
+--------------------------------------------------------------------------------
+Files created:
+  status.bat             — Wrapper script: uses venv Python if available,
+                           falls back to system Python; calls status_reader.py
+  scripts/status_reader.py — Standalone reader: parses data/heartbeat.txt +
+                           data/bot.pid, prints 7-section status report
+                           (BOT PROCESS, MT5 CONNECTION, TODAY'S TRADING,
+                           CURRENT SESSION, OPEN POSITIONS, LAST SIGNAL,
+                           HEARTBEAT); masks account numbers; no secrets exposed
+
+Validation:
+  ✓ python -m py_compile scripts/status_reader.py — no errors
+  ✓ Reads HEARTBEAT_FILE_PATH from .env (falls back to data/heartbeat.txt)
+  ✓ Reads MAX_DAILY_TRADES, MAX_DAILY_LOSS_PCT, MAX_CONSECUTIVE_LOSSES from .env
+  ✓ Account number masked (last 4 digits only)
+  ✓ MT5_PASSWORD and Telegram tokens never printed
+  ✓ "BOT IS NOT RUNNING" displayed when PID absent and heartbeat stale/missing
+  ✓ Heartbeat marked STALE when last update > 120 seconds ago
+  ✓ Full test suite: 1275/1275 pass (zero regressions)
+
+Acceptance Criteria:
+  [✓] status.bat reads and displays heartbeat data
+  [✓] Clear "NOT RUNNING" message when bot stopped
+  [✓] All fields populated correctly (from heartbeat + .env config limits)
+  [✓] No secrets exposed
+
 ================================================================================
 PHASE 19 — TESTING
 ================================================================================
@@ -1492,7 +1521,7 @@ OVERALL PROJECT METRICS
 ================================================================================
 Total Phases:         22
 Completed Phases:     17  (Phases 01–17)
-In Progress:          1   (Phase 18 — Windows Automation, tasks 18-01, 18-02, 18-03 done)
+In Progress:          1   (Phase 18 — Windows Automation, tasks 18-01–18-04 done)
 Blocked:              0
 Not Started:          4   (Phases 19–22)
 Tests Passing:        1275/1275  (100% — Python 3.12, pytest 9.x, pandas 2+, flask added)
@@ -1517,8 +1546,8 @@ Per-Phase Test Counts (verified 2026-07-24):
   Phase 18 (Windows Automation):  0 tests  (18-01: .bat script — no unit tests required)
   TOTAL:                        1275 tests (all pass)
 
-Current Phase:        18 — WINDOWS AUTOMATION (tasks 18-01, 18-02, 18-03 done; next: 18-04 STATUS_BAT)
-Recommended Action:   Open ROADMAP/18_WINDOWS_AUTOMATION/04_TASK_STATUS_BAT.txt
+Current Phase:        18 — WINDOWS AUTOMATION (tasks 18-01–18-04 done; next: 18-05 AUTOSTART)
+Recommended Action:   Open ROADMAP/18_WINDOWS_AUTOMATION/05_TASK_AUTOSTART.txt
 
 ================================================================================
 ROADMAP AUDIT — COMPLETE (2026-07-23)
