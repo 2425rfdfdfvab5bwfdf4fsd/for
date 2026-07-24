@@ -9,7 +9,7 @@
 # =============================================================================
 
 # --- MetaTrader 5 ---
-MetaTrader5>=5.0.45           # MT5 Python API (Windows only)
+MetaTrader5>=5.0.45; sys_platform == "win32"  # MT5 Python API (Windows only)
 
 # --- Data Processing ---
 pandas>=2.0.0                 # OHLCV data processing, time-series operations
@@ -64,5 +64,20 @@ numpy
 pandas
 pytest-cov
 python-dotenv
+python-telegram-bot
+requests
+fastapi
+numpy
+pandas
+pytest
+pytest-mock
+python-dotenv
+uvicorn
+flask
+matplotlib
+python-telegram-bot
+requests
+flask
+matplotlib
 python-telegram-bot
 requests

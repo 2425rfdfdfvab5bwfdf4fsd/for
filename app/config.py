@@ -234,6 +234,8 @@ class Config:
     BACKTEST_COMMISSION_PER_LOT: float
     BACKTEST_OVERNIGHT_SWAP_LONG: float
     BACKTEST_OVERNIGHT_SWAP_SHORT: float
+    BACKTEST_GAP_THRESHOLD_BARS: int    # Gap > N×bar_width triggers a gap warning
+    DATA_DIR: str                        # Root directory for data files (CSV, DB, locks)
 
     # ------------------------------------------------------------------
     # SCREENSHOTS
@@ -446,6 +448,8 @@ class Config:
         self.BACKTEST_OVERNIGHT_SWAP_SHORT = _get_float(
             "BACKTEST_OVERNIGHT_SWAP_SHORT", -0.30
         )
+        self.BACKTEST_GAP_THRESHOLD_BARS = _get_int("BACKTEST_GAP_THRESHOLD_BARS", 5)
+        self.DATA_DIR = _get_str("DATA_DIR", "data")
 
         # --- SCREENSHOTS ---
         self.ENABLE_SCREENSHOTS = _get_bool("ENABLE_SCREENSHOTS", False)

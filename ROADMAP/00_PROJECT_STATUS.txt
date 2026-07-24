@@ -3,7 +3,7 @@ PROJECT STATUS TRACKER
 ================================================================================
 Project: MT5 Automated Forex Trading Bot
 Last Updated: 2026-07-24
-Updated By: Replit Agent — Phase 14 Task 14-07 COMPLETE
+Updated By: Replit Agent — Phase 15 Task 15-01 COMPLETE
 
 STATUS LEGEND:
   [ ] NOT STARTED
@@ -32,7 +32,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   12  | Notifications           | [✓]    | 2026-07-24   | Complete — 47 tests (12-01: 21, 12-02: 26)
   13  | Trade Journal           | [✓]    | 2026-07-24   | Complete — all 4 tasks done (50 tests)
   14  | Dashboard               | [~]    | 2026-07-24   | 14-01–07 complete; 14-08 pending
-  15  | Backtesting             | [ ]    | -            | Depends on 05+07+08
+  15  | Backtesting             | [~]    | 2026-07-24   | 15-01 complete; tasks 15-02–05 pending
   16  | Validation              | [ ]    | -            | Depends on Phase 15
   17  | Self-Improvement        | [ ]    | -            | Depends on 04+15
   18  | Windows Automation      | [ ]    | -            | Depends on 11+14
@@ -1058,12 +1058,29 @@ TASK 14-08 — WHY NO TRADE EXPLAINER: [✓] COMPLETE (2026-07-24)
 ================================================================================
 PHASE 15 — BACKTESTING
 ================================================================================
-Status:          [ ] NOT STARTED
-Last Updated:    -
-Completed Tasks: None
+Status:          [~] IN PROGRESS
+Last Updated:    2026-07-24
+Completed Tasks: 15-01 HISTORICAL DATA — [✓] COMPLETE (2026-07-24)
 Failed Tasks:    None
 Known Issues:    None
-Next Action:     Complete Phases 05 + 07 + 08 first.
+Next Action:     ROADMAP/15_BACKTESTING/02_TASK_BACKTEST_ENGINE.txt
+
+TASK 15-01 — HISTORICAL DATA MANAGER: [✓] COMPLETE (2026-07-24)
+  Files Created:
+    backtesting/historical_data.py              — HistoricalDataManager + DataValidationResult
+    tests/test_backtesting/__init__.py          — package init
+    tests/test_backtesting/test_historical_data.py — 21 tests (all pass)
+    data/historical/.gitkeep                    — cache directory
+  Files Modified:
+    app/config.py                               — added BACKTEST_GAP_THRESHOLD_BARS, DATA_DIR
+    requirements.txt                            — added sys_platform guard for MetaTrader5
+  Tests: 21/21 pass
+  Acceptance Criteria:
+    [✓] Data downloaded from MT5 and cached (download() + save_to_cache())
+    [✓] Gaps detected and logged (gap_threshold from Config)
+    [✓] Invalid bars detected and warned (OHLCV integrity check)
+    [✓] Duplicate timestamps removed (drop_duplicates in validate())
+    [✓] All tests pass (866/866 full suite, zero regressions)
 
 ================================================================================
 PHASE 16 — VALIDATION
@@ -1143,7 +1160,7 @@ Completed Phases:     11  (Phases 01–11)
 In Progress:          0
 Blocked:              0
 Not Started:          11  (Phases 12–22)
-Tests Passing:        843/843  (100% — Python 3.12, pytest 9.x, pandas 3+)
+Tests Passing:        866/866  (100% — Python 3.12, pytest 9.x, pandas 3+)
 Log Files Active:     4  (app.log, trading.log, errors.log, strategy.log)
 
 Per-Phase Test Counts (verified 2026-07-24):
@@ -1157,12 +1174,13 @@ Per-Phase Test Counts (verified 2026-07-24):
   Phase 10 (Position Mgmt):      60 tests
   Phase 11 (Automation):         92 tests  (11-01: 18, 11-02: 16, 11-03: 21, 11-04: 18, 11-05: 19)
   Phase 12 (Notifications):      47 tests  (12-01: 21, 12-02: 26)
+  Phase 15 (Backtesting):        23 tests  (15-01: 23)
   Phase 13 (Trade Journal):      50 tests  (13-01: 13, 13-02: 11, 13-03: 13, 13-04: 13)
   Phase 14 (Dashboard):          26 tests  (14-01: 17, 14-02–07: 0 UI-only, 14-08: 9)
-  TOTAL:                        843 tests (all pass)
+  TOTAL:                        866 tests (all pass)
 
-Current Phase:        14 — DASHBOARD (all tasks complete; phase done)
-Recommended Action:   Open ROADMAP/15_BACKTESTING/01_PHASE_OVERVIEW.txt
+Current Phase:        15 — BACKTESTING (task 15-01 complete; next: 15-02 BACKTEST_ENGINE)
+Recommended Action:   Open ROADMAP/15_BACKTESTING/02_TASK_BACKTEST_ENGINE.txt
 
 ================================================================================
 ROADMAP AUDIT — COMPLETE (2026-07-23)
