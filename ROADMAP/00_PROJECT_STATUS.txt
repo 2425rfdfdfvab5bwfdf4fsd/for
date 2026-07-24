@@ -1160,10 +1160,11 @@ PHASE 16 — VALIDATION
 Status:          [~] IN PROGRESS
 Last Updated:    2026-07-24
 Updated By:      Replit Agent — Phase 16 Task 16-01 COMPLETE
-Completed Tasks: 16-01 IN-SAMPLE VALIDATION  — [✓] COMPLETE (2026-07-24)
+Completed Tasks: 16-01 IN-SAMPLE VALIDATION     — [✓] COMPLETE (2026-07-24)
+                 16-02 OUT-OF-SAMPLE VALIDATION — [✓] COMPLETE (2026-07-24)
 Failed Tasks:    None
 Known Issues:    None
-Next Action:     ROADMAP/16_VALIDATION/02_TASK_OUT_OF_SAMPLE.txt
+Next Action:     ROADMAP/16_VALIDATION/03_TASK_WALK_FORWARD.txt
 
 TASK 16-01 — IN-SAMPLE VALIDATION: [✓] COMPLETE (2026-07-24)
   Files Created:
@@ -1181,6 +1182,21 @@ TASK 16-01 — IN-SAMPLE VALIDATION: [✓] COMPLETE (2026-07-24)
     [✓] All outputs saved (HTML, per-symbol CSVs, summary JSON)
     [✓] Summary JSON contains all key metrics
     [✓] WARNING logged if below soft thresholds (win rate, PF, drawdown, trade count)
+
+TASK 16-02 — OUT-OF-SAMPLE VALIDATION: [✓] COMPLETE (2026-07-24)
+  Files Created:
+    validation/out_of_sample.py                 — OutOfSampleValidator, ComparisonReport,
+                                                  _determine_verdict
+    tests/test_validation/test_out_of_sample.py — 39 tests (all pass)
+  Files Modified:
+    ROADMAP/00_PROJECT_STATUS.txt               — this file
+    replit.md                                   — updated test count
+  Tests: 39 new / 1104 total (all pass, zero regressions)
+  Acceptance Criteria:
+    [✓] OOS backtest runs with identical parameters (engine mocked in tests)
+    [✓] Comparison report generated (ComparisonReport with verdict + recommendation)
+    [✓] FAIL verdict when OOS win rate < 45% or win rate degradation > 10 pp
+    [✓] All results saved (HTML, per-symbol CSVs, out_of_sample_summary.json with comparison)
 
 ================================================================================
 PHASE 17 — SELF-IMPROVEMENT
@@ -1267,11 +1283,11 @@ Per-Phase Test Counts (verified 2026-07-24):
   Phase 13 (Trade Journal):      50 tests  (13-01: 13, 13-02: 11, 13-03: 13, 13-04: 13)
   Phase 14 (Dashboard):          26 tests  (14-01: 17, 14-02–07: 0 UI-only, 14-08: 9)
   Phase 15 (Backtesting):       190 tests  (15-01: 23, 15-02: 29, 15-03: 36, 15-04: 61, 15-05: 41)
-  Phase 16 (Validation):         32 tests  (16-01: 32)
-  TOTAL:                        1065 tests (all pass)
+  Phase 16 (Validation):         71 tests  (16-01: 32, 16-02: 39)
+  TOTAL:                        1104 tests (all pass)
 
-Current Phase:        16 — VALIDATION (task 16-01 complete; next: 16-02 OUT_OF_SAMPLE)
-Recommended Action:   Open ROADMAP/16_VALIDATION/02_TASK_OUT_OF_SAMPLE.txt
+Current Phase:        16 — VALIDATION (tasks 16-01–02 complete; next: 16-03 WALK_FORWARD)
+Recommended Action:   Open ROADMAP/16_VALIDATION/03_TASK_WALK_FORWARD.txt
 
 ================================================================================
 ROADMAP AUDIT — COMPLETE (2026-07-23)
