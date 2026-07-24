@@ -294,6 +294,10 @@ class Config:
     DRY_RUN: bool                       # True = full pipeline but skip order placement
     MAX_CONSECUTIVE_ERRORS: int         # Consecutive tick errors before graceful shutdown
     LOCK_FILE_PATH: str                 # PID lock file path (default "data/bot.lock")
+    HEARTBEAT_FILE_PATH: str            # Heartbeat JSON file (default "data/heartbeat.txt")
+    WATCHDOG_TIMEOUT_SECONDS: int       # Stale threshold in seconds (default 120)
+    WATCHDOG_MAX_RESTARTS: int          # Max consecutive restarts before giving up (default 5)
+    WATCHDOG_RESTART_DELAY_SECONDS: int # Base backoff delay in seconds (default 30)
 
     def __init__(self) -> None:
         """Load all configuration from environment variables."""
@@ -506,6 +510,10 @@ class Config:
         self.DRY_RUN = _get_bool("DRY_RUN", False)
         self.MAX_CONSECUTIVE_ERRORS = _get_int("MAX_CONSECUTIVE_ERRORS", 5)
         self.LOCK_FILE_PATH = _get_str("LOCK_FILE_PATH", "data/bot.lock")
+        self.HEARTBEAT_FILE_PATH = _get_str("HEARTBEAT_FILE_PATH", "data/heartbeat.txt")
+        self.WATCHDOG_TIMEOUT_SECONDS = _get_int("WATCHDOG_TIMEOUT_SECONDS", 120)
+        self.WATCHDOG_MAX_RESTARTS = _get_int("WATCHDOG_MAX_RESTARTS", 5)
+        self.WATCHDOG_RESTART_DELAY_SECONDS = _get_int("WATCHDOG_RESTART_DELAY_SECONDS", 30)
 
         # Validate after all values are loaded
         self._validate()

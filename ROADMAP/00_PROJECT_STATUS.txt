@@ -28,7 +28,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   08  | Filters                 | [✓]    | 2026-07-23   | Complete — 119/119 tests pass
   09  | Execution Engine        | [✓]    | 2026-07-23   | Complete — 65/65 tests pass
   10  | Position Management     | [✓]    | 2026-07-23   | Complete — 60/60 tests pass
-  11  | Automation              | [~]    | 2026-07-24   | In progress — 11-01 + 11-02 complete (34 tests)
+  11  | Automation              | [~]    | 2026-07-24   | In progress — 11-01 + 11-02 + 11-03 complete (55 tests)
   12  | Notifications           | [ ]    | -            | Depends on 04+11
   13  | Trade Journal           | [ ]    | -            | Depends on 04+09
   14  | Dashboard               | [ ]    | -            | Depends on 04+11
@@ -709,14 +709,14 @@ PHASE 11 — AUTOMATION
 ================================================================================
 Status:          [~] IN PROGRESS
 Last Updated:    2026-07-23
-Completed Tasks: 11-01 MAIN LOOP, 11-02 SINGLETON GUARD
+Completed Tasks: 11-01 MAIN LOOP, 11-02 SINGLETON GUARD, 11-03 WATCHDOG
 Failed Tasks:    None
 Known Issues:    ATR pips uses a static default (15 pips) — live MarketDataFetcher
                  wiring deferred to Phase 11 polish.
                  daily_stats in RiskContext is None — Phase 13 will wire repos.
                  OrderValidator not called before OrderExecutor (pre-approved
                  OrderValidationResult used) — full wiring deferred.
-Next Action:     → Task 11-03: ROADMAP/11_AUTOMATION/03_TASK_WATCHDOG.txt
+Next Action:     → Task 11-04: ROADMAP/11_AUTOMATION/04_TASK_HEARTBEAT.txt
 
 TASK 11-01 — MAIN LOOP: [✓] COMPLETE (2026-07-23)
   Files Created:
@@ -749,6 +749,20 @@ TASK 11-02 — SINGLETON GUARD: [✓] COMPLETE (2026-07-24)
     [✓] Second instance blocked immediately with clear log message
     [✓] Stale locks from crashed instances cleaned up automatically
     [✓] All 3 required tests pass (plus 13 additional coverage tests)
+
+TASK 11-03 — WATCHDOG: [✓] COMPLETE (2026-07-24)
+  Files Created:
+    watchdog.py                              — Watchdog class (project root, separate process)
+    tests/test_automation/test_watchdog.py  — 21 tests (all pass)
+  Files Modified:
+    app/config.py  — added HEARTBEAT_FILE_PATH, WATCHDOG_TIMEOUT_SECONDS,
+                     WATCHDOG_MAX_RESTARTS, WATCHDOG_RESTART_DELAY_SECONDS
+  Tests: 21/21 pass
+  Acceptance Criteria:
+    [✓] Stale heartbeat triggers bot restart
+    [✓] MAX_RESTARTS limit respected — loop stops after threshold
+    [✓] Exponential backoff: 30 → 60 → 120 → 240 → 480s, capped at 480
+    [✓] All 4 required tests pass (plus 17 additional coverage tests)
 
 ================================================================================
 PHASE 12 — NOTIFICATIONS
@@ -869,7 +883,7 @@ In Progress:          0
 Blocked:              0
 In Progress:          1   (Phase 11 — Automation, task 11-01 done)
 Not Started:          11  (Phases 12–22)
-Tests Passing:        662/662  (100% — Python 3.12, pytest 9.x, pandas 3+)
+Tests Passing:        683/683  (100% — Python 3.12, pytest 9.x, pandas 3+)
 Log Files Active:     4  (app.log, trading.log, errors.log, strategy.log)
 
 Per-Phase Test Counts (verified 2026-07-23):
@@ -881,11 +895,11 @@ Per-Phase Test Counts (verified 2026-07-23):
   Phase 08 (Filters):           119 tests
   Phase 09 (Execution Engine):   65 tests
   Phase 10 (Position Mgmt):      60 tests
-  Phase 11 (Automation):         34 tests  (11-01: 18, 11-02: 16)
-  TOTAL:                        662 tests (all pass)
+  Phase 11 (Automation):         55 tests  (11-01: 18, 11-02: 16, 11-03: 21)
+  TOTAL:                        683 tests (all pass)
 
-Current Phase:        11 — AUTOMATION (tasks 11-01 + 11-02 complete; next: 11-03 WATCHDOG)
-Recommended Action:   Open ROADMAP/11_AUTOMATION/03_TASK_WATCHDOG.txt
+Current Phase:        11 — AUTOMATION (tasks 11-01–11-03 complete; next: 11-04 HEARTBEAT)
+Recommended Action:   Open ROADMAP/11_AUTOMATION/04_TASK_HEARTBEAT.txt
 
 ================================================================================
 ROADMAP AUDIT — COMPLETE (2026-07-23)
