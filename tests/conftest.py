@@ -263,3 +263,101 @@ def test_config():
     cfg.EMA_SLOW = 50
 
     return cfg
+
+
+# ---------------------------------------------------------------------------
+# Additional fixtures required by Phase 19 (Task 19-01)
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def config():
+    """Alias for test_config — satisfies Phase 19 fixture naming convention."""
+    from app.config import Config
+    cfg = Config()
+    cfg.LIVE_TRADING = False
+    cfg.TRADING_MODE = "DEMO"
+    cfg.MIN_CONFLUENCE_SCORE = 8
+    cfg.RISK_PER_TRADE = 0.5
+    cfg.MAX_DAILY_TRADES = 3
+    cfg.MAX_DAILY_LOSS_PCT = 2.0
+    cfg.MAX_CONSECUTIVE_LOSSES = 2
+    cfg.MIN_RR_RATIO = 2.0
+    cfg.MAX_LOT_SIZE = 10.0
+    cfg.MARGIN_SAFETY_LEVEL = 150.0
+    cfg.ATR_PERIOD = 14
+    cfg.EMA_FAST = 20
+    cfg.EMA_SLOW = 50
+    return cfg
+
+
+@pytest.fixture
+def in_memory_db(test_config):
+    """Return an initialised in-memory DatabaseManager for isolation."""
+    from app.database.database import DatabaseManager
+    db = DatabaseManager(test_config)
+    db.initialize()
+    yield db
+    db.close()
+
+
+@pytest.fixture
+def sample_signal(test_config):
+    """Return a minimal valid TradeSetup for unit tests."""
+    from app.strategy.signal_engine import TradeSetup
+    from datetime import datetime, timezone
+    return TradeSetup(
+        symbol="EURUSD",
+        direction="BUY",
+        entry_zone_high=1.10100,
+        entry_zone_low=1.10000,
+        entry_target=1.10050,
+        suggested_sl=1.09800,
+        suggested_tp=1.10550,
+        h4_bias="BULLISH",
+        h1_structure_aligned=True,
+        m15_setup_type="OB",
+        m15_liquidity_swept=True,
+        m5_confirmation=True,
+        m5_confirmation_type="BOS",
+        has_h4_bias=True,
+        has_h1_structure=True,
+        has_bos_choch=True,
+        has_liquidity_sweep=True,
+        has_valid_ob=True,
+        has_m5_confirmation=True,
+        has_ema_alignment=True,
+        is_valid_session=True,
+        atr=0.00080,
+        setup_timestamp=datetime.now(tz=timezone.utc),
+    )
+
+
+@pytest.fixture
+def sample_scored_signal(sample_signal):
+    """Return a ScoredSignal wrapping sample_signal with A-grade score."""
+    from app.database.models import ScoredSignal
+    return ScoredSignal(
+        signal=sample_signal,
+        total_score=8.5,
+        factor_scores={},
+        status="ACCEPTED",
+        quality_grade="A",
+    )
+
+
+@pytest.fixture
+def sample_trade_params():
+    """Return a valid TradeParameters object for unit tests."""
+    from app.database.models import TradeParameters
+    return TradeParameters(
+        symbol="EURUSD",
+        direction="BUY",
+        lot_size=0.02,
+        entry_price=1.10050,
+        sl_price=1.09800,
+        tp1_price=1.10550,
+        tp2_price=1.11050,
+        sl_pips=25.0,
+        rr_ratio=2.0,
+        risk_amount=50.0,
+    )
