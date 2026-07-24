@@ -35,7 +35,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   15  | Backtesting             | [✓]    | 2026-07-24   | All 5 tasks complete
   16  | Validation              | [✓]    | 2026-07-24   | Complete — all 5 tasks done (175 tests)
   17  | Self-Improvement        | [✓]    | 2026-07-24   | Complete — all 4 tasks done (17-01–17-04)
-  18  | Windows Automation      | [~]    | 2026-07-24   | 1/6 tasks done (18-01)
+  18  | Windows Automation      | [~]    | 2026-07-24   | 2/6 tasks done (18-01, 18-02)
   19  | Testing                 | [ ]    | -            | Depends on all phases
   20  | Security                | [ ]    | -            | Depends on 02+09
   21  | Final Validation        | [ ]    | -            | Depends on all phases
@@ -1348,7 +1348,7 @@ PHASE 18 — WINDOWS AUTOMATION
 ================================================================================
 Status:          [~] IN PROGRESS
 Last Updated:    2026-07-24
-Updated By:      Replit Agent — Phase 18 Task 18-01 COMPLETE
+Updated By:      Replit Agent — Phase 18 Task 18-02 COMPLETE
 Completed Tasks: 18-01 SETUP_BAT
 Failed Tasks:    None
 
@@ -1365,7 +1365,7 @@ Known Issues / Notes:
   - health_check.py reports flask missing on fresh Linux env; flask now installed
   - .env.example already existed and was complete — no changes needed
 
-Next Action:     → Task 18-02: ROADMAP/18_WINDOWS_AUTOMATION/02_TASK_CONFIGURE_BAT.txt
+Next Action:     → Task 18-03: ROADMAP/18_WINDOWS_AUTOMATION/03_TASK_START_STOP_RESTART.txt
 
 --------------------------------------------------------------------------------
 TASK 18-01 — SETUP_BAT: [✓] COMPLETE (2026-07-24)
@@ -1382,6 +1382,22 @@ Validation:
   ✓ python -m py_compile scripts/init_db.py — no errors
   ✓ python -m py_compile scripts/health_check.py — no errors
   ✓ Full test suite: 1275/1275 pass (zero regressions)
+
+--------------------------------------------------------------------------------
+TASK 18-02 — CONFIGURE_BAT: [✓] COMPLETE (2026-07-24)
+--------------------------------------------------------------------------------
+Files created:
+  configure.bat
+  scripts/setup_wizard.py
+
+Validation:
+  ✓ python -m py_compile scripts/setup_wizard.py — no errors
+  ✓ Full test suite: 1275/1275 pass (zero regressions)
+  ✓ Wizard covers all 5 sections: MT5, Trading, Sessions, Features, Telegram
+  ✓ Existing .env values used as defaults
+  ✓ Validation on all numeric inputs and required fields
+  ✓ Summary + y/n confirmation before writing
+  ✓ KeyboardInterrupt (Ctrl-C) exits cleanly with exit code 2 (no changes)
 
 ================================================================================
 PHASE 19 — TESTING
@@ -1453,8 +1469,8 @@ Per-Phase Test Counts (verified 2026-07-24):
   Phase 18 (Windows Automation):  0 tests  (18-01: .bat script — no unit tests required)
   TOTAL:                        1275 tests (all pass)
 
-Current Phase:        18 — WINDOWS AUTOMATION (task 18-01 done; next: 18-02 CONFIGURE_BAT)
-Recommended Action:   Open ROADMAP/18_WINDOWS_AUTOMATION/02_TASK_CONFIGURE_BAT.txt
+Current Phase:        18 — WINDOWS AUTOMATION (tasks 18-01, 18-02 done; next: 18-03 START_STOP_RESTART)
+Recommended Action:   Open ROADMAP/18_WINDOWS_AUTOMATION/03_TASK_START_STOP_RESTART.txt
 
 ================================================================================
 ROADMAP AUDIT — COMPLETE (2026-07-23)
