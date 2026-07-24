@@ -235,6 +235,8 @@ class Config:
     BACKTEST_OVERNIGHT_SWAP_LONG: float
     BACKTEST_OVERNIGHT_SWAP_SHORT: float
     BACKTEST_GAP_THRESHOLD_BARS: int    # Gap > N×bar_width triggers a gap warning
+    BACKTEST_MIN_SAMPLE_TRADES: int     # Warn if fewer trades than this (statistical floor)
+    BACKTEST_M15_BARS_PER_YEAR: int     # M15 bars in a forex year — used for Sharpe/Sortino
     DATA_DIR: str                        # Root directory for data files (CSV, DB, locks)
 
     # ------------------------------------------------------------------
@@ -449,6 +451,9 @@ class Config:
             "BACKTEST_OVERNIGHT_SWAP_SHORT", -0.30
         )
         self.BACKTEST_GAP_THRESHOLD_BARS = _get_int("BACKTEST_GAP_THRESHOLD_BARS", 5)
+        self.BACKTEST_MIN_SAMPLE_TRADES = _get_int("BACKTEST_MIN_SAMPLE_TRADES", 30)
+        # 4 bars/hr × 24 hrs × 252 trading days ≈ forex M15 bars per year
+        self.BACKTEST_M15_BARS_PER_YEAR = _get_int("BACKTEST_M15_BARS_PER_YEAR", 24_192)
         self.DATA_DIR = _get_str("DATA_DIR", "data")
 
         # --- SCREENSHOTS ---

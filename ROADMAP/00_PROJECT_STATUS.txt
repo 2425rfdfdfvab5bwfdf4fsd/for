@@ -3,7 +3,7 @@ PROJECT STATUS TRACKER
 ================================================================================
 Project: MT5 Automated Forex Trading Bot
 Last Updated: 2026-07-24
-Updated By: Replit Agent — Phase 15 Task 15-03 COMPLETE
+Updated By: Replit Agent — Phase 15 Task 15-04 COMPLETE
 
 STATUS LEGEND:
   [ ] NOT STARTED
@@ -32,7 +32,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   12  | Notifications           | [✓]    | 2026-07-24   | Complete — 47 tests (12-01: 21, 12-02: 26)
   13  | Trade Journal           | [✓]    | 2026-07-24   | Complete — all 4 tasks done (50 tests)
   14  | Dashboard               | [✓]    | 2026-07-24   | Complete — all 8 tasks done (26 tests)
-  15  | Backtesting             | [~]    | 2026-07-24   | 15-01–03 complete; tasks 15-04–05 pending
+  15  | Backtesting             | [~]    | 2026-07-24   | 15-01–04 complete; task 15-05 pending
   16  | Validation              | [ ]    | -            | Depends on Phase 15
   17  | Self-Improvement        | [ ]    | -            | Depends on 04+15
   18  | Windows Automation      | [ ]    | -            | Depends on 11+14
@@ -1063,12 +1063,13 @@ PHASE 15 — BACKTESTING
 ================================================================================
 Status:          [~] IN PROGRESS
 Last Updated:    2026-07-24
-Completed Tasks: 15-01 HISTORICAL DATA   — [✓] COMPLETE (2026-07-24)
-                 15-02 BACKTEST ENGINE   — [✓] COMPLETE (2026-07-24)
-                 15-03 REALISTIC EXECUTION — [✓] COMPLETE (2026-07-24)
+Completed Tasks: 15-01 HISTORICAL DATA      — [✓] COMPLETE (2026-07-24)
+                 15-02 BACKTEST ENGINE      — [✓] COMPLETE (2026-07-24)
+                 15-03 REALISTIC EXECUTION  — [✓] COMPLETE (2026-07-24)
+                 15-04 METRICS CALCULATOR   — [✓] COMPLETE (2026-07-24)
 Failed Tasks:    None
 Known Issues:    None
-Next Action:     ROADMAP/15_BACKTESTING/04_TASK_METRICS.txt
+Next Action:     ROADMAP/15_BACKTESTING/05_TASK_REPORTS.txt
 
 TASK 15-01 — HISTORICAL DATA MANAGER: [✓] COMPLETE (2026-07-24)
   Files Created:
@@ -1114,6 +1115,21 @@ TASK 15-03 — REALISTIC EXECUTION SIMULATOR: [✓] COMPLETE (2026-07-24)
     [✓] Spread, slippage, and commission all applied
     [✓] Net P&L always less than gross P&L (costs always positive)
     [✓] All tests pass (931/931 full suite, zero regressions)
+
+TASK 15-04 — PERFORMANCE METRICS CALCULATOR: [✓] COMPLETE (2026-07-24)
+  Files Created:
+    backtesting/metrics.py                      — MetricsCalculator, BacktestMetrics,
+                                                  helper functions (_sharpe, _sortino,
+                                                  _max_drawdown, _streaks, _monthly_win_rate)
+    tests/test_backtesting/test_metrics.py      — 61 tests (all pass)
+  Files Modified:
+    app/config.py                               — added BACKTEST_MIN_SAMPLE_TRADES (30),
+                                                  BACKTEST_M15_BARS_PER_YEAR (24192)
+  Tests: 61 new / 992 total (all pass, zero regressions)
+  Acceptance Criteria:
+    [✓] All metrics calculated correctly (verified against known inputs)
+    [✓] Low sample size triggers warning (< BACKTEST_MIN_SAMPLE_TRADES)
+    [✓] All tests pass with known mathematical results (992/992, zero regressions)
 
 ================================================================================
 PHASE 16 — VALIDATION
@@ -1193,7 +1209,7 @@ Completed Phases:     14  (Phases 01–14)
 In Progress:          1   (Phase 15)
 Blocked:              0
 Not Started:          7   (Phases 16–22)
-Tests Passing:        931/931  (100% — Python 3.12, pytest 9.x, pandas 3+)
+Tests Passing:        992/992  (100% — Python 3.12, pytest 9.x, pandas 3+)
 Log Files Active:     4  (app.log, trading.log, errors.log, strategy.log)
 
 Per-Phase Test Counts (verified 2026-07-24):
@@ -1209,11 +1225,11 @@ Per-Phase Test Counts (verified 2026-07-24):
   Phase 12 (Notifications):      47 tests  (12-01: 21, 12-02: 26)
   Phase 13 (Trade Journal):      50 tests  (13-01: 13, 13-02: 11, 13-03: 13, 13-04: 13)
   Phase 14 (Dashboard):          26 tests  (14-01: 17, 14-02–07: 0 UI-only, 14-08: 9)
-  Phase 15 (Backtesting):        88 tests  (15-01: 23, 15-02: 29, 15-03: 36)
-  TOTAL:                        931 tests (all pass)
+  Phase 15 (Backtesting):       149 tests  (15-01: 23, 15-02: 29, 15-03: 36, 15-04: 61)
+  TOTAL:                        992 tests (all pass)
 
-Current Phase:        15 — BACKTESTING (tasks 15-01–03 complete; next: 15-04 METRICS)
-Recommended Action:   Open ROADMAP/15_BACKTESTING/04_TASK_METRICS.txt
+Current Phase:        15 — BACKTESTING (tasks 15-01–04 complete; next: 15-05 REPORTS)
+Recommended Action:   Open ROADMAP/15_BACKTESTING/05_TASK_REPORTS.txt
 
 ================================================================================
 ROADMAP AUDIT — COMPLETE (2026-07-23)
