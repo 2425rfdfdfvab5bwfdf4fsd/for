@@ -3,7 +3,7 @@ PROJECT STATUS TRACKER
 ================================================================================
 Project: MT5 Automated Forex Trading Bot
 Last Updated: 2026-07-24
-Updated By: Replit Agent — Phase 16 Task 16-05 COMPLETE
+Updated By: Replit Agent — Phase 17 Task 17-01 COMPLETE
 
 STATUS LEGEND:
   [ ] NOT STARTED
@@ -34,7 +34,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   14  | Dashboard               | [✓]    | 2026-07-24   | Complete — all 8 tasks done (26 tests)
   15  | Backtesting             | [✓]    | 2026-07-24   | All 5 tasks complete
   16  | Validation              | [✓]    | 2026-07-24   | Complete — all 5 tasks done (175 tests)
-  17  | Self-Improvement        | [ ]    | -            | Depends on 04+15
+  17  | Self-Improvement        | [~]    | 2026-07-24   | 1/4 tasks done (17-01)
   18  | Windows Automation      | [ ]    | -            | Depends on 11+14
   19  | Testing                 | [ ]    | -            | Depends on all phases
   20  | Security                | [ ]    | -            | Depends on 02+09
@@ -1274,12 +1274,26 @@ PHASE 16 STATUS: [✓] COMPLETE (pending human review of live-data results)
 ================================================================================
 PHASE 17 — SELF-IMPROVEMENT
 ================================================================================
-Status:          [ ] NOT STARTED
-Last Updated:    -
-Completed Tasks: None
+Status:          [~] IN PROGRESS
+Last Updated:    2026-07-24
+Updated By:      Replit Agent — Phase 17 Task 17-01 COMPLETE
+Completed Tasks: 17-01 PERFORMANCE ANALYTICS — [✓] COMPLETE (2026-07-24)
 Failed Tasks:    None
 Known Issues:    None
-Next Action:     Complete Phases 04 + 15 first.
+Next Action:     ROADMAP/17_SELF_IMPROVEMENT/02_TASK_SEGMENT_ANALYSIS.txt
+
+TASK 17-01 — PERFORMANCE ANALYTICS: [✓] COMPLETE (2026-07-24)
+  Files Created:
+    app/analytics/performance_analytics.py  — PerformanceAnalytics, PerformanceReport,
+                                              ComparisonReport, SymbolStats, SessionStats
+    app/analytics/__init__.py               — updated module docstring
+    tests/test_self_improvement/__init__.py — package init
+    tests/test_self_improvement/test_analytics.py — 17 tests (all pass)
+  Tests: 17/17 pass
+  Acceptance Criteria:
+    [✓] Reports generated with correct aggregation (weekly + monthly)
+    [✓] Empty period handled gracefully (returns zeroed PerformanceReport)
+    [✓] All tests pass (1225/1225 full suite, zero regressions)
 
 ================================================================================
 PHASE 18 — WINDOWS AUTOMATION
@@ -1339,7 +1353,7 @@ Completed Phases:     16  (Phases 01–16)
 In Progress:          0
 Blocked:              0
 Not Started:          6   (Phases 17–22)
-Tests Passing:        1208/1208  (100% — Python 3.12, pytest 9.x, pandas 3+)
+Tests Passing:        1225/1225  (100% — Python 3.12, pytest 9.x, pandas 3+)
 Log Files Active:     4  (app.log, trading.log, errors.log, strategy.log)
 
 Per-Phase Test Counts (verified 2026-07-24):
@@ -1359,8 +1373,8 @@ Per-Phase Test Counts (verified 2026-07-24):
   Phase 16 (Validation):        175 tests  (16-01: 32, 16-02: 39, 16-03: 35, 16-04: 35, 16-05: 34)
   TOTAL:                        1208 tests (all pass)
 
-Current Phase:        17 — SELF-IMPROVEMENT (not started)
-Recommended Action:   Open ROADMAP/17_SELF_IMPROVEMENT/01_PHASE_OVERVIEW.txt
+Current Phase:        17 — SELF-IMPROVEMENT (task 17-01 complete; next: 17-02 SEGMENT_ANALYSIS)
+Recommended Action:   Open ROADMAP/17_SELF_IMPROVEMENT/02_TASK_SEGMENT_ANALYSIS.txt
 
 ================================================================================
 ROADMAP AUDIT — COMPLETE (2026-07-23)

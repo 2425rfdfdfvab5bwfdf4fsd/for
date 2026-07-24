@@ -84,3 +84,5 @@ requests
 pytest
 pytest-cov
 pytest-mock
+pytest
+pytest-mock
