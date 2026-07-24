@@ -1,0 +1,115 @@
+You are working on: [PROJECT NAME]
+
+Roadmap: ROADMAP/ — follow it exactly.
+
+================================================================================
+TASK
+================================================================================
+
+Phase:     [PHASE NUMBER] — [PHASE NAME]
+Task:      [TASK NUMBER]
+Task File: [PATH TO TASK FILE]
+
+================================================================================
+STEP 1 — ORIENT  (read before touching any file)
+================================================================================
+
+Read in order:
+  1. replit.md
+  2. AI_RULES.md
+  3. ARCHITECTURE.md
+  4. ROADMAP/00_PROJECT_STATUS.txt
+  5. [Phase overview file]
+  6. [Task file]
+
+Inspect the existing implementation.
+If the codebase has diverged from the task file, trust the codebase.
+
+Then list — do not modify anything yet:
+  Inspect:       [files to read for context]
+  Create:        [new files]
+  Modify:        [existing files to change]
+  Must NOT touch:[out-of-scope files and directories]
+
+================================================================================
+STEP 2 — PLAN
+================================================================================
+
+Write a short implementation plan:
+  - Key classes / functions and their signatures
+  - Order of changes (what depends on what)
+  - Error handling strategy
+  - How you will test it
+
+Do not write code until the plan is internally consistent with the architecture.
+
+================================================================================
+STEP 3 — IMPLEMENT
+================================================================================
+
+Build only the current task. Follow CODE_STANDARDS.md, SECURITY.md,
+TESTING.md, and AI_RULES.md.
+
+  - No unnecessary technologies
+  - No refactoring of unrelated code
+  - No scope creep beyond a clear technical necessity
+  - All thresholds and config values come from Config — never hardcoded
+
+================================================================================
+STEP 4 — TEST & FIX
+================================================================================
+
+Run new tests first:
+  python -m pytest [test path] -v --tb=short
+
+Then run the full suite (must be zero regressions):
+  python -m pytest tests/ -v --tb=short
+
+Required test cases: [list from task file]
+
+On failure: identify root cause → fix → re-run. Never skip or hide a failure.
+
+================================================================================
+STEP 5 — REVIEW
+================================================================================
+
+Before declaring done, verify:
+
+  [ ] Only in-scope files were changed
+  [ ] No unused or circular imports
+  [ ] Every exception is logged — no silent failures
+  [ ] No secrets or hardcoded values in code
+  [ ] Every acceptance criterion from the task file passes
+
+================================================================================
+STEP 6 — DOCUMENT & REPORT
+================================================================================
+
+Update only:
+  - ROADMAP/00_PROJECT_STATUS.txt  (mark task [✓] COMPLETE, update test count)
+  - replit.md                      (only if run instructions or stack changed)
+
+Then return this report:
+
+  ### Completed
+  [What was built and why it satisfies the task objective]
+
+  ### Files Created / Modified
+  | File | Description of change |
+  |------|-----------------------|
+  | ...  | ...                   |
+
+  ### Test Results
+  [X/X tests pass — include any warnings]
+
+  ### Acceptance Criteria
+  [✓] criterion 1
+  [✓] criterion 2
+
+  ### Known Issues
+  [Deferred items, deprecation warnings, or caveats — "None" if clean]
+
+  ### Next Task
+  Phase [XX] — Task [XX-XX] — [path/to/task/file]
+
+Do not start the next task unless explicitly instructed.
