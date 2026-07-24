@@ -287,6 +287,13 @@ class Config:
     ORDER_FILLING_MODE: str             # FOK | IOC | RETURN
     ORPHAN_POLICY: str                  # alert | close | adopt
 
+    # ------------------------------------------------------------------
+    # AUTOMATION (Phase 11)
+    # ------------------------------------------------------------------
+    LOOP_INTERVAL_SECONDS: int          # Seconds between main loop ticks (default 60)
+    DRY_RUN: bool                       # True = full pipeline but skip order placement
+    MAX_CONSECUTIVE_ERRORS: int         # Consecutive tick errors before graceful shutdown
+
     def __init__(self) -> None:
         """Load all configuration from environment variables."""
         # --- TRADING MODE ---
@@ -492,6 +499,11 @@ class Config:
         self.RETRY_DELAY_SECONDS = _get_float("RETRY_DELAY_SECONDS", 0.5)
         self.ORDER_FILLING_MODE = _get_str("ORDER_FILLING_MODE", "FOK")
         self.ORPHAN_POLICY = _get_str("ORPHAN_POLICY", "alert")
+
+        # --- AUTOMATION (Phase 11) ---
+        self.LOOP_INTERVAL_SECONDS = _get_int("LOOP_INTERVAL_SECONDS", 60)
+        self.DRY_RUN = _get_bool("DRY_RUN", False)
+        self.MAX_CONSECUTIVE_ERRORS = _get_int("MAX_CONSECUTIVE_ERRORS", 5)
 
         # Validate after all values are loaded
         self._validate()

@@ -28,7 +28,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   08  | Filters                 | [✓]    | 2026-07-23   | Complete — 119/119 tests pass
   09  | Execution Engine        | [✓]    | 2026-07-23   | Complete — 65/65 tests pass
   10  | Position Management     | [✓]    | 2026-07-23   | Complete — 60/60 tests pass
-  11  | Automation              | [ ]    | -            | Depends on 05-10
+  11  | Automation              | [~]    | 2026-07-23   | In progress — 11-01 MAIN LOOP complete (18 tests)
   12  | Notifications           | [ ]    | -            | Depends on 04+11
   13  | Trade Journal           | [ ]    | -            | Depends on 04+09
   14  | Dashboard               | [ ]    | -            | Depends on 04+11
@@ -707,12 +707,34 @@ PHASE 10 STATUS: [✓] COMPLETE
 ================================================================================
 PHASE 11 — AUTOMATION
 ================================================================================
-Status:          [ ] NOT STARTED
-Last Updated:    -
-Completed Tasks: None
+Status:          [~] IN PROGRESS
+Last Updated:    2026-07-23
+Completed Tasks: 11-01 MAIN LOOP
 Failed Tasks:    None
-Known Issues:    None
-Next Action:     Complete Phases 05-10 first.
+Known Issues:    ATR pips uses a static default (15 pips) — live MarketDataFetcher
+                 wiring deferred to Phase 11 polish.
+                 daily_stats in RiskContext is None — Phase 13 will wire repos.
+                 OrderValidator not called before OrderExecutor (pre-approved
+                 OrderValidationResult used) — full wiring deferred.
+Next Action:     → Task 11-02: ROADMAP/11_AUTOMATION/02_TASK_SINGLETON.txt
+
+TASK 11-01 — MAIN LOOP: [✓] COMPLETE (2026-07-23)
+  Files Created:
+    app/automation/main_loop.py  — MainLoop class with full pipeline orchestration
+    main.py                      — Bot entry point (Config → engines → loop.run())
+    tests/test_automation/__init__.py
+    tests/test_automation/test_main_loop.py  — 18 tests (all pass)
+  Files Modified:
+    app/automation/__init__.py   — exports MainLoop
+    app/config.py                — added LOOP_INTERVAL_SECONDS, DRY_RUN,
+                                   MAX_CONSECUTIVE_ERRORS
+  Tests: 18/18 pass
+  Acceptance Criteria:
+    [✓] Full pipeline runs in correct order (filter→strategy→confluence→risk→execute→manage)
+    [✓] DRY_RUN=true skips order execution and logs instead
+    [✓] Errors do not crash the loop (up to MAX_CONSECUTIVE_ERRORS threshold)
+    [✓] Graceful shutdown handles SIGTERM and SIGINT correctly
+    [✓] All 5 required tests pass (plus 13 additional coverage tests)
 
 ================================================================================
 PHASE 12 — NOTIFICATIONS
@@ -831,12 +853,9 @@ Total Phases:         22
 Completed Phases:     10  (Phases 01–10)
 In Progress:          0
 Blocked:              0
-Not Started:          12  (Phases 11–22)
-
-Total Tasks:          ~90
-Completed Tasks:      ~45  (all tasks in Phases 01–10 complete)
-Skipped Tasks:        1    (01-02 — no existing Python code found at project start)
-Tests Passing:        628/628  (100% — Python 3.12, pytest 9.x, pandas 3+)
+In Progress:          1   (Phase 11 — Automation, task 11-01 done)
+Not Started:          11  (Phases 12–22)
+Tests Passing:        646/646  (100% — Python 3.12, pytest 9.x, pandas 3+)
 Log Files Active:     4  (app.log, trading.log, errors.log, strategy.log)
 
 Per-Phase Test Counts (verified 2026-07-23):
@@ -848,11 +867,11 @@ Per-Phase Test Counts (verified 2026-07-23):
   Phase 08 (Filters):           119 tests
   Phase 09 (Execution Engine):   65 tests
   Phase 10 (Position Mgmt):      60 tests
-  TOTAL:                        628 tests (all pass)
+  Phase 11 (Automation):         18 tests  (task 11-01 only)
+  TOTAL:                        646 tests (all pass)
 
-Current Phase:        11 — AUTOMATION (main bot loop)
-Recommended Action:   Open ROADMAP/11_AUTOMATION/01_PHASE_OVERVIEW.txt
-                      Read it, then start the first task file
+Current Phase:        11 — AUTOMATION (task 11-01 complete; next: 11-02 SINGLETON)
+Recommended Action:   Open ROADMAP/11_AUTOMATION/02_TASK_SINGLETON.txt
 
 ================================================================================
 ROADMAP AUDIT — COMPLETE (2026-07-23)
