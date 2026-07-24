@@ -246,6 +246,11 @@ class Config:
     WF_OOS_MONTHS: int   # Out-of-sample step size in months (default 3)
 
     # ------------------------------------------------------------------
+    # OVERFITTING CHECK (Phase 16-04)
+    # ------------------------------------------------------------------
+    SENSITIVITY_THRESHOLD: float  # Max allowed % performance change per parameter variation (default 50.0)
+
+    # ------------------------------------------------------------------
     # SCREENSHOTS
     # ------------------------------------------------------------------
     ENABLE_SCREENSHOTS: bool
@@ -465,6 +470,9 @@ class Config:
         # --- WALK-FORWARD VALIDATION ---
         self.WF_IS_MONTHS = _get_int("WF_IS_MONTHS", 12)
         self.WF_OOS_MONTHS = _get_int("WF_OOS_MONTHS", 3)
+
+        # --- OVERFITTING CHECK ---
+        self.SENSITIVITY_THRESHOLD = _get_float("SENSITIVITY_THRESHOLD", 50.0)
 
         # --- SCREENSHOTS ---
         self.ENABLE_SCREENSHOTS = _get_bool("ENABLE_SCREENSHOTS", False)
