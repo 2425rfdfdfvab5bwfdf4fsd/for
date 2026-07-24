@@ -349,6 +349,21 @@ CREATE TABLE IF NOT EXISTS position_management_events (
 );
 """
 
+CREATE_REJECTION_JOURNAL_ENTRIES_TABLE = """
+CREATE TABLE IF NOT EXISTS rejection_journal_entries (
+    id                  TEXT PRIMARY KEY,
+    timestamp_utc       TEXT NOT NULL,
+    symbol              TEXT NOT NULL,
+    direction           TEXT NOT NULL,
+    confluence_score    REAL NOT NULL,
+    rejection_category  TEXT NOT NULL,
+    rejection_detail    TEXT NOT NULL DEFAULT '',
+    factor_breakdown    TEXT NOT NULL DEFAULT '{}',
+    session             TEXT NOT NULL DEFAULT '',
+    spread_pips         REAL NOT NULL DEFAULT 0.0
+);
+"""
+
 CREATE_TRADE_JOURNAL_ENTRIES_TABLE = """
 CREATE TABLE IF NOT EXISTS trade_journal_entries (
     id                 TEXT PRIMARY KEY,
@@ -393,6 +408,7 @@ ALL_TABLES: list[str] = [
     CREATE_CONSECUTIVE_LOSS_STATE_TABLE,
     CREATE_POSITION_MANAGEMENT_EVENTS_TABLE,
     CREATE_TRADE_JOURNAL_ENTRIES_TABLE,
+    CREATE_REJECTION_JOURNAL_ENTRIES_TABLE,
 ]
 
 
@@ -857,3 +873,42 @@ class TradeJournalEntry:
     # Audit
     created_at: str = field(default_factory=_now_iso)
     updated_at: str = field(default_factory=_now_iso)
+
+
+@dataclass
+class RejectionEntry:
+    """
+    Records a single rejected trade signal with the reason for rejection.
+
+    Used by RejectionJournal (Phase 13) to accumulate data for threshold tuning
+    and near-miss analysis.
+
+    rejection_category must be one of the RejectionCategory constants.
+    """
+
+    id: str = field(default_factory=_new_uuid)
+    timestamp_utc: str = field(default_factory=_now_iso)
+    symbol: str = ""
+    direction: str = ""                 # "BUY" | "SELL"
+    confluence_score: float = 0.0
+    rejection_category: str = ""        # see RejectionCategory constants
+    rejection_detail: str = ""          # Human-readable extra context
+    factor_breakdown: str = "{}"        # JSON: factor_name → score
+    session: str = ""
+    spread_pips: float = 0.0
+
+
+class RejectionCategory:
+    """Rejection category constants used by RejectionJournal."""
+
+    CONFLUENCE_TOO_LOW = "CONFLUENCE_TOO_LOW"
+    DAILY_LIMIT_REACHED = "DAILY_LIMIT_REACHED"
+    CONSECUTIVE_LOSS_BLOCK = "CONSECUTIVE_LOSS_BLOCK"
+    CORRELATION_BLOCK = "CORRELATION_BLOCK"
+    RR_INSUFFICIENT = "RR_INSUFFICIENT"
+    SESSION_BLOCKED = "SESSION_BLOCKED"
+    SPREAD_TOO_WIDE = "SPREAD_TOO_WIDE"
+    NEWS_BLACKOUT = "NEWS_BLACKOUT"
+    FILTER_BLOCKED = "FILTER_BLOCKED"
+    DUPLICATE_SIGNAL = "DUPLICATE_SIGNAL"
+    EXECUTION_FAILED = "EXECUTION_FAILED"

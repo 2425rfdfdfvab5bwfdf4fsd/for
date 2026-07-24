@@ -33,6 +33,7 @@ from app.database.models import (
     DailyRiskState,
     PerformanceSnapshot,
     RejectedSignal,
+    RejectionEntry,
     SystemEvent,
     Trade,
     TradeJournalEntry,
@@ -707,6 +708,127 @@ class PerformanceRepository:
 
 
 # ===========================================================================
+# RejectionJournalRepository
+# ===========================================================================
+
+class RejectionJournalRepository:
+    """CRUD operations for the rejection_journal_entries table."""
+
+    def __init__(self, db: DatabaseManager) -> None:
+        self._db = db
+
+    def create(self, entry: RejectionEntry) -> None:
+        """Insert a new rejection entry."""
+        sql = """
+            INSERT INTO rejection_journal_entries (
+                id, timestamp_utc, symbol, direction,
+                confluence_score, rejection_category, rejection_detail,
+                factor_breakdown, session, spread_pips
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        params = (
+            entry.id, entry.timestamp_utc, entry.symbol, entry.direction,
+            entry.confluence_score, entry.rejection_category, entry.rejection_detail,
+            entry.factor_breakdown, entry.session, entry.spread_pips,
+        )
+        try:
+            self._db.execute(sql, params)
+            self._db.get_connection().commit()
+            logger.debug(
+                "Rejection entry saved: %s %s score=%.1f category=%s",
+                entry.symbol, entry.direction, entry.confluence_score,
+                entry.rejection_category,
+            )
+        except DatabaseError:
+            logger.error("Failed to save rejection entry %s", entry.id)
+            raise
+
+    def get_by_date(self, date: str) -> list[RejectionEntry]:
+        """Return all rejection entries whose timestamp_utc starts with date (YYYY-MM-DD)."""
+        try:
+            cursor = self._db.execute(
+                """
+                SELECT * FROM rejection_journal_entries
+                 WHERE timestamp_utc LIKE ?
+                 ORDER BY timestamp_utc ASC
+                """,
+                (f"{date}%",),
+            )
+            return [self._row_to_entry(row) for row in cursor.fetchall()]
+        except DatabaseError:
+            logger.error("Failed to fetch rejection entries for date %s", date)
+            return []
+
+    def get_by_category(self, category: str, limit: int = 100) -> list[RejectionEntry]:
+        """Return recent rejection entries for a specific category."""
+        try:
+            cursor = self._db.execute(
+                """
+                SELECT * FROM rejection_journal_entries
+                 WHERE rejection_category = ?
+                 ORDER BY timestamp_utc DESC
+                 LIMIT ?
+                """,
+                (category, limit),
+            )
+            return [self._row_to_entry(row) for row in cursor.fetchall()]
+        except DatabaseError:
+            logger.error("Failed to fetch rejections by category %s", category)
+            return []
+
+    def get_near_misses(self, date: str, min_score: float, max_score: float) -> list[RejectionEntry]:
+        """Return CONFLUENCE_TOO_LOW rejections within a score band for a given date."""
+        try:
+            cursor = self._db.execute(
+                """
+                SELECT * FROM rejection_journal_entries
+                 WHERE timestamp_utc LIKE ?
+                   AND confluence_score >= ?
+                   AND confluence_score < ?
+                 ORDER BY confluence_score DESC
+                """,
+                (f"{date}%", min_score, max_score),
+            )
+            return [self._row_to_entry(row) for row in cursor.fetchall()]
+        except DatabaseError:
+            logger.error("Failed to fetch near-miss rejections for date %s", date)
+            return []
+
+    def count_by_category_for_date(self, date: str) -> dict[str, int]:
+        """Return a dict of {category: count} for all rejections on a given date."""
+        try:
+            cursor = self._db.execute(
+                """
+                SELECT rejection_category, COUNT(*) as cnt
+                  FROM rejection_journal_entries
+                 WHERE timestamp_utc LIKE ?
+                 GROUP BY rejection_category
+                """,
+                (f"{date}%",),
+            )
+            return {row["rejection_category"]: row["cnt"] for row in cursor.fetchall()}
+        except DatabaseError:
+            logger.error("Failed to count rejections by category for date %s", date)
+            return {}
+
+    @staticmethod
+    def _row_to_entry(row) -> RejectionEntry:
+        d = dict(row)
+        return RejectionEntry(
+            id=d["id"],
+            timestamp_utc=d["timestamp_utc"],
+            symbol=d["symbol"],
+            direction=d["direction"],
+            confluence_score=d["confluence_score"],
+            rejection_category=d["rejection_category"],
+            rejection_detail=d.get("rejection_detail", ""),
+            factor_breakdown=d.get("factor_breakdown", "{}"),
+            session=d.get("session", ""),
+            spread_pips=d.get("spread_pips", 0.0),
+        )
+
+
+# ===========================================================================
 # TradeJournalRepository
 # ===========================================================================
 
@@ -913,3 +1035,4 @@ class Repositories:
         self.system_events = SystemEventRepository(db)
         self.performance = PerformanceRepository(db)
         self.trade_journal = TradeJournalRepository(db)
+        self.rejection_journal = RejectionJournalRepository(db)
