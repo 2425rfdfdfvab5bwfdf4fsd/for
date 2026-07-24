@@ -31,7 +31,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   11  | Automation              | [✓]    | 2026-07-24   | Complete — all 5 tasks done (92 tests)
   12  | Notifications           | [✓]    | 2026-07-24   | Complete — 47 tests (12-01: 21, 12-02: 26)
   13  | Trade Journal           | [✓]    | 2026-07-24   | Complete — all 4 tasks done (50 tests)
-  14  | Dashboard               | [~]    | 2026-07-24   | 14-01–07 complete; 14-08 pending
+  14  | Dashboard               | [✓]    | 2026-07-24   | Complete — all 8 tasks done (26 tests)
   15  | Backtesting             | [~]    | 2026-07-24   | 15-01 complete; tasks 15-02–05 pending
   16  | Validation              | [ ]    | -            | Depends on Phase 15
   17  | Self-Improvement        | [ ]    | -            | Depends on 04+15
@@ -914,7 +914,10 @@ Last Updated:    2026-07-24
 Updated By:      Replit Agent — Phase 14 Task 14-08 Why No Trade
 Completed Tasks: 14-01 BACKEND API — [✓] COMPLETE (2026-07-24)
                  14-02 OVERVIEW UI — [✓] COMPLETE (2026-07-24)
-                 14-06 LOG VIEWER  — [✓] COMPLETE (2026-07-24)
+                 14-03 MARKET SCANNER VIEW — [✓] COMPLETE (2026-07-24)
+                 14-04 OPEN POSITIONS VIEW — [✓] COMPLETE (2026-07-24)
+                 14-05 ANALYTICS PAGE — [✓] COMPLETE (2026-07-24)
+                 14-06 LOG VIEWER — [✓] COMPLETE (2026-07-24)
                  14-07 HEALTH MONITOR — [✓] COMPLETE (2026-07-24)
                  14-08 WHY NO TRADE — [✓] COMPLETE (2026-07-24)
 Failed Tasks:    None
@@ -1069,12 +1072,12 @@ TASK 15-01 — HISTORICAL DATA MANAGER: [✓] COMPLETE (2026-07-24)
   Files Created:
     backtesting/historical_data.py              — HistoricalDataManager + DataValidationResult
     tests/test_backtesting/__init__.py          — package init
-    tests/test_backtesting/test_historical_data.py — 21 tests (all pass)
+    tests/test_backtesting/test_historical_data.py — 23 tests (all pass)
     data/historical/.gitkeep                    — cache directory
   Files Modified:
     app/config.py                               — added BACKTEST_GAP_THRESHOLD_BARS, DATA_DIR
     requirements.txt                            — added sys_platform guard for MetaTrader5
-  Tests: 21/21 pass
+  Tests: 23/23 pass
   Acceptance Criteria:
     [✓] Data downloaded from MT5 and cached (download() + save_to_cache())
     [✓] Gaps detected and logged (gap_threshold from Config)
@@ -1156,10 +1159,10 @@ Next Action:     Complete all phases first.
 OVERALL PROJECT METRICS
 ================================================================================
 Total Phases:         22
-Completed Phases:     11  (Phases 01–11)
-In Progress:          0
+Completed Phases:     14  (Phases 01–14)
+In Progress:          1   (Phase 15)
 Blocked:              0
-Not Started:          11  (Phases 12–22)
+Not Started:          7   (Phases 16–22)
 Tests Passing:        866/866  (100% — Python 3.12, pytest 9.x, pandas 3+)
 Log Files Active:     4  (app.log, trading.log, errors.log, strategy.log)
 
@@ -1174,9 +1177,9 @@ Per-Phase Test Counts (verified 2026-07-24):
   Phase 10 (Position Mgmt):      60 tests
   Phase 11 (Automation):         92 tests  (11-01: 18, 11-02: 16, 11-03: 21, 11-04: 18, 11-05: 19)
   Phase 12 (Notifications):      47 tests  (12-01: 21, 12-02: 26)
-  Phase 15 (Backtesting):        23 tests  (15-01: 23)
   Phase 13 (Trade Journal):      50 tests  (13-01: 13, 13-02: 11, 13-03: 13, 13-04: 13)
   Phase 14 (Dashboard):          26 tests  (14-01: 17, 14-02–07: 0 UI-only, 14-08: 9)
+  Phase 15 (Backtesting):        23 tests  (15-01: 23)
   TOTAL:                        866 tests (all pass)
 
 Current Phase:        15 — BACKTESTING (task 15-01 complete; next: 15-02 BACKTEST_ENGINE)
