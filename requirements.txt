@@ -81,3 +81,6 @@ flask
 matplotlib
 python-telegram-bot
 requests
+pytest
+pytest-cov
+pytest-mock

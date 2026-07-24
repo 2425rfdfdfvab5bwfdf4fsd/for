@@ -240,6 +240,12 @@ class Config:
     DATA_DIR: str                        # Root directory for data files (CSV, DB, locks)
 
     # ------------------------------------------------------------------
+    # WALK-FORWARD VALIDATION
+    # ------------------------------------------------------------------
+    WF_IS_MONTHS: int    # In-sample window length in months (default 12)
+    WF_OOS_MONTHS: int   # Out-of-sample step size in months (default 3)
+
+    # ------------------------------------------------------------------
     # SCREENSHOTS
     # ------------------------------------------------------------------
     ENABLE_SCREENSHOTS: bool
@@ -455,6 +461,10 @@ class Config:
         # 4 bars/hr × 24 hrs × 252 trading days ≈ forex M15 bars per year
         self.BACKTEST_M15_BARS_PER_YEAR = _get_int("BACKTEST_M15_BARS_PER_YEAR", 24_192)
         self.DATA_DIR = _get_str("DATA_DIR", "data")
+
+        # --- WALK-FORWARD VALIDATION ---
+        self.WF_IS_MONTHS = _get_int("WF_IS_MONTHS", 12)
+        self.WF_OOS_MONTHS = _get_int("WF_OOS_MONTHS", 3)
 
         # --- SCREENSHOTS ---
         self.ENABLE_SCREENSHOTS = _get_bool("ENABLE_SCREENSHOTS", False)
