@@ -1,294 +1,115 @@
-You are working on: MT5 Automated Forex Trading Bot
+You are working on: [PROJECT NAME]
 
-The project has already completed:
-
-  1. Requirements analysis
-  2. Architecture planning
-  3. Roadmap creation
-  4. Roadmap audit
-
-The authoritative roadmap is located in: ROADMAP/
-
-You must follow the roadmap exactly.
+Roadmap: ROADMAP/ — follow it exactly.
 
 ================================================================================
-CURRENT TASK
+TASK
 ================================================================================
 
-  Phase:      11
-  Phase Name: Automation
-  Task:       11-01
-  Task File:  ROADMAP/11_AUTOMATION/01_TASK_MAIN_LOOP.txt
+Phase:     [PHASE NUMBER] — [PHASE NAME]
+Task:      [TASK NUMBER]
+Task File: [PATH TO TASK FILE]
 
 ================================================================================
-BEFORE CODING
+STEP 1 — ORIENT  (read before touching any file)
 ================================================================================
 
-Read in this order:
-
+Read in order:
   1. replit.md
   2. AI_RULES.md
   3. ARCHITECTURE.md
   4. ROADMAP/00_PROJECT_STATUS.txt
-  5. ROADMAP/11_AUTOMATION/01_PHASE_OVERVIEW.txt
-  6. ROADMAP/11_AUTOMATION/01_TASK_MAIN_LOOP.txt
+  5. [Phase overview file]
+  6. [Task file]
 
-Then inspect the existing implementation.
+Inspect the existing implementation.
+If the codebase has diverged from the task file, trust the codebase.
 
-Do not assume the task file is correct if the current codebase has changed.
-
-================================================================================
-STEP 1 — UNDERSTAND
-================================================================================
-
-Explain:
-
-  - What this task does:
-      Implements the main trading loop (MainLoop class) that orchestrates the
-      complete pipeline on every tick: connect → filter → scan → confluence →
-      risk → execute → manage → sleep. Also creates main.py as the bot entry point.
-
-  - Why it is needed:
-      All engines (Phases 03–10) are complete but not wired together. This is
-      the top-level orchestrator that makes the bot fully runnable.
-
-  - Dependencies:
-      All Phases 02–10 must be complete (they are — 628/628 tests pass).
-      Uses: MT5Connection, FilterPipeline, SignalEngine, ConfluenceScorer,
-            RiskManager, OrderExecutor, PositionManager, DatabaseManager.
-
-  - Expected inputs and outputs:
-      Input:  Config (.env), live MT5 connection, system time (UTC).
-      Output: Continuously running bot process; one full pipeline pass per tick.
-
-  - Files involved:
-      app/automation/main_loop.py  — new
-      main.py                      — new (entry point)
-      tests/test_automation/test_main_loop.py — new
+Then list — do not modify anything yet:
+  Inspect:       [files to read for context]
+  Create:        [new files]
+  Modify:        [existing files to change]
+  Must NOT touch:[out-of-scope files and directories]
 
 ================================================================================
-STEP 2 — SCOPE
+STEP 2 — PLAN
 ================================================================================
 
-Before modifying anything, list:
+Write a short implementation plan:
+  - Key classes / functions and their signatures
+  - Order of changes (what depends on what)
+  - Error handling strategy
+  - How you will test it
 
-  Files to inspect:
-      app/automation/__init__.py
-      app/config.py                        (LOOP_INTERVAL_SECONDS, DRY_RUN, MAX_CONSECUTIVE_ERRORS)
-      app/mt5/connection.py                (MT5Connection interface)
-      app/filters/filter_pipeline.py       (FilterPipeline.run())
-      app/strategy/signal_engine.py        (SignalEngine / analyze_symbol())
-      app/confluence/scorer.py             (ConfluenceScorer)
-      app/risk/risk_manager.py             (RiskManager)
-      app/execution/order_executor.py      (OrderExecutor.execute())
-      app/management/position_manager.py   (PositionManager.process_all())
-      app/database/repositories.py         (open trade queries)
-      tests/conftest.py                    (mock_mt5 fixture)
-
-  Files to create:
-      app/automation/main_loop.py
-      main.py
-      tests/test_automation/__init__.py
-      tests/test_automation/test_main_loop.py
-
-  Files to modify:
-      app/automation/__init__.py           (export MainLoop)
-      app/config.py                        (add LOOP_INTERVAL_SECONDS, DRY_RUN,
-                                            MAX_CONSECUTIVE_ERRORS if not present)
-
-  Must NOT modify:
-      app/mt5/
-      app/strategy/
-      app/risk/
-      app/confluence/
-      app/filters/
-      app/execution/
-      app/management/
-      ROADMAP/
+Do not write code until the plan is internally consistent with the architecture.
 
 ================================================================================
-STEP 3 — PLAN
+STEP 3 — IMPLEMENT
 ================================================================================
 
-  1. Add any missing config keys (LOOP_INTERVAL_SECONDS, DRY_RUN,
-     MAX_CONSECUTIVE_ERRORS) to app/config.py.
+Build only the current task. Follow CODE_STANDARDS.md, SECURITY.md,
+TESTING.md, and AI_RULES.md.
 
-  2. Implement app/automation/main_loop.py:
-       class MainLoop:
-           __init__(config, mt5, strategy, confluence, risk,
-                    execution, position_mgr, filters, journal, notifier)
-           run()               → loops until SIGTERM / critical error
-           _tick()             → one full pipeline pass
-           _handle_exception() → logs, increments error counter, triggers
-                                 shutdown if counter > MAX_CONSECUTIVE_ERRORS
-           stop()              → graceful shutdown (close MT5, write status,
-                                 delete lock file)
-
-       Loop order per tick:
-           1.  Verify MT5 connection (reconnect if needed; skip tick on failure)
-           2.  Update heartbeat
-           3.  Get current UTC time + session info
-           4.  For each symbol: run FilterPipeline → skip if blocked
-           5.  For passing symbols: run SignalEngine → collect TradeSetups
-           6.  For each signal: run ConfluenceScorer → skip if REJECTED
-           7.  For accepted signals: run RiskManager → produce TradeParameters
-           8.  For approved params: run OrderExecutor (skip + log if DRY_RUN)
-           9.  Run PositionManager.process_all() for all open positions
-           10. Log loop summary (symbols scanned, signals found, trades placed)
-
-       Signal handling:
-           - Register SIGTERM + SIGINT handlers that call stop()
-
-       Error handling:
-           - MT5 disconnect     → reconnect attempt, skip tick, continue
-           - Strategy exception → log ERROR, skip symbol, continue
-           - Execution error    → log CRITICAL, skip execution, continue
-           - Unhandled tick err → log CRITICAL, increment error_count
-           - error_count > MAX_CONSECUTIVE_ERRORS → call stop()
-
-  3. Implement main.py (entry point):
-       - Load Config, initialise logging
-       - Instantiate all engines
-       - Instantiate MainLoop
-       - Call loop.run()
-
-  4. Write tests using mocked engines — no real MT5 in tests.
-
-  5. Run full test suite; verify 0 regressions.
-
-  6. Update ROADMAP/00_PROJECT_STATUS.txt (task 11-01 complete).
+  - No unnecessary technologies
+  - No refactoring of unrelated code
+  - No scope creep beyond a clear technical necessity
+  - All thresholds and config values come from Config — never hardcoded
 
 ================================================================================
-STEP 4 — IMPLEMENT
+STEP 4 — TEST & FIX
 ================================================================================
 
-Implement ONLY task 11-01 (main_loop.py + main.py).
+Run new tests first:
+  python -m pytest [test path] -v --tb=short
 
-Follow:
-
-  - Existing architecture and module boundaries
-  - Coding standards (CODE_STANDARDS.md)
-  - Security rules (SECURITY.md)
-  - Testing rules (TESTING.md)
-  - Project conventions (AI_RULES.md)
-
-Do not introduce unnecessary technologies.
-Do not refactor unrelated code.
-Do not expand the task scope without a clear technical reason.
-
-Tasks 11-02 (Singleton), 11-03 (Watchdog), 11-04 (Heartbeat), and
-11-05 (Auto-Recovery) are separate tasks — do not implement them here.
-
-================================================================================
-STEP 5 — TEST
-================================================================================
-
-Run the new automation tests:
-
-  python -m pytest tests/test_automation/test_main_loop.py -v --tb=short
-
-Required test cases (from task file):
-
-  - test_single_tick_completes_without_error()
-  - test_mt5_disconnect_skips_tick()
-  - test_dry_run_skips_execution()
-  - test_error_counter_triggers_shutdown()
-  - test_graceful_shutdown_on_sigterm()
-
-Then run the full suite to confirm no regressions:
-
+Then run the full suite (must be zero regressions):
   python -m pytest tests/ -v --tb=short
 
-================================================================================
-STEP 6 — REVIEW
-================================================================================
+Required test cases: [list from task file]
 
-Before declaring done, review:
-
-  - Git diff / changed files
-  - All imports (no unused, no circular)
-  - Error handling (no silent failures — every exception must be logged)
-  - DRY_RUN guard is in _tick(), not buried inside OrderExecutor
-  - SIGTERM / SIGINT handlers registered before loop starts
-  - No hardcoded values — all thresholds come from Config
-  - Test coverage for all 5 required test cases
-
-Verify that no files outside the scope list were changed.
+On failure: identify root cause → fix → re-run. Never skip or hide a failure.
 
 ================================================================================
-STEP 7 — FIX
+STEP 5 — REVIEW
 ================================================================================
 
-If any tests fail:
+Before declaring done, verify:
 
-  1. Identify the root cause
-  2. Fix the issue
-  3. Run tests again
-  4. Repeat until fully stable
-
-Do not hide, skip, or ignore failures.
-
-================================================================================
-STEP 8 — ACCEPTANCE
-================================================================================
-
-Verify every criterion from ROADMAP/11_AUTOMATION/01_TASK_MAIN_LOOP.txt:
-
-  [ ] Full pipeline runs in correct order (filter→strategy→confluence→risk→execute→manage)
-  [ ] DRY_RUN=true skips order execution and logs instead
-  [ ] Errors do not crash the loop (up to MAX_CONSECUTIVE_ERRORS threshold)
-  [ ] Graceful shutdown handles SIGTERM and SIGINT correctly
-  [ ] All 5 tests pass
+  [ ] Only in-scope files were changed
+  [ ] No unused or circular imports
+  [ ] Every exception is logged — no silent failures
+  [ ] No secrets or hardcoded values in code
+  [ ] Every acceptance criterion from the task file passes
 
 ================================================================================
-STEP 9 — DOCUMENT
+STEP 6 — DOCUMENT & REPORT
 ================================================================================
 
-Update:
+Update only:
+  - ROADMAP/00_PROJECT_STATUS.txt  (mark task [✓] COMPLETE, update test count)
+  - replit.md                      (only if run instructions or stack changed)
 
-  - ROADMAP/00_PROJECT_STATUS.txt
-      Mark task 11-01 MAIN LOOP as [✓] COMPLETE.
-      Add files created, test count, and any known issues.
-
-  - replit.md
-      Update test count (was 628; add new automation tests).
-
-Do not update any other documentation files.
-
-================================================================================
-STEP 10 — FINAL REPORT
-================================================================================
-
-Return a structured report using the headings below:
+Then return this report:
 
   ### Completed
   [What was built and why it satisfies the task objective]
 
-  ### Files Created
-  [New files with one-line description each]
-
-  ### Files Modified
-  [Changed files with one-line description of what changed]
-
-  ### Tests Run
-  [Command(s) used]
+  ### Files Created / Modified
+  | File | Description of change |
+  |------|-----------------------|
+  | ...  | ...                   |
 
   ### Test Results
   [X/X tests pass — include any warnings]
 
   ### Acceptance Criteria
-  [ ] Full pipeline runs in correct order
-  [ ] DRY_RUN respected
-  [ ] Errors don't crash loop (up to threshold)
-  [ ] Graceful shutdown works
-  [ ] All tests pass
+  [✓] criterion 1
+  [✓] criterion 2
 
   ### Known Issues
-  [Any deferred items, deprecation warnings, or caveats]
+  [Deferred items, deprecation warnings, or caveats — "None" if clean]
 
-  ### Next Recommended Task
-  Phase 11 — Task 11-02 — ROADMAP/11_AUTOMATION/02_TASK_SINGLETON.txt
+  ### Next Task
+  Phase [XX] — Task [XX-XX] — [path/to/task/file]
 
-Do not start the next roadmap task automatically unless explicitly instructed.
-
-Wait for confirmation before proceeding.
+Do not start the next task unless explicitly instructed.
