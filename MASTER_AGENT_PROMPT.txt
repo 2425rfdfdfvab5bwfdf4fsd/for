@@ -1,4 +1,4 @@
-You are working on: [PROJECT NAME]
+You are working on: MT5 Automated Forex Trading Bot
 
 Roadmap: ROADMAP/ — follow it exactly.
 
@@ -6,9 +6,9 @@ Roadmap: ROADMAP/ — follow it exactly.
 TASK
 ================================================================================
 
-Phase:     [PHASE NUMBER] — [PHASE NAME]
-Task:      [TASK NUMBER]
-Task File: [PATH TO TASK FILE]
+Phase:     11 — Automation
+Task:      11-02
+Task File: ROADMAP/11_AUTOMATION/02_TASK_SINGLETON.txt
 
 ================================================================================
 STEP 1 — ORIENT  (read before touching any file)
@@ -19,53 +19,126 @@ Read in order:
   2. AI_RULES.md
   3. ARCHITECTURE.md
   4. ROADMAP/00_PROJECT_STATUS.txt
-  5. [Phase overview file]
-  6. [Task file]
+  5. ROADMAP/11_AUTOMATION/01_PHASE_OVERVIEW.txt
+  6. ROADMAP/11_AUTOMATION/02_TASK_SINGLETON.txt
 
 Inspect the existing implementation.
 If the codebase has diverged from the task file, trust the codebase.
 
 Then list — do not modify anything yet:
-  Inspect:       [files to read for context]
-  Create:        [new files]
-  Modify:        [existing files to change]
-  Must NOT touch:[out-of-scope files and directories]
+
+  Inspect:
+      app/config.py                   (check for LOCK_FILE_PATH — not present, must add)
+      app/automation/__init__.py      (currently exports MainLoop only)
+      main.py                         (entry point — must wrap with SingletonGuard)
+      tests/test_automation/          (existing test structure)
+
+  Create:
+      app/automation/singleton.py
+      tests/test_automation/test_singleton.py
+
+  Modify:
+      app/config.py                   (add LOCK_FILE_PATH, default "data/bot.lock")
+      app/automation/__init__.py      (export SingletonGuard)
+      main.py                         (wrap loop.run() in SingletonGuard context manager)
+
+  Must NOT touch:
+      app/mt5/
+      app/strategy/
+      app/risk/
+      app/confluence/
+      app/filters/
+      app/execution/
+      app/management/
+      ROADMAP/
 
 ================================================================================
 STEP 2 — PLAN
 ================================================================================
 
-Write a short implementation plan:
-  - Key classes / functions and their signatures
-  - Order of changes (what depends on what)
-  - Error handling strategy
-  - How you will test it
+  1. Add LOCK_FILE_PATH to app/config.py (type annotation + __init__ value,
+     default "data/bot.lock").
 
-Do not write code until the plan is internally consistent with the architecture.
+  2. Implement app/automation/singleton.py:
+
+       class SingletonGuard:
+           __init__(config)
+           acquire() -> bool      # creates lock file with PID; True = acquired,
+                                  # False = another live instance already holds it
+           release() -> None      # deletes lock file (safe if already gone)
+           is_stale() -> bool     # lock file exists but PID inside is dead
+           __enter__ / __exit__   # context manager — acquire on enter,
+                                  # release on exit (even on exception)
+
+       Lock file format: plain text containing the owning process PID.
+
+       acquire() logic:
+           1. If lock file does not exist → write PID, return True
+           2. If lock file exists:
+              a. Read PID from file
+              b. If PID is dead (psutil / os.kill check) → remove file (stale),
+                 write own PID, return True
+              c. If PID is alive → log clear error, return False
+
+       release() logic:
+           - Read PID from lock file
+           - Only delete if it contains our own PID (never steal another's lock)
+           - Swallow FileNotFoundError (idempotent)
+
+       is_stale() logic:
+           - Return True if lock file exists and the stored PID has no live process
+
+       Error handling:
+           - IOError / PermissionError on acquire → log CRITICAL, return False
+           - All release errors are logged and swallowed (never raise in cleanup)
+
+  3. Update main.py to use SingletonGuard as a context manager:
+
+       guard = SingletonGuard(config)
+       if not guard.acquire():
+           logger.critical("Another bot instance is already running — exiting")
+           sys.exit(1)
+       try:
+           loop.run()
+       finally:
+           guard.release()
+
+     (Or equivalently use the with-statement form.)
+
+  4. Write tests — no real process spawning; mock os.getpid() and process
+     existence checks for full isolation.
+
+  5. Run full suite; verify 646 + new tests all pass.
+
+  6. Update ROADMAP/00_PROJECT_STATUS.txt (task 11-02 complete).
 
 ================================================================================
 STEP 3 — IMPLEMENT
 ================================================================================
 
-Build only the current task. Follow CODE_STANDARDS.md, SECURITY.md,
-TESTING.md, and AI_RULES.md.
+Build only task 11-02 (singleton.py + config addition + main.py wiring).
+Follow CODE_STANDARDS.md, SECURITY.md, TESTING.md, and AI_RULES.md.
 
-  - No unnecessary technologies
+  - No unnecessary technologies (use stdlib os / pathlib; psutil is acceptable
+    if already a project dependency — check requirements.txt first)
   - No refactoring of unrelated code
-  - No scope creep beyond a clear technical necessity
-  - All thresholds and config values come from Config — never hardcoded
+  - No scope creep (watchdog, heartbeat, auto-recovery are separate tasks)
+  - LOCK_FILE_PATH must come from Config — never hardcoded in singleton.py
 
 ================================================================================
 STEP 4 — TEST & FIX
 ================================================================================
 
-Run new tests first:
-  python -m pytest [test path] -v --tb=short
+Run new tests:
+  python -m pytest tests/test_automation/test_singleton.py -v --tb=short
 
-Then run the full suite (must be zero regressions):
+Run full suite (zero regressions against 646 existing tests):
   python -m pytest tests/ -v --tb=short
 
-Required test cases: [list from task file]
+Required test cases (from task file):
+  - test_first_instance_acquires()
+  - test_stale_lock_cleaned_up()
+  - test_acquire_returns_false_if_locked()
 
 On failure: identify root cause → fix → re-run. Never skip or hide a failure.
 
@@ -78,16 +151,18 @@ Before declaring done, verify:
   [ ] Only in-scope files were changed
   [ ] No unused or circular imports
   [ ] Every exception is logged — no silent failures
-  [ ] No secrets or hardcoded values in code
-  [ ] Every acceptance criterion from the task file passes
+  [ ] No hardcoded paths — LOCK_FILE_PATH comes from Config
+  [ ] release() never raises (safe to call in finally / __exit__)
+  [ ] acquire() never deletes a lock owned by a different live process
+  [ ] All 3 required tests pass
 
 ================================================================================
 STEP 6 — DOCUMENT & REPORT
 ================================================================================
 
 Update only:
-  - ROADMAP/00_PROJECT_STATUS.txt  (mark task [✓] COMPLETE, update test count)
-  - replit.md                      (only if run instructions or stack changed)
+  - ROADMAP/00_PROJECT_STATUS.txt  (mark task 11-02 [✓] COMPLETE, update test count)
+  - replit.md                      (update test count)
 
 Then return this report:
 
@@ -103,13 +178,14 @@ Then return this report:
   [X/X tests pass — include any warnings]
 
   ### Acceptance Criteria
-  [✓] criterion 1
-  [✓] criterion 2
+  [ ] Second instance blocked immediately with clear message
+  [ ] Stale locks from crashed instances cleaned up
+  [ ] All tests pass
 
   ### Known Issues
   [Deferred items, deprecation warnings, or caveats — "None" if clean]
 
   ### Next Task
-  Phase [XX] — Task [XX-XX] — [path/to/task/file]
+  Phase 11 — Task 11-03 — ROADMAP/11_AUTOMATION/03_TASK_WATCHDOG.txt
 
 Do not start the next task unless explicitly instructed.
