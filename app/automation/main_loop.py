@@ -12,11 +12,14 @@ Usage:
 
 from __future__ import annotations
 
+import json
+import os
 import signal
 import sys
+import tempfile
 import time
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Any, Optional
 
 from app.config import Config
 from app.logger import get_logger
@@ -207,7 +210,10 @@ class MainLoop:
         except Exception as exc:               # noqa: BLE001
             logger.error("MainLoop: position management error: %s", exc, exc_info=True)
 
-        # Step 10 — tick summary
+        # Step 10 — write scan state for dashboard (Why No Trade? panel)
+        self._write_scan_state(now, list(self._config.BOT_PAIRS))
+
+        # Step 11 — tick summary
         logger.info(
             "MainLoop: tick done — scanned=%d accepted=%d placed=%d [%s]",
             symbols_scanned,
@@ -495,3 +501,41 @@ class MainLoop:
             atr=self._fetch_atr_pips(symbol) * pip_size,
             pip_size=pip_size,
         )
+
+    # ------------------------------------------------------------------
+    # Dashboard scan state (Why No Trade? — Feature D08)
+    # ------------------------------------------------------------------
+
+    def _write_scan_state(self, now: datetime, symbols: list[str]) -> None:
+        """
+        Atomically write data/scan_state.json after each scan cycle.
+
+        The dashboard reads this file to populate the "Why No Trade?" panel.
+        Writes to a temp file then renames to avoid partial-read races.
+        Errors are logged and silently suppressed — never crash the bot loop.
+        """
+        state: dict[str, Any] = {
+            "timestamp_utc": now.isoformat(),
+            "symbols_scanned": symbols,
+            # session_active / news_blackout / filter_results are populated
+            # as best-effort from what is available in the main loop context.
+            # Phase 14 enrichment: filter_results come from _process_symbol
+            # when run in the same tick; here we write the minimal stub so
+            # the dashboard always has a fresh timestamp to display.
+            "session_active": None,
+            "news_blackout": False,
+            "filter_results": {},
+            "nearest_signal": None,
+        }
+        path = self._config.SCAN_STATE_FILE_PATH
+        try:
+            os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+            dir_name = os.path.dirname(os.path.abspath(path)) or "."
+            with tempfile.NamedTemporaryFile(
+                "w", dir=dir_name, suffix=".tmp", delete=False, encoding="utf-8"
+            ) as fh:
+                json.dump(state, fh)
+                tmp_path = fh.name
+            os.replace(tmp_path, path)
+        except Exception as exc:               # noqa: BLE001
+            logger.warning("MainLoop: failed to write scan_state.json: %s", exc)

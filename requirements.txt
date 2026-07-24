@@ -56,3 +56,13 @@ pytest-cov
 pytest-mock
 python-dotenv
 requests
+pytest
+pytest-mock
+flask
+matplotlib
+numpy
+pandas
+pytest-cov
+python-dotenv
+python-telegram-bot
+requests

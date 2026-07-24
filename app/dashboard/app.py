@@ -35,14 +35,16 @@ logger = get_logger(__name__)
 def create_app(
     config: Optional[Config] = None,
     data_service=None,
+    why_no_trade_service=None,
 ) -> Flask:
     """
     Flask application factory.
 
     Args:
-        config:       Config instance.  If None, a default Config() is created.
-        data_service: Optional DataService override (used in tests to inject
-                      a mock without touching the real database or filesystem).
+        config:                Config instance.  If None, a default Config() is created.
+        data_service:          Optional DataService override (used in tests to inject
+                               a mock without touching the real database or filesystem).
+        why_no_trade_service:  Optional WhyNoTradeService override (used in tests).
 
     Returns:
         Configured Flask application.
@@ -59,6 +61,17 @@ def create_app(
     else:
         from app.dashboard.api.data_service import DataService
         app.config["DATA_SERVICE"] = DataService(config)
+
+    # Inject the Why No Trade service (can be overridden in tests)
+    if why_no_trade_service is not None:
+        app.config["WHY_NO_TRADE_SERVICE"] = why_no_trade_service
+    else:
+        try:
+            from app.dashboard.api.why_no_trade import WhyNoTradeService
+            app.config["WHY_NO_TRADE_SERVICE"] = WhyNoTradeService(config)
+        except Exception as exc:
+            logger.warning("WhyNoTradeService init skipped: %s", exc)
+            app.config["WHY_NO_TRADE_SERVICE"] = None
 
     # Register the API blueprint
     app.register_blueprint(api_bp)

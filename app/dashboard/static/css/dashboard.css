@@ -742,6 +742,114 @@ th.sortable:hover { color: var(--text); background: #1c2535; }
 .log-badge-error    { background: #3d2800; color: #e8941a; }
 .log-badge-critical { background: var(--red-bg); color: var(--red); }
 
+/* ── Why No Trade? panel (Feature D08) ──────────────────────── */
+.wnt-section {
+    padding: 10px 0 8px;
+    border-bottom: 1px solid var(--border);
+}
+.wnt-section:last-child { border-bottom: none; }
+
+.wnt-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.wnt-timestamp {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-dim);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.wnt-status-grid { display: flex; flex-direction: column; gap: 4px; }
+
+.wnt-status-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+}
+
+.wnt-label {
+    color: var(--text-muted);
+    min-width: 100px;
+    font-size: 12px;
+}
+
+.wnt-value { display: flex; align-items: center; gap: 6px; }
+
+/* Pill badges */
+.wnt-pill {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.wnt-pill-ok      { background: rgba(63,185,80,0.15);  color: var(--green); }
+.wnt-pill-blocked { background: var(--red-bg);          color: var(--red);   }
+.wnt-pill-unknown { background: rgba(139,148,158,0.12); color: var(--text-muted); }
+
+/* Spread row */
+.wnt-spread-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+.wnt-spread-item { display: flex; align-items: center; gap: 4px; }
+
+/* Symbol cards — scan section */
+.wnt-scan-symbols { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+
+.wnt-sym-card {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--bg-table-hd);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+.wnt-sym {
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--text);
+}
+
+/* Nearest signal */
+.wnt-nearest-signal {
+    background: rgba(3,102,214,0.07);
+    border: 1px solid rgba(3,102,214,0.2);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--text);
+}
+.wnt-nearest-label { margin-bottom: 2px; }
+.wnt-missing { color: var(--text-muted); font-size: 12px; }
+
+/* Regime grid */
+.wnt-regime-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.wnt-regime-item { display: flex; align-items: center; gap: 5px; font-size: 12px; }
+
+/* Empty / detail text */
+.wnt-empty-msg { color: var(--text-dim); font-size: 13px; padding: 4px 0; }
+.wnt-detail { font-size: 12px; color: var(--text-muted); }
+
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 900px) {
     .card-row { grid-template-columns: repeat(2, 1fr); }

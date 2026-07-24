@@ -1,0 +1,273 @@
+<!-- Why No Trade? explainer panel — Feature D08                              -->
+<!-- Included inline by index.html via Jinja2; auto-refreshed by dashboard.js -->
+
+<section class="panel" id="why-no-trade-panel">
+    <div class="panel-header panel-toggle" id="wnt-toggle" role="button" tabindex="0" aria-expanded="true">
+        <span class="panel-title">Why No Trade Today?</span>
+        <span class="panel-badge" id="wnt-rejections-count">0</span>
+        <span class="panel-chevron" id="wnt-chevron">▼</span>
+    </div>
+    <div class="panel-body" id="wnt-body">
+
+        <!-- ── SECTION 1: Current Trading Status ───────────────────────── -->
+        <div class="wnt-section">
+            <div class="wnt-section-title">Current Trading Status</div>
+            <div class="wnt-status-grid" id="wnt-status-grid">
+                <!-- Populated by JS -->
+                <div class="wnt-status-row">
+                    <span class="wnt-label">Session</span>
+                    <span class="wnt-value" id="wnt-session">—</span>
+                </div>
+                <div class="wnt-status-row">
+                    <span class="wnt-label">News Blackout</span>
+                    <span class="wnt-value" id="wnt-news">—</span>
+                </div>
+                <div class="wnt-status-row">
+                    <span class="wnt-label">Daily Trades</span>
+                    <span class="wnt-value" id="wnt-trades-limit">—</span>
+                </div>
+                <div class="wnt-status-row">
+                    <span class="wnt-label">Daily Loss</span>
+                    <span class="wnt-value" id="wnt-daily-loss">—</span>
+                </div>
+            </div>
+            <!-- Per-symbol spread -->
+            <div class="wnt-spread-row" id="wnt-spread-row">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- ── SECTION 2: Last Scan Results ────────────────────────────── -->
+        <div class="wnt-section">
+            <div class="wnt-section-title">Last Scan Results
+                <span class="wnt-timestamp" id="wnt-scan-time"></span>
+            </div>
+            <div id="wnt-scan-content">
+                <div class="wnt-scan-symbols" id="wnt-scan-symbols">
+                    <!-- Per-symbol filter pills populated by JS -->
+                </div>
+                <div id="wnt-nearest-signal" class="wnt-nearest-signal hidden">
+                    <!-- Nearest signal info populated by JS -->
+                </div>
+            </div>
+            <div id="wnt-no-scan" class="wnt-empty-msg hidden">
+                No scan data yet — bot has not completed a scan cycle.
+            </div>
+        </div>
+
+        <!-- ── SECTION 3: Last 5 Rejections ────────────────────────────── -->
+        <div class="wnt-section">
+            <div class="wnt-section-title">Recent Rejections</div>
+            <div class="table-wrap">
+                <table class="data-table" id="wnt-rejections-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Symbol</th>
+                            <th>Dir</th>
+                            <th>Score</th>
+                            <th>Category</th>
+                            <th>Detail</th>
+                        </tr>
+                    </thead>
+                    <tbody id="wnt-rejections-tbody">
+                        <tr><td colspan="6" class="empty-row">No rejections recorded today</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ── SECTION 4: Market Regime Status ─────────────────────────── -->
+        <div class="wnt-section">
+            <div class="wnt-section-title">Market Regime</div>
+            <div class="wnt-regime-grid" id="wnt-regime-grid">
+                <!-- Per-symbol regime pills populated by JS -->
+            </div>
+        </div>
+
+    </div><!-- end panel-body -->
+</section>
+
+<script>
+(function() {
+    "use strict";
+
+    var WNT_REFRESH_MS = 30000;
+    var wntTimer = null;
+
+    // ── Toggle collapse ──────────────────────────────────────────────
+    var toggle = document.getElementById("wnt-toggle");
+    var body   = document.getElementById("wnt-body");
+    var chev   = document.getElementById("wnt-chevron");
+    if (toggle) {
+        toggle.addEventListener("click", function() {
+            var expanded = toggle.getAttribute("aria-expanded") === "true";
+            toggle.setAttribute("aria-expanded", String(!expanded));
+            body.classList.toggle("collapsed", expanded);
+            chev.textContent = expanded ? "▶" : "▼";
+        });
+        toggle.addEventListener("keydown", function(e) {
+            if (e.key === "Enter" || e.key === " ") { toggle.click(); e.preventDefault(); }
+        });
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────
+    function fmtTime(iso) {
+        if (!iso) return "—";
+        try {
+            var d = new Date(iso);
+            return d.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit", second: "2-digit"});
+        } catch(e) { return iso.slice(11,19) || "—"; }
+    }
+
+    function statusPill(ok, okLabel, failLabel) {
+        if (ok === null || ok === undefined) return '<span class="wnt-pill wnt-pill-unknown">UNKNOWN</span>';
+        return ok
+            ? '<span class="wnt-pill wnt-pill-ok">' + (okLabel || "OK") + '</span>'
+            : '<span class="wnt-pill wnt-pill-blocked">' + (failLabel || "BLOCKED") + '</span>';
+    }
+
+    function regimePill(regime, blocked) {
+        var cls = blocked ? "wnt-pill-blocked" : "wnt-pill-ok";
+        if (regime === "UNKNOWN") cls = "wnt-pill-unknown";
+        return '<span class="wnt-pill ' + cls + '">' + (regime || "UNKNOWN") + '</span>';
+    }
+
+    // ── Render ───────────────────────────────────────────────────────
+    function renderWhyNoTrade(data) {
+        var ts = data.trading_status || {};
+        var scan = data.last_scan || {};
+        var rejections = data.recent_rejections || [];
+        var regime = data.regime_status || {};
+
+        // Badge: rejection count
+        document.getElementById("wnt-rejections-count").textContent = rejections.length;
+
+        // ── Section 1 ──
+        var sessionActive = ts.session_active;
+        document.getElementById("wnt-session").innerHTML = statusPill(sessionActive, "ACTIVE", "INACTIVE");
+
+        var newsBlackout = ts.news_blackout;
+        document.getElementById("wnt-news").innerHTML = newsBlackout
+            ? '<span class="wnt-pill wnt-pill-blocked">BLACKOUT</span>'
+            : '<span class="wnt-pill wnt-pill-ok">CLEAR</span>';
+
+        var tradesUsed = ts.trades_today || 0;
+        var tradesMax  = ts.max_daily_trades || 3;
+        var tradeLimitHit = tradesUsed >= tradesMax;
+        document.getElementById("wnt-trades-limit").innerHTML =
+            '<span class="wnt-pill ' + (tradeLimitHit ? "wnt-pill-blocked" : "wnt-pill-ok") + '">' +
+            tradesUsed + " / " + tradesMax + '</span>';
+
+        var lossUsed = ts.daily_loss_pct || 0;
+        var lossMax  = ts.max_daily_loss_pct || 2.0;
+        var lossHit  = lossUsed >= lossMax;
+        document.getElementById("wnt-daily-loss").innerHTML =
+            '<span class="wnt-pill ' + (lossHit ? "wnt-pill-blocked" : "wnt-pill-ok") + '">' +
+            lossUsed.toFixed(2) + "% / " + lossMax + "%" + '</span>';
+
+        // Spread pills
+        var spreadRow = document.getElementById("wnt-spread-row");
+        var spreadStatus = ts.spread_status || {};
+        var spreadHtml = '<span class="wnt-label">Spread:</span>';
+        for (var sym in spreadStatus) {
+            var sp = spreadStatus[sym];
+            var pipsStr = (sp.spread_pips != null) ? sp.spread_pips.toFixed(1) + " pips" : "—";
+            var maxStr  = sp.max_spread_pips != null ? " (max " + sp.max_spread_pips + ")" : "";
+            spreadHtml += '<span class="wnt-spread-item">' +
+                '<span class="wnt-sym">' + sym + '</span> ' +
+                pipsStr + maxStr + ' ' +
+                statusPill(sp.ok) +
+                '</span>';
+        }
+        spreadRow.innerHTML = spreadHtml;
+
+        // ── Section 2 ──
+        var scanTime = document.getElementById("wnt-scan-time");
+        var scanSymbols = document.getElementById("wnt-scan-symbols");
+        var noScan = document.getElementById("wnt-no-scan");
+        var nearestDiv = document.getElementById("wnt-nearest-signal");
+
+        if (!scan.timestamp_utc) {
+            scanSymbols.classList.add("hidden");
+            nearestDiv.classList.add("hidden");
+            noScan.classList.remove("hidden");
+            scanTime.textContent = "";
+        } else {
+            scanSymbols.classList.remove("hidden");
+            noScan.classList.add("hidden");
+            scanTime.textContent = " — " + fmtTime(scan.timestamp_utc);
+
+            var filterResults = scan.filter_results || {};
+            var symbols = scan.symbols_scanned || Object.keys(filterResults);
+            var symsHtml = "";
+            symbols.forEach(function(s) {
+                var fr = filterResults[s] || {};
+                var regime = fr.regime || "UNKNOWN";
+                var allOk = fr.session !== false && fr.news !== false && fr.spread !== false && regime !== "HIGH_VOL";
+                symsHtml += '<div class="wnt-sym-card">' +
+                    '<span class="wnt-sym">' + s + '</span>' +
+                    (fr.session !== undefined ? ' ' + statusPill(fr.session !== false, "SESSION OK", "NO SESSION") : '') +
+                    (fr.spread !== undefined ? ' ' + statusPill(fr.spread !== false, "SPREAD OK", "SPREAD HIGH") : '') +
+                    (fr.regime ? ' ' + regimePill(fr.regime, fr.regime === "HIGH_VOL" || fr.regime === "LOW_VOL") : '') +
+                    '</div>';
+            });
+            scanSymbols.innerHTML = symsHtml;
+
+            var nearest = scan.nearest_signal;
+            if (nearest && nearest.symbol) {
+                nearestDiv.classList.remove("hidden");
+                var missing = (nearest.missing || []).join(", ") || "none";
+                nearestDiv.innerHTML =
+                    '<div class="wnt-nearest-label">Nearest setup: <strong>' + nearest.symbol + '</strong>' +
+                    ' — Score <strong>' + (nearest.score || 0).toFixed(1) + ' / ' + (nearest.threshold || 8) + '</strong>' +
+                    '</div>' +
+                    '<div class="wnt-missing">Missing factors: ' + missing + '</div>';
+            } else {
+                nearestDiv.classList.add("hidden");
+            }
+        }
+
+        // ── Section 3 ──
+        var tbody = document.getElementById("wnt-rejections-tbody");
+        if (rejections.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="empty-row">No rejections recorded today</td></tr>';
+        } else {
+            tbody.innerHTML = rejections.map(function(r) {
+                var score = r.confluence_score != null ? r.confluence_score.toFixed(1) : "—";
+                return '<tr>' +
+                    '<td>' + fmtTime(r.timestamp_utc) + '</td>' +
+                    '<td>' + (r.symbol || "—") + '</td>' +
+                    '<td>' + (r.direction || "—") + '</td>' +
+                    '<td>' + score + '</td>' +
+                    '<td>' + (r.rejection_category || "—") + '</td>' +
+                    '<td class="wnt-detail">' + (r.rejection_detail || "—") + '</td>' +
+                    '</tr>';
+            }).join("");
+        }
+
+        // ── Section 4 ──
+        var regimeGrid = document.getElementById("wnt-regime-grid");
+        var regHtml = "";
+        for (var rsym in regime) {
+            var ri = regime[rsym];
+            regHtml += '<div class="wnt-regime-item">' +
+                '<span class="wnt-sym">' + rsym + '</span> ' +
+                regimePill(ri.regime, ri.blocked) +
+                '</div>';
+        }
+        regimeGrid.innerHTML = regHtml || '<span class="wnt-empty-msg">No regime data</span>';
+    }
+
+    // ── Fetch ────────────────────────────────────────────────────────
+    function fetchWhyNoTrade() {
+        fetch("/api/why-no-trade")
+            .then(function(r) { return r.json(); })
+            .then(function(data) { renderWhyNoTrade(data); })
+            .catch(function(err) { console.warn("why-no-trade fetch error:", err); });
+    }
+
+    fetchWhyNoTrade();
+    wntTimer = setInterval(fetchWhyNoTrade, WNT_REFRESH_MS);
+})();
+</script>

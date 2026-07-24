@@ -14,6 +14,7 @@ Endpoints:
     GET /api/logs?lines=500
     GET /api/health
     GET /api/signals/history?date=YYYY-MM-DD
+    GET /api/why-no-trade
 """
 
 from __future__ import annotations
@@ -147,4 +148,24 @@ def signals_history():
         return jsonify({"signals": data, "count": len(data)}), 200
     except Exception as e:
         logger.error("/api/signals/history error: %s", e)
+        return jsonify({"error": "internal error", "detail": str(e)}), 500
+
+
+@api_bp.route("/why-no-trade", methods=["GET"])
+def why_no_trade():
+    """
+    Return the Why No Trade? explainer payload (Feature D08).
+
+    Combines current filter status, last scan results, recent rejections,
+    and market regime data into a single JSON response.
+    Always returns 200 even when the bot is stopped.
+    """
+    try:
+        wnt_service = current_app.config.get("WHY_NO_TRADE_SERVICE")
+        if wnt_service is None:
+            return jsonify({"error": "WHY_NO_TRADE_SERVICE not configured"}), 500
+        data = wnt_service.get_why_no_trade()
+        return jsonify(data), 200
+    except Exception as e:
+        logger.error("/api/why-no-trade error: %s", e)
         return jsonify({"error": "internal error", "detail": str(e)}), 500
