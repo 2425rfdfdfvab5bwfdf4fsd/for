@@ -74,7 +74,7 @@ python -m pytest tests/ -v --tb=short
 runs on Windows; Replit is used for development, testing, and code review only.
 MT5_LOGIN / MT5_PASSWORD / MT5_SERVER are not needed for testing.
 
-**Current test count:** 1355/1355 passing (Phases 01–19 task 19-01 complete)
+**Current test count:** 1363/1363 passing (Phases 01–19 tasks 19-01, 19-02 complete)
 
 ## How to Run (Windows)
 
