@@ -293,6 +293,7 @@ class Config:
     LOOP_INTERVAL_SECONDS: int          # Seconds between main loop ticks (default 60)
     DRY_RUN: bool                       # True = full pipeline but skip order placement
     MAX_CONSECUTIVE_ERRORS: int         # Consecutive tick errors before graceful shutdown
+    LOCK_FILE_PATH: str                 # PID lock file path (default "data/bot.lock")
 
     def __init__(self) -> None:
         """Load all configuration from environment variables."""
@@ -504,6 +505,7 @@ class Config:
         self.LOOP_INTERVAL_SECONDS = _get_int("LOOP_INTERVAL_SECONDS", 60)
         self.DRY_RUN = _get_bool("DRY_RUN", False)
         self.MAX_CONSECUTIVE_ERRORS = _get_int("MAX_CONSECUTIVE_ERRORS", 5)
+        self.LOCK_FILE_PATH = _get_str("LOCK_FILE_PATH", "data/bot.lock")
 
         # Validate after all values are loaded
         self._validate()

@@ -28,7 +28,7 @@ PHASE | NAME                    | STATUS | LAST UPDATED | NOTES
   08  | Filters                 | [✓]    | 2026-07-23   | Complete — 119/119 tests pass
   09  | Execution Engine        | [✓]    | 2026-07-23   | Complete — 65/65 tests pass
   10  | Position Management     | [✓]    | 2026-07-23   | Complete — 60/60 tests pass
-  11  | Automation              | [~]    | 2026-07-23   | In progress — 11-01 MAIN LOOP complete (18 tests)
+  11  | Automation              | [~]    | 2026-07-24   | In progress — 11-01 + 11-02 complete (34 tests)
   12  | Notifications           | [ ]    | -            | Depends on 04+11
   13  | Trade Journal           | [ ]    | -            | Depends on 04+09
   14  | Dashboard               | [ ]    | -            | Depends on 04+11
@@ -709,14 +709,14 @@ PHASE 11 — AUTOMATION
 ================================================================================
 Status:          [~] IN PROGRESS
 Last Updated:    2026-07-23
-Completed Tasks: 11-01 MAIN LOOP
+Completed Tasks: 11-01 MAIN LOOP, 11-02 SINGLETON GUARD
 Failed Tasks:    None
 Known Issues:    ATR pips uses a static default (15 pips) — live MarketDataFetcher
                  wiring deferred to Phase 11 polish.
                  daily_stats in RiskContext is None — Phase 13 will wire repos.
                  OrderValidator not called before OrderExecutor (pre-approved
                  OrderValidationResult used) — full wiring deferred.
-Next Action:     → Task 11-02: ROADMAP/11_AUTOMATION/02_TASK_SINGLETON.txt
+Next Action:     → Task 11-03: ROADMAP/11_AUTOMATION/03_TASK_WATCHDOG.txt
 
 TASK 11-01 — MAIN LOOP: [✓] COMPLETE (2026-07-23)
   Files Created:
@@ -735,6 +735,20 @@ TASK 11-01 — MAIN LOOP: [✓] COMPLETE (2026-07-23)
     [✓] Errors do not crash the loop (up to MAX_CONSECUTIVE_ERRORS threshold)
     [✓] Graceful shutdown handles SIGTERM and SIGINT correctly
     [✓] All 5 required tests pass (plus 13 additional coverage tests)
+
+TASK 11-02 — SINGLETON GUARD: [✓] COMPLETE (2026-07-24)
+  Files Created:
+    app/automation/singleton.py              — SingletonGuard class (PID lock file)
+    tests/test_automation/test_singleton.py  — 16 tests (all pass)
+  Files Modified:
+    app/automation/__init__.py  — exports SingletonGuard
+    app/config.py               — added LOCK_FILE_PATH (default "data/bot.lock")
+    main.py                     — wrapped loop.run() with SingletonGuard
+  Tests: 16/16 pass
+  Acceptance Criteria:
+    [✓] Second instance blocked immediately with clear log message
+    [✓] Stale locks from crashed instances cleaned up automatically
+    [✓] All 3 required tests pass (plus 13 additional coverage tests)
 
 ================================================================================
 PHASE 12 — NOTIFICATIONS
@@ -855,7 +869,7 @@ In Progress:          0
 Blocked:              0
 In Progress:          1   (Phase 11 — Automation, task 11-01 done)
 Not Started:          11  (Phases 12–22)
-Tests Passing:        646/646  (100% — Python 3.12, pytest 9.x, pandas 3+)
+Tests Passing:        662/662  (100% — Python 3.12, pytest 9.x, pandas 3+)
 Log Files Active:     4  (app.log, trading.log, errors.log, strategy.log)
 
 Per-Phase Test Counts (verified 2026-07-23):
@@ -867,11 +881,11 @@ Per-Phase Test Counts (verified 2026-07-23):
   Phase 08 (Filters):           119 tests
   Phase 09 (Execution Engine):   65 tests
   Phase 10 (Position Mgmt):      60 tests
-  Phase 11 (Automation):         18 tests  (task 11-01 only)
-  TOTAL:                        646 tests (all pass)
+  Phase 11 (Automation):         34 tests  (11-01: 18, 11-02: 16)
+  TOTAL:                        662 tests (all pass)
 
-Current Phase:        11 — AUTOMATION (task 11-01 complete; next: 11-02 SINGLETON)
-Recommended Action:   Open ROADMAP/11_AUTOMATION/02_TASK_SINGLETON.txt
+Current Phase:        11 — AUTOMATION (tasks 11-01 + 11-02 complete; next: 11-03 WATCHDOG)
+Recommended Action:   Open ROADMAP/11_AUTOMATION/03_TASK_WATCHDOG.txt
 
 ================================================================================
 ROADMAP AUDIT — COMPLETE (2026-07-23)

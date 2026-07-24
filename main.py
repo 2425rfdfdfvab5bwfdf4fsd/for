@@ -127,6 +127,18 @@ def main() -> None:
         notifier=None,     # Phase 12 — Notifications (not yet implemented)
     )
 
+    # --- Singleton guard (must be acquired before the loop starts) ------
+    from app.automation.singleton import SingletonGuard
+
+    guard = SingletonGuard(config)
+    if not guard.acquire():
+        logger.critical(
+            "Bot is already running — only one instance is allowed. "
+            "If the previous run crashed, delete %s and try again.",
+            config.LOCK_FILE_PATH,
+        )
+        sys.exit(1)
+
     logger.info("All components initialised — entering main loop")
 
     try:
@@ -134,6 +146,8 @@ def main() -> None:
     except KeyboardInterrupt:
         logger.info("KeyboardInterrupt received — stopping")
         loop.stop()
+    finally:
+        guard.release()
 
     logger.info("Bot exited cleanly")
 
