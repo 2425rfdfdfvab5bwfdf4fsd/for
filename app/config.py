@@ -201,6 +201,13 @@ class Config:
     TELEGRAM_CHAT_ID: str
 
     # ------------------------------------------------------------------
+    # NOTIFICATION REPORT TIMES (Phase 12)
+    # ------------------------------------------------------------------
+    DAILY_REPORT_TIME_UTC: str    # "HH:MM" — time to send daily report (default 20:30)
+    WEEKLY_REPORT_TIME_UTC: str   # "HH:MM" — Sunday time to send weekly report (default 20:00)
+    MONTHLY_REPORT_TIME_UTC: str  # "HH:MM" — 1st-of-month time to send monthly report (default 08:00)
+
+    # ------------------------------------------------------------------
     # DASHBOARD
     # ------------------------------------------------------------------
     DASHBOARD_PORT: int
@@ -409,6 +416,11 @@ class Config:
         self.TELEGRAM_ENABLED = _get_bool("TELEGRAM_ENABLED", False)
         self.TELEGRAM_BOT_TOKEN = _get_str("TELEGRAM_BOT_TOKEN", "")
         self.TELEGRAM_CHAT_ID = _get_str("TELEGRAM_CHAT_ID", "")
+
+        # --- NOTIFICATION REPORT TIMES (Phase 12) ---
+        self.DAILY_REPORT_TIME_UTC = _get_str("DAILY_REPORT_TIME_UTC", "20:30")
+        self.WEEKLY_REPORT_TIME_UTC = _get_str("WEEKLY_REPORT_TIME_UTC", "20:00")
+        self.MONTHLY_REPORT_TIME_UTC = _get_str("MONTHLY_REPORT_TIME_UTC", "08:00")
 
         # --- DASHBOARD ---
         self.DASHBOARD_PORT = _get_int("DASHBOARD_PORT", 8080)
