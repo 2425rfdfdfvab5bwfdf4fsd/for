@@ -64,7 +64,7 @@ logs/                          ← app.log trading.log errors.log strategy.log
 ## How to Run on Replit
 
 ```bash
-# Run all tests (720 tests, Phases 01–11 complete)
+# Run all tests (741 tests, Phases 01–11 complete + Phase 12 Task 12-01)
 python -m pytest tests/ -v --tb=short
 
 # Or use the "Run Tests" workflow in the Replit UI

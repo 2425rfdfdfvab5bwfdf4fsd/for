@@ -49,3 +49,10 @@ python-dotenv
 python-telegram-bot
 requests
 uvicorn
+numpy
+pandas
+pytest
+pytest-cov
+pytest-mock
+python-dotenv
+requests
