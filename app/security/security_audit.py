@@ -213,9 +213,19 @@ class SecurityAudit:
                     line_no = text[: match.start()].count("\n") + 1
                     rel_path = str(py_file.relative_to(self._root))
 
-                    # Skip the secret_manager itself and test fixtures that
-                    # intentionally embed fake tokens for testing.
-                    if "secret_manager" in rel_path or "test_secrets" in rel_path:
+                    # Skip files that intentionally contain credential-like text:
+                    # - secret_manager.py: handles real secrets (masked access)
+                    # - security_audit.py: contains the detection patterns themselves
+                    # - test_secrets.py / test_audit.py: embed fake tokens for testing
+                    if any(
+                        name in rel_path
+                        for name in (
+                            "secret_manager",
+                            "security_audit",
+                            "test_secrets",
+                            "test_audit",
+                        )
+                    ):
                         continue
 
                     report.add_issue(SecurityIssue(
