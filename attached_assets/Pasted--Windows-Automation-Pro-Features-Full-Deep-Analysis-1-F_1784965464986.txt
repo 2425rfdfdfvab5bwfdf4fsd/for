@@ -1,0 +1,227 @@
+🪟 Windows Automation Pro Features — Full Deep Analysis
+🚀 1. Full Boot-to-Trade Automation Pipeline
+The most powerful Windows feature: zero human intervention from cold boot to live trading.
+
+PC powers on
+  → Windows auto-logs in silently (netplwiz)
+  → Task Scheduler fires autostart.bat at logon
+  → Sleep prevention locks ON (two-layer)
+  → MetaTrader 5 launched automatically if not running
+  → Bot waits ~120s for MT5 to appear, then 20s login grace
+  → python main_manual.py --auto starts (logged to logs\)
+  → Telegram receives trade alerts all day
+  → Bot exits → original sleep timeout restored automatically
+
+No keyboard, no mouse, no manual steps after setup.
+
+🗓️ 2. Windows Task Scheduler Integration (scripts/install-autostart.ps1)
+A fully scripted Task Scheduler registration — not a manual GUI click:
+
+Setting	Value	Why
+Trigger	At logon of current user	Fires the instant Windows session starts
+Run Level	Highest Privileges (Admin)	Required for powercfg sleep control + MT5
+Execution Time Limit	None (0 hours)	Bot runs all day, never auto-killed by Scheduler
+Restart on Failure	3 times, 1 minute apart	Recovers from Python crash / MT5 not ready
+Start When Available	True	If PC was off at trigger time, runs ASAP on next boot
+Multiple Instances	IgnoreNew	Prevents a second bot from launching alongside the first
+Working Directory	Project root (auto-resolved)	No hardcoded paths — works from any folder
+Uninstall is equally scripted — uninstall-autostart.ps1 finds, stops, and removes the task cleanly, including guidance to restore netplwiz and sleep settings.
+
+😴 3. Dual-Layer Sleep Prevention
+Windows will kill a sleeping process. The bot blocks this at two independent levels simultaneously:
+
+Layer 1 — OS Power Settings (autostart.bat)
+powercfg /change standby-timeout-ac 0
+
+Sets AC sleep to Never before the bot starts
+Saves your original setting first via PowerShell registry read
+Restores it automatically when the bot exits (exact original value, or 30-min fallback if registry read failed)
+If PC is hard-rebooted mid-run, the doc tells you how to restore manually
+Layer 2 — Kernel-Level Power Request (sleep_guard.py)
+SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED)
+
+Calls Windows kernel32.dll directly via ctypes
+ES_SYSTEM_REQUIRED — CPU cannot sleep
+ES_AWAYMODE_REQUIRED — blocks sleep even when screen is locked or idle
+Registered with atexit — releases automatically even on crash/exception
+Verify anytime with powercfg /requests — python.exe appears under SYSTEM
+Silent no-op on Linux/macOS (safe to import anywhere without platform guards)
+Why two layers? If the OS setting is changed externally while the bot runs (e.g. Windows Update, Group Policy), Layer 2 still holds. If the Python process fails to acquire the kernel lock (rare permissions issue), Layer 1 still protects.
+
+🔵 4. Silent Auto-Logon Setup (netplwiz)
+Problem: Task Scheduler fires at logon — but if Windows sits at the password screen, logon never happens.
+
+Solution documented in AUTOSTART_SETUP.md:
+
+Uses netplwiz to skip the password prompt on boot only
+Your lock screen password is unchanged — Win+L still works normally
+Auto-logon only bypasses the cold-boot prompt
+Desktop stays fully open (no auto-lock) so you can check MT5 and Telegram remotely
+💡 5. Hibernate & Fast Startup Elimination
+Problem: Windows Hibernate (S4) is a full RAM-to-disk shutdown — the bot process cannot survive it, even with sleep prevention active.
+
+Solution (one-time, documented):
+
+powercfg /h off
+
+Plus disable Fast Startup (which uses hibernate under the hood): Control Panel → Power Options → Choose what the power buttons do → Turn off fast startup
+
+After this, the only idle state the PC can enter is Sleep (S3) — which is fully blocked by the dual-layer sleep prevention above.
+
+🛑 6. Three-Method Process Termination (scripts/stop-bot.bat)
+Stopping the bot safely handles every edge case — window title changes, WMIC removal on Windows 11, etc.:
+
+Method 1 — PID File (Primary)
+set /p BOT_PID=<data\bot.pid
+taskkill /f /pid %BOT_PID%
+
+The bot writes its own PID to data/bot.pid at startup. Kill is exact and instant.
+
+Method 2 — Window Title Kill (Fallback)
+taskkill /f /fi "windowtitle eq SMC Bot - AUTO-TRADE MODE"
+
+Covers every known window title variant the bot can have (Manual, Auto, Backtester, Setup Wizard, Connection Test).
+
+Method 3 — Script-Name Filter (Last Resort)
+taskkill /F /FI "IMAGENAME eq python.exe" /FI "WINDOWTITLE eq *main_manual.py*"
+
+Uses taskkill filters instead of deprecated WMIC — works on all Windows versions including Windows 11 builds where WMIC was removed.
+
+Note on Task Scheduler: stop-bot.bat kills the process, but the Scheduler's "Restart on Failure" will relaunch it up to 3 times. To prevent restart, disable/remove the task via the uninstall script.
+
+🖥️ 7. Smart double-click Guard (autostart.bat)
+Problem: When you double-click a .bat file, Windows runs it via cmd /c — the window closes the instant the script exits, even on error. You can't see what went wrong.
+
+Solution — self-relaunching guard:
+
+if not defined _SMC_LAUNCHED (
+    set _SMC_LAUNCHED=1
+    cmd /k ""%~f0" %*"
+    exit /b 0
+)
+
+First run: relaunches itself under cmd /k (window stays open), sets _SMC_LAUNCHED
+Second run: _SMC_LAUNCHED is defined, skips the guard, executes normally
+Task Scheduler is unaffected — it sets its own environment, never defines _SMC_LAUNCHED, so the guard is skipped and the task exits cleanly (enabling proper restart tracking)
+This solves a subtle race condition: if Task Scheduler used cmd /k, it would orphan as a background process and allow a second bot instance to spawn on next logon.
+
+📅 8. Cross-Version Date Stamping for Log Files
+Problem: wmic (used for date formatting) was removed from some Windows 11 builds.
+
+Solution — two-tier date resolution:
+
+:: Try PowerShell first (all Windows versions)
+for /f ... powershell -Command "Get-Date -Format 'yyyy-MM-dd'"
+:: Fallback to wmic for old Windows 10
+for /f ... wmic os get LocalDateTime
+
+Log files are always named logs\autostart_2026-07-25.log regardless of Windows version. A new file is created each day — old logs are never overwritten.
+
+🔍 9. MT5 Process Detection & Readiness Polling
+The bot doesn't blindly launch MT5 and immediately try to connect:
+
+:: Step 1: Check if MT5 is already running
+tasklist /fi "imagename eq terminal64.exe" | find /i "terminal64.exe"
+:: Step 2: If not running, launch it
+start "" "%MT5_PATH%"
+:: Step 3: Poll until it appears (up to 120 seconds)
+:wait_loop
+  timeout /t 5 /nobreak
+  tasklist | find "terminal64.exe" → if found, goto :mt5_ready
+  set /a elapsed+=5
+  if elapsed >= MT5_WAIT_TIMEOUT_SECONDS → error and exit
+:: Step 4: Login grace period (20s for price sync)
+timeout /t 20 /nobreak
+
+MT5 path read from .env (MT5_PATH) — fallback to standard install location
+Configurable timeout (MT5_WAIT_TIMEOUT_SECONDS=120)
+Configurable login grace (MT5_LOGIN_GRACE_SECONDS=20)
+Manual mode scripts (run-manual.bat, run-auto.bat) also check MT5 is running before starting and pause with a Y/N prompt if not — prevents silent failures
+✅ 10. Pre-flight Safety Check System (scripts/preflight_check.py)
+Runs automatically at end of setup.bat — validates the entire config before the first run:
+
+Check	What it validates
+Config import	config.py imports cleanly (catches bad .env values at startup)
+Dry-run flag	BOT_DRY_RUN=true is set (warns if going live accidentally)
+Max trades	MAX_TRADES_PER_SESSION >= 1
+Drawdown limits	All R-limits are valid numbers with correct sign
+Friday close hour	0–23 range
+News calendar timezone	Correct UTC offset configured
+Telegram credentials	Bot token + chat ID are present and non-placeholder
+Duplicate pair roots	No broker-suffix conflicts (e.g. both EURUSD and EURUSDm configured)
+Schema sync	Signal validator schema matches rule analyzer output
+Output: clear ✅/❌ per check with a final "All checks passed — bot is safe to start" or failure count. setup.bat calls this automatically at step 5 of 6.
+
+🧙 11. Guided Setup Wizard (scripts/setup.bat)
+A full interactive Windows setup experience — no terminal knowledge required:
+
+[1/6] Python version check
+[2/6] pip install all required packages
+[3/6] Create data/, logs/, backtest_results/ directories
+[4/6] Interactive .env builder (prompts for MT5 login, Telegram token, etc.)
+[5/6] Run preflight_check.py (validates everything)
+[6/6] Print full "what to run next" menu
+
+Hidden trap detection: Catches the notorious Windows "hidden extension" bug where .env is saved as .env.txt silently — warns the user with exact fix instructions:
+
+if exist ".env.txt" (
+    if not exist ".env" (
+        echo  Fix karo: rename .env.txt .env
+    )
+)
+
+📜 12. Complete Script Suite (11 Files)
+Every operational mode has a dedicated double-click script:
+
+Script	Purpose
+setup.bat	One-time guided setup wizard
+install-autostart.ps1	Register Task Scheduler task
+uninstall-autostart.ps1	Remove Task Scheduler task cleanly
+autostart.bat	Boot-time launcher (MT5 + sleep + bot)
+run-manual.bat	Confirm-to-Trade mode (Telegram approve/reject)
+run-auto.bat	Auto-trade mode (silent, immediate execution)
+run-backtest.bat	Run backtester on historical data
+run-self-improver.bat	Analyze journal + propose config improvements
+stop-bot.bat	Kill bot safely (3-method fallback chain)
+test-connections.bat	Verify MT5 + Telegram before first live run
+preflight_check.py	Config safety validator
+run-self-improver.bat even has a full CLI sub-menu:
+
+run-self-improver.bat              → Run (respects cooldown interval)
+run-self-improver.bat force        → Run now (ignore interval)
+run-self-improver.bat snapshots    → List all config snapshots
+run-self-improver.bat changes      → Show change history log
+run-self-improver.bat restore <f>  → Restore a snapshot (with confirmation)
+
+📁 13. Daily Rotating Log System
+logs\autostart_2026-07-25.log   ← autostart.bat stdout (new file per day)
+logs\manual_analyzer.log        ← bot's own detailed operational log
+
+Log directory created automatically by both setup.bat and autostart.bat
+Append mode (>>) — a restart mid-day continues the same daily file
+All Python stdout/stderr redirected into the log (>> "%LOG_FILE%" 2>&1)
+Bot's own logging module writes structured entries to manual_analyzer.log
+⚙️ 14. Configurable Automation Constants
+All key automation timings live as named constants at the top of autostart.bat — no code editing required:
+
+set MT5_WAIT_TIMEOUT_SECONDS=120    ← How long to wait for MT5 to appear
+set MT5_LOGIN_GRACE_SECONDS=20      ← Wait for price sync after MT5 appears
+set BOT_SCRIPT=main_manual.py       ← Entry point (swap to test scripts)
+set BOT_FLAGS=--auto                ← Arguments passed to Python
+set LOCK_SCREEN_AFTER_START=false   ← Lock screen after bot starts (optional)
+set PREVENT_SLEEP=true              ← Enable/disable sleep prevention
+set SLEEP_RESTORE_MINUTES=30        ← Fallback sleep restore value
+set PAUSE_ON_ERROR=true             ← Keep window open on error (double-click)
+                                      false = Task Scheduler mode (exits cleanly)
+
+🔄 Summary
+Category	Features
+Boot automation	netplwiz auto-logon + Task Scheduler at-logon trigger
+Sleep prevention	powercfg OS-level + SetThreadExecutionState kernel-level
+Process management	PID file + 3-method stop fallback + single-instance enforcement
+MT5 orchestration	Detection → launch → readiness polling → grace period
+Safety	Pre-flight checks, dry-run guard, hibernate elimination
+Reliability	Auto-restart on crash (3×), cross-version date stamping, log rotation
+UX	Guided setup wizard, hidden-extension trap detection, double-click guard
+Operations	Full 11-script suite covering every operational mode
+This is a production-hardened, unattended Windows trading infrastructure — designed to survive reboots, crashes, power cuts, and user absence without missing a trading session.

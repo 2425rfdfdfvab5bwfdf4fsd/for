@@ -1,0 +1,605 @@
+# MASTER NEW FEATURE ADDITION, INTEGRATION & VALIDATION PROMPT
+
+You are working on an existing production-grade software project that was previously developed using an approved architecture and roadmap.
+
+I now want to add a new feature.
+
+Your responsibility is to safely analyze, plan, implement, test, integrate, and validate this new feature without breaking existing functionality.
+
+---
+
+# NEW FEATURE REQUEST
+
+Feature Name:
+
+[FEATURE NAME]
+
+Feature Description:
+
+[DESCRIBE THE NEW FEATURE]
+
+Why I want this feature:
+
+[EXPLAIN THE PURPOSE]
+
+Expected User Behavior:
+
+[DESCRIBE WHAT THE USER SHOULD BE ABLE TO DO]
+
+Additional Requirements:
+
+[OPTIONAL REQUIREMENTS]
+
+---
+
+# IMPORTANT: DO NOT START CODING IMMEDIATELY
+
+Do NOT immediately modify the codebase.
+
+First analyze the existing project and determine how the new feature should be integrated.
+
+The existing project is the source of truth for current behavior.
+
+The new feature must fit into the existing architecture unless there is a strong technical reason to modify the architecture.
+
+---
+
+# PHASE 1 — PROJECT CONTEXT ANALYSIS
+
+Before implementation, inspect:
+
+```text
+ROADMAP/
+```
+
+Read the relevant:
+
+* Master roadmap
+* Architecture documentation
+* Project status
+* Definition of Done
+* Relevant phase documentation
+* Relevant task files
+
+Also inspect the actual codebase.
+
+Analyze:
+
+* Existing architecture
+* Frontend
+* Backend
+* Database
+* Authentication
+* Authorization
+* APIs
+* Integrations
+* Background processes
+* Configuration
+* Tests
+* Deployment
+
+Identify which existing components are affected by the new feature.
+
+---
+
+# PHASE 2 — FEATURE REQUIREMENTS ANALYSIS
+
+Convert the feature request into precise requirements.
+
+Define:
+
+## Functional Requirements
+
+What exactly must the feature do?
+
+## Non-Functional Requirements
+
+Performance, reliability, scalability, etc.
+
+## Security Requirements
+
+Authentication, authorization, validation, privacy, etc.
+
+## User Experience Requirements
+
+UI, workflows, loading states, errors, empty states, etc.
+
+## Data Requirements
+
+What data is:
+
+* Created?
+* Read?
+* Updated?
+* Deleted?
+* Stored?
+* Cached?
+
+## Integration Requirements
+
+Which existing components or external services are involved?
+
+---
+
+# PHASE 3 — IDENTIFY IMPACT
+
+Create an impact analysis.
+
+Identify:
+
+### Files likely affected
+
+### Components affected
+
+### Database changes
+
+### API changes
+
+### Frontend changes
+
+### Backend changes
+
+### Authentication changes
+
+### Authorization changes
+
+### Configuration changes
+
+### Environment variables
+
+### Tests required
+
+### Documentation required
+
+### Deployment changes
+
+---
+
+# PHASE 4 — CHECK FOR CONFLICTS
+
+Before implementation, verify whether the new feature conflicts with:
+
+* Existing requirements
+* Existing architecture
+* Existing roadmap
+* Existing business logic
+* Existing database design
+* Existing APIs
+* Existing security rules
+
+If conflicts exist:
+
+1. Identify the conflict.
+2. Explain why it exists.
+3. Recommend the safest solution.
+4. Do not silently break existing functionality.
+
+---
+
+# PHASE 5 — FEATURE DESIGN
+
+Design the feature before coding.
+
+Provide:
+
+## User Flow
+
+```text
+User Action
+↓
+Frontend
+↓
+API
+↓
+Backend
+↓
+Database / External Service
+↓
+Response
+↓
+UI Update
+```
+
+Adapt this flow to the actual project.
+
+Also define:
+
+* Data flow
+* State management
+* Error handling
+* Security flow
+* Recovery behavior
+
+---
+
+# PHASE 6 — ARCHITECTURE DECISION
+
+Determine whether the feature requires:
+
+* New files
+* New components
+* New API endpoints
+* New database tables
+* New database fields
+* New indexes
+* New services
+* New background jobs
+* New environment variables
+* New dependencies
+
+Avoid adding new dependencies unless necessary.
+
+Prefer reusing existing project infrastructure.
+
+---
+
+# PHASE 7 — CREATE A FEATURE ROADMAP
+
+Create a dedicated feature roadmap.
+
+Recommended location:
+
+```text
+ROADMAP/
+└── FEATURES/
+    └── [FEATURE_NAME]/
+```
+
+Create:
+
+```text
+ROADMAP/FEATURES/[FEATURE_NAME]/
+├── 00_FEATURE_SPECIFICATION.txt
+├── 01_FEATURE_ARCHITECTURE.txt
+├── 02_IMPLEMENTATION_PLAN.txt
+├── 03_TEST_PLAN.txt
+├── 04_ACCEPTANCE_CRITERIA.txt
+└── 05_FEATURE_STATUS.txt
+```
+
+If the feature is complex, create additional task files.
+
+---
+
+# PHASE 8 — FEATURE IMPLEMENTATION TASKS
+
+Break the feature into small AI-agent-friendly tasks.
+
+For example:
+
+```text
+TASK-01 — Database Changes
+TASK-02 — Backend Service
+TASK-03 — API Endpoint
+TASK-04 — Authentication / Authorization
+TASK-05 — Frontend UI
+TASK-06 — State Management
+TASK-07 — Error Handling
+TASK-08 — Integration
+TASK-09 — Unit Tests
+TASK-10 — Integration Tests
+TASK-11 — End-to-End Tests
+TASK-12 — Documentation
+```
+
+Adapt this according to the actual feature.
+
+Every task must include:
+
+```text
+TASK ID
+TASK NAME
+OBJECTIVE
+CONTEXT
+DEPENDENCIES
+
+FILES TO INSPECT
+FILES TO CREATE
+FILES TO MODIFY
+FILES FORBIDDEN TO MODIFY
+
+IMPLEMENTATION REQUIREMENTS
+
+EDGE CASES
+
+ERROR HANDLING
+
+SECURITY REQUIREMENTS
+
+TEST REQUIREMENTS
+
+VALIDATION COMMANDS
+
+ACCEPTANCE CRITERIA
+
+DEFINITION OF DONE
+```
+
+---
+
+# PHASE 9 — SAFE IMPLEMENTATION
+
+Implement the feature incrementally.
+
+For each task:
+
+1. Read relevant project documentation.
+2. Inspect existing code.
+3. Understand dependencies.
+4. Explain the implementation plan.
+5. Identify affected files.
+6. Implement only the current task.
+7. Run relevant tests.
+8. Review the code changes.
+9. Check for regressions.
+10. Verify acceptance criteria.
+
+Do not modify unrelated functionality.
+
+Do not rewrite working components unnecessarily.
+
+---
+
+# PHASE 10 — BACKWARD COMPATIBILITY
+
+After implementation, verify that all existing features still work.
+
+Specifically check:
+
+* Existing user workflows
+* Existing APIs
+* Existing database operations
+* Existing authentication
+* Existing authorization
+* Existing integrations
+* Existing automation
+* Existing scheduled tasks
+
+The new feature must not break existing functionality.
+
+---
+
+# PHASE 11 — SECURITY VALIDATION
+
+Audit the new feature for:
+
+* Authentication
+* Authorization
+* Input validation
+* Data exposure
+* Injection risks
+* XSS
+* CSRF
+* Rate limiting
+* Secrets
+* Sensitive data logging
+
+Ensure security is enforced on the backend where applicable.
+
+---
+
+# PHASE 12 — TESTING
+
+Create and run appropriate tests.
+
+At minimum, test:
+
+### Normal behavior
+
+### Invalid input
+
+### Empty input
+
+### Boundary values
+
+### Unauthorized access
+
+### Authentication failures
+
+### API failures
+
+### Database failures
+
+### Network failures
+
+### Duplicate operations
+
+### Concurrent operations
+
+### Recovery scenarios
+
+Also run the existing regression test suite.
+
+---
+
+# PHASE 13 — ACCEPTANCE VALIDATION
+
+Verify every acceptance criterion.
+
+Use:
+
+```text
+Criterion
+↓
+Implementation
+↓
+Test
+↓
+Result
+```
+
+Every criterion must be:
+
+PASS
+FAIL
+UNVERIFIED
+
+Do not mark `UNVERIFIED` as `PASS`.
+
+---
+
+# PHASE 14 — UPDATE PROJECT DOCUMENTATION
+
+Update relevant:
+
+* README
+* Architecture documentation
+* API documentation
+* Environment variable documentation
+* User documentation
+* Roadmap
+* Project status
+* Feature documentation
+
+Do not document features that are not actually implemented.
+
+---
+
+# PHASE 15 — FEATURE AUDIT
+
+After implementation, perform a focused audit of the new feature.
+
+Check:
+
+* Requirements compliance
+* Architecture compliance
+* Security
+* Performance
+* Reliability
+* Error handling
+* Testing
+* Backward compatibility
+* Documentation
+
+Create:
+
+```text
+ROADMAP/FEATURES/[FEATURE_NAME]/06_FEATURE_AUDIT.txt
+```
+
+---
+
+# PHASE 16 — REGRESSION AUDIT
+
+Perform a regression check across the complete application.
+
+Verify:
+
+```text
+Existing Features
++
+New Feature
++
+Integrations
++
+Database
++
+Authentication
++
+Deployment
+```
+
+Nothing important should regress.
+
+If regressions are discovered:
+
+1. Identify root cause.
+2. Fix it.
+3. Re-run targeted tests.
+4. Run regression tests again.
+
+---
+
+# PHASE 17 — FINAL FEATURE REPORT
+
+At completion, provide:
+
+### Feature Status
+
+### Requirements Implemented
+
+### Files Created
+
+### Files Modified
+
+### Database Changes
+
+### API Changes
+
+### Frontend Changes
+
+### Security Changes
+
+### Tests Added
+
+### Tests Run
+
+### Tests Passed
+
+### Tests Failed
+
+### Regression Results
+
+### Documentation Updated
+
+### Known Limitations
+
+### Remaining Issues
+
+### Final Acceptance Status
+
+Final status:
+
+```text
+FEATURE COMPLETE
+
+FEATURE COMPLETE WITH MINOR ISSUES
+
+FEATURE NOT COMPLETE
+
+FEATURE BLOCKED
+```
+
+---
+
+# IMPORTANT FINAL RULE
+
+The feature is not considered complete merely because the new UI or functionality appears to work.
+
+The feature is complete only when:
+
+```text
+Feature Request
+↓
+Requirements Defined
+↓
+Impact Analyzed
+↓
+Architecture Designed
+↓
+Implementation Planned
+↓
+Feature Implemented
+↓
+Unit Tests
+↓
+Integration Tests
+↓
+End-to-End Tests
+↓
+Security Validation
+↓
+Regression Testing
+↓
+Documentation Updated
+↓
+Feature Audit
+↓
+Acceptance Criteria Passed
+```
+
+Never sacrifice existing project stability for a new feature.
+
+The primary objective is:
+
+**Add the new feature safely while preserving the integrity, security, reliability, and functionality of the entire existing system.**
