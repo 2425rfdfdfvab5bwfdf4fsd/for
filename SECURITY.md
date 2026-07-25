@@ -1,173 +1,175 @@
-# Security — MT5 Forex Trading Bot
+# Security Policy — MT5 Automated Forex Trading Bot
 
-## Threat Model
-
-This bot handles real financial accounts. The primary risks are:
-
-1. **Credential exposure** — MT5 login/password or Telegram token leaked
-2. **Accidental live trading** — bot executes real orders during development/testing
-3. **Runaway trading** — bug causes excessive orders or positions
-4. **Injection via news filter** — external HTTP data used without validation
-5. **Database corruption** — state loss causing incorrect risk accounting
+> **Last reviewed:** 2026-07-25  
+> **Scope:** All code under `app/`, `tests/`, `validation/`, and infrastructure files.
 
 ---
 
-## Secret Management (S01)
+## 1. Credential Storage
 
-### .env is the only secret store
-- All credentials live in `.env` — never in Python source files
-- `.env` is listed in `.gitignore` — it is NEVER committed to version control
-- `.env.example` contains placeholder values only — safe to commit
+**Policy:** All secrets are loaded exclusively from a `.env` file at the project root via `python-dotenv`. No secret may be hardcoded in source code.
 
-### What must NEVER appear in code
-```python
-# FORBIDDEN — never do this
-MT5_PASSWORD = "mypassword123"
-TELEGRAM_TOKEN = "1234567:ABCdef..."
-API_KEY = "sk-..."
-```
+| Secret | Environment Variable | Who uses it |
+|--------|---------------------|-------------|
+| MT5 account password | `MT5_PASSWORD` | `app/security/secret_manager.py` → `app/config.py` |
+| Telegram bot token | `TELEGRAM_BOT_TOKEN` | `app/security/secret_manager.py` → `app/config.py` |
+| Telegram chat ID | `TELEGRAM_CHAT_ID` | `app/security/secret_manager.py` → `app/config.py` |
 
-### Logging rules
-- **Never log** the MT5 password, Telegram bot token, or any API key
-- **Always mask** account numbers: `XXXXX7890` not `1234567890`
-- Use `mask_account()` from `app/logger.py` before logging account info
+**Access pattern:**
 
 ```python
-# CORRECT
-logger.info("Connected to account %s", mask_account(account_number))
-
-# WRONG
-logger.info("Connected to account %d", account_number)
+from app.config import Config
+config = Config()
+token = config.TELEGRAM_BOT_TOKEN   # loaded via SecretManager — never log raw
 ```
+
+`SecretManager` (see `app/security/secret_manager.py`) is the sole interface for reading secrets. It exposes a `mask(value)` helper that shows only the first four characters followed by `"..."` for safe log output.
 
 ---
 
-## Live Trading Guards (S04)
+## 2. Secrets Never Logged
 
-### Double-lock mechanism
-Real orders may only be placed when BOTH conditions are true:
+**Policy:** No secret value may appear in any log record, error message, or exception traceback.
+
+Controls in place:
+
+- `SecretSanitiserFilter` (in `app/security/secret_manager.py`) is a `logging.Filter` that scrubs known secret values and Telegram token patterns from every record before emission.
+- `app/logger.py` applies `mask_account()` to account numbers — PII by definition.
+- Automated audit check **H1** (`SecurityAudit._check_h1_secrets_in_logs`) scans all source files for logger calls that directly reference secret variable names.
+
+**Correct pattern:**
 
 ```python
-# In app/config.py — validated at startup
-# Condition 1: TRADING_MODE must be "LIVE"
-# Condition 2: LIVE_TRADING must be explicitly True
-
-def is_live_trading_allowed(config: Config) -> bool:
-    return config.TRADING_MODE == "LIVE" and config.LIVE_TRADING is True
+sm = SecretManager()
+token = sm.get_telegram_token()
+logger.info("Telegram token loaded: %s", sm.mask(token))  # logs "abcd..."
 ```
 
-### Execution guard (mandatory in order_executor.py)
+---
+
+## 3. Live Trading Activation Procedure
+
+**All six conditions must be true simultaneously** before a real order is placed:
+
+| # | Condition | Config key |
+|---|-----------|------------|
+| 1 | Trading mode is LIVE | `TRADING_MODE=LIVE` |
+| 2 | Live trading explicitly enabled | `LIVE_TRADING=true` |
+| 3 | Separate confirmation flag | `LIVE_TRADING_CONFIRMED=true` |
+| 4 | Expected account number configured | `LIVE_ACCOUNT_NUMBER=<your login>` |
+| 5 | MT5 account login matches configured number | verified at startup |
+| 6 | MT5 account is a REAL account (not demo) | verified at startup |
+
+If any condition fails, `LiveTradingGuard` (see `app/security/live_trading_guards.py`) forces DEMO mode and logs a `CRITICAL` warning. Startup aborts via `AutoRecovery` step `live_trading_guard`.
+
+**Default values are safe:** `LIVE_TRADING=false`, `LIVE_TRADING_CONFIRMED=false`.
+
+---
+
+## 4. .gitignore Coverage
+
+The following are excluded from version control via `.gitignore`:
+
+```
+.env          ← secrets (most important)
+venv/         ← virtual environment
+data/         ← trade database, screenshots, reports
+screenshots/  ← chart images
+results/      ← backtest results
+backups/      ← database backups
+logs/         ← rotating log files
+__pycache__/  ← Python bytecode
+*.pyc
+```
+
+Automated audit check **C2** (`SecurityAudit._check_c2_gitignore_env`) verifies that `.env` is listed in `.gitignore` on every audit run.
+
+---
+
+## 5. Dashboard Security
+
+- **Binding:** The dashboard binds to `DASHBOARD_HOST` (default `127.0.0.1`). It must **never** be exposed on `0.0.0.0` in production without an authenticating reverse proxy.
+- **Read-only:** All dashboard API endpoints are `GET` only — no write operations are exposed.
+- **Secret stripping:** `DataService.get_status()` and `get_health()` explicitly strip `mt5_password` and `telegram_token` before returning data to the frontend.
+- **Session key:** The Flask `SECRET_KEY` is set to a placeholder value (`dashboard-local-only`) acceptable for a localhost-only tool. If the dashboard is ever exposed externally, this must be replaced with a random value stored in `.env`.
+
+---
+
+## 6. MT5 Connection Security
+
+- MT5 credentials (`MT5_LOGIN`, `MT5_PASSWORD`, `MT5_SERVER`) are read from `.env` only, never hardcoded.
+- The MT5 module is imported only inside `app/mt5/` — all other modules receive data via function arguments.
+- Connection errors are logged at `WARNING` level; credential values are never included in log messages.
+- On Replit (Linux), MetaTrader5 is mocked — no real credentials are ever needed or used.
+
+---
+
+## 7. Database Security
+
+- The SQLite database file lives in `data/` which is excluded from version control.
+- All queries in `app/database/repositories.py` use `?` parameterized placeholders — no f-string or string-concatenation SQL.
+- `DatabaseManager.execute()` and `execute_many()` enforce parameterized queries at the API boundary.
+- The database is accessed only via `app/database/repositories.py` — business logic never queries SQLite directly.
+- There is no external network port for the database; it is a local file accessible only to the bot process.
+
+---
+
+## 8. Incident Response
+
+### If MT5 credentials are exposed
+
+1. **Immediately** change the MT5 account password from the MetaTrader platform.
+2. Set `LIVE_TRADING=false` in `.env` and restart the bot.
+3. Review MT5 trade history for unauthorised orders.
+4. Rotate the `.env` file by creating a new one from `.env.example`.
+5. Audit git history with `git log --all -- .env` to confirm the file was never committed.
+
+### If the Telegram token is exposed
+
+1. Open [@BotFather](https://t.me/BotFather) and revoke the old token.
+2. Create a new token and update `TELEGRAM_BOT_TOKEN` in `.env`.
+3. Restart the bot; the notifier will reconnect automatically.
+
+### If a log file is exfiltrated
+
+1. Check that `SecretSanitiserFilter` is attached to all handlers.
+2. Review recent log files for any `<masked>` patterns that were NOT masked (would indicate a filter misconfiguration).
+3. Rotate MT5 and Telegram credentials as a precaution.
+
+---
+
+## 9. Automated Security Audit
+
+The `SecurityAudit` class (`app/security/security_audit.py`) runs automated checks covering:
+
+| ID | Severity | Check |
+|----|----------|-------|
+| C1 | CRITICAL | Hardcoded credential patterns in source files |
+| C2 | CRITICAL | `.env` listed in `.gitignore` |
+| H1 | HIGH | Secret variable names in logger calls |
+| H2 | HIGH | Dashboard host binding |
+| M1 | MEDIUM | SQL built with f-strings or concatenation |
+| M2 | MEDIUM | Path traversal in file operations |
+| M3 | MEDIUM | Placeholder Flask secret key |
+
+Run the audit at any time:
+
 ```python
-if not is_live_trading_allowed(config):
-    logger.info("Live trading blocked — TRADING_MODE=%s, LIVE_TRADING=%s",
-                config.TRADING_MODE, config.LIVE_TRADING)
-    return None  # Silently skip; never raise for normal demo operation
+from app.security.security_audit import SecurityAudit
+report = SecurityAudit().run()
+print(f"Status: {report.overall_status}")
+for issue in report.critical_issues + report.high_issues:
+    print(f"[{issue.severity}] {issue.check_name}: {issue.description}")
 ```
 
-### Development rule
-During Phase 01 through Phase 20:
-- `LIVE_TRADING` is always `false` in `.env.example`
-- No code path enables `LIVE_TRADING=true` programmatically
-- Tests never set `LIVE_TRADING=true`
+The test suite runs the audit against the live codebase in `tests/test_security/test_audit.py::TestAuditPassesCleanCodebase` — a CI failure in this class means a real security regression.
 
 ---
 
-## Account Validation (S05)
+## 10. Regular Security Review Recommendations
 
-Before ANY order in live mode, verify:
-1. Account type matches `TRADING_MODE` (demo account → DEMO mode)
-2. Magic number matches expected value
-3. Margin level is above `MARGIN_SAFETY_LEVEL`
-4. No unexpected positions already open from other EAs
-
-Implementation: `app/mt5/account.py` + `app/execution/order_validator.py`
-
----
-
-## Input Validation
-
-### MT5 data validation
-All data returned from MT5 must be validated before use:
-```python
-data = mt5.copy_rates_from_pos(symbol, timeframe, 0, count)
-if data is None or len(data) == 0:
-    logger.warning("Empty data from MT5 for %s", symbol)
-    return pd.DataFrame()
-```
-
-### News filter HTTP validation
-The news filter fetches external data. Validate it defensively:
-- Set a request timeout (5–10 seconds maximum)
-- If request fails, fall back to manual blackout windows — do not crash
-- Never eval() or exec() external data
-- Strip and validate all date/time strings before parsing
-
-### Database input validation
-- Use parameterised queries only — never string-formatted SQL
-- Validate all values before INSERT (non-null, correct type, sane range)
-
----
-
-## Runaway Trade Protection
-
-The following limits prevent a bug from causing catastrophic loss:
-
-| Protection | Implementation | Configurable |
-|---|---|---|
-| Max lot size | Hard cap in position_sizing.py | `MAX_LOT_SIZE` |
-| Daily trade limit | Checked before every order | `MAX_DAILY_TRADES` |
-| Daily loss limit | Checked before every order | `MAX_DAILY_LOSS_PCT` |
-| Consecutive losses | Checked before every order | `MAX_CONSECUTIVE_LOSSES` |
-| Margin safety | Checked before every order | `MARGIN_SAFETY_LEVEL` |
-| Duplicate trade guard | Checked before every order | — |
-| R:R validation | Checked before every order | `MIN_RR_RATIO` |
-
-If ANY check fails, the trade is rejected. The rejection is logged to
-`trading.log` with the specific reason.
-
----
-
-## Dashboard Security
-
-- Dashboard is **read-only** by default — no trade controls, no live mode toggle
-- Dashboard binds to `127.0.0.1` only (localhost) — not exposed to network
-- No authentication required (local machine access assumed)
-- If remote access is needed, add a reverse proxy with authentication (future)
-- No POST/PUT/DELETE endpoints in Phase 14 — GET only
-
----
-
-## .gitignore Verification Checklist
-
-Before any git commit, verify `.gitignore` includes:
-```
-.env              ← credentials
-logs/             ← may contain account info
-data/historical/  ← large files
-*.db              ← database (contains trade data)
-```
-
-Run this check: `git status --short | grep -v "^?"` — `.env` must NOT appear.
-
----
-
-## Dependency Security
-
-- Pin major versions in `requirements.txt` (e.g. `pandas>=2.0.0`)
-- Avoid packages with no recent maintenance
-- Do not add new packages without explicit approval
-- `pystray` is excluded (system tray is optional — see Decision-001)
-- No packages that require elevated Windows privileges
-
----
-
-## Incident Response
-
-If credentials are accidentally committed to git:
-1. Rotate the credential immediately (change MT5 password, regenerate Telegram token)
-2. Remove the file from git history (`git filter-branch` or `git filter-repo`)
-3. Force-push the cleaned history
-4. Notify any collaborators
-
-Never rely on "it was only committed for a moment" — git history is permanent
-until explicitly rewritten.
+- **Monthly:** Run `SecurityAudit().run()` and review any WARN/FAIL outcomes.
+- **Before each deployment:** Verify `LIVE_TRADING_CONFIRMED`, `LIVE_ACCOUNT_NUMBER`, and all Telegram settings are correct in the production `.env`.
+- **Annually:** Rotate MT5 password and Telegram token even if not exposed.
+- **After any dependency update:** Re-run the full test suite including `tests/test_security/`.
+- **When adding new modules:** Ensure no new secret variables are logged without `mask()`, and no new SQL queries bypass parameterization.
