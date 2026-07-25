@@ -1,6 +1,11 @@
 ---
 name: mt5-next-task
-description: Automates the MT5 Forex Trading Bot task workflow. Use when the user says "continue", "next task", "implement next", or any similar instruction to advance the roadmap. Reads project status, finds the next task, builds the master prompt, and implements it — no manual prompt-filling required.
+description: >-
+  Automates the MT5 Forex Trading Bot task workflow. Use when the user says
+  "continue", "next task", "implement next", or any similar instruction to
+  advance the roadmap. Reads project status, finds the next task, builds the
+  master prompt, and implements it — no manual prompt-filling required.
+enabled: false
 ---
 
 # MT5 Next-Task Automation Skill
