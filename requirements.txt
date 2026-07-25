@@ -36,3 +36,15 @@ pytest-mock>=3.11.0           # Provides 'mocker' fixture for MT5 mocking
 
 # --- Charts / Screenshots ---
 matplotlib>=3.7.0             # Backtest charts and optional trade screenshots
+fastapi
+flask
+matplotlib
+numpy
+pandas
+pytest
+pytest-cov
+pytest-mock
+python-dotenv
+python-telegram-bot
+requests
+uvicorn

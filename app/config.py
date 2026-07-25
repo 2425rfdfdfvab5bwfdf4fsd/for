@@ -13,6 +13,7 @@ Usage:
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from app.security.secret_manager import SecretManager
 
 # ---------------------------------------------------------------------------
 # Load .env file from the project root (one level up from app/)
@@ -79,6 +80,11 @@ class Config:
     TRADING_MODE: str           # DEMO | PAPER | LIVE | BACKTEST
     LIVE_TRADING: bool          # Must be explicitly true for live orders
     MAGIC_NUMBER: int           # MT5 magic number for all bot orders
+    # --- Live trading guards (Phase 20) ---
+    LIVE_TRADING_CONFIRMED: bool    # Third explicit confirmation flag
+    LIVE_ACCOUNT_NUMBER: str        # Expected real account number (must match MT5)
+    LIVE_MAX_LOT_SIZE: float        # Hard cap on lot size in live mode (default 0.1)
+    LIVE_MAX_DAILY_LOSS_PERCENT: float  # More conservative daily-loss cap for live (default 1.0%)
 
     # ------------------------------------------------------------------
     # MT5 CONNECTION
@@ -342,10 +348,18 @@ class Config:
         self.TRADING_MODE = _get_str("TRADING_MODE", "DEMO").upper()
         self.LIVE_TRADING = _get_bool("LIVE_TRADING", False)
         self.MAGIC_NUMBER = _get_int("MAGIC_NUMBER", 20260001)
+        # Live trading guards (Phase 20)
+        self.LIVE_TRADING_CONFIRMED = _get_bool("LIVE_TRADING_CONFIRMED", False)
+        self.LIVE_ACCOUNT_NUMBER = _get_str("LIVE_ACCOUNT_NUMBER", "")
+        self.LIVE_MAX_LOT_SIZE = _get_float("LIVE_MAX_LOT_SIZE", 0.1)
+        self.LIVE_MAX_DAILY_LOSS_PERCENT = _get_float("LIVE_MAX_DAILY_LOSS_PERCENT", 1.0)
+
+        # --- SECRET MANAGER (Phase 20) ---
+        self._secret_manager = SecretManager()
 
         # --- MT5 CONNECTION ---
         self.MT5_LOGIN = _get_str("MT5_LOGIN", "")
-        self.MT5_PASSWORD = _get_str("MT5_PASSWORD", "")
+        self.MT5_PASSWORD = self._secret_manager.get_mt5_password() or ""
         self.MT5_SERVER = _get_str("MT5_SERVER", "")
         self.MT5_TERMINAL_PATH = _get_str("MT5_TERMINAL_PATH", "")
 
@@ -444,8 +458,8 @@ class Config:
 
         # --- TELEGRAM ---
         self.TELEGRAM_ENABLED = _get_bool("TELEGRAM_ENABLED", False)
-        self.TELEGRAM_BOT_TOKEN = _get_str("TELEGRAM_BOT_TOKEN", "")
-        self.TELEGRAM_CHAT_ID = _get_str("TELEGRAM_CHAT_ID", "")
+        self.TELEGRAM_BOT_TOKEN = self._secret_manager.get_telegram_token()
+        self.TELEGRAM_CHAT_ID = self._secret_manager.get_telegram_chat_id()
 
         # --- NOTIFICATION REPORT TIMES (Phase 12) ---
         self.DAILY_REPORT_TIME_UTC = _get_str("DAILY_REPORT_TIME_UTC", "20:30")

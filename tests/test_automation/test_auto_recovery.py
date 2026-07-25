@@ -185,15 +185,16 @@ def _run_with_mocks(
 class TestRequiredCases:
 
     def test_clean_startup_all_steps_pass(self):
-        """All 8 steps complete → success=True and all step names recorded."""
+        """All 9 steps complete → success=True and all step names recorded."""
         result = _run_with_mocks()
 
         assert result.success is True
         assert result.failed_step is None
-        assert len(result.steps_completed) == 8
+        assert len(result.steps_completed) == 9
         assert "singleton_lock" in result.steps_completed
         assert "mt5_connect" in result.steps_completed
         assert "account_validate" in result.steps_completed
+        assert "live_trading_guard" in result.steps_completed
         assert "orphan_recovery" in result.steps_completed
         assert "reconciliation" in result.steps_completed
         assert "daily_stats" in result.steps_completed
@@ -287,7 +288,7 @@ class TestAccountValidation:
         assert result.failed_step == "account_validate"
 
     def test_live_trading_on_demo_account_exits(self):
-        """LIVE_TRADING=True but account is demo → failed_step='account_validate'."""
+        """LIVE_TRADING=True but guards not met → failed_step='live_trading_guard'."""
         cfg = _make_config()
         cfg.LIVE_TRADING = True
         result = _run_with_mocks(
@@ -295,7 +296,7 @@ class TestAccountValidation:
             account_info=_make_account_info(is_demo=True),
         )
         assert result.success is False
-        assert result.failed_step == "account_validate"
+        assert result.failed_step == "live_trading_guard"
 
     def test_trade_not_allowed_adds_warning(self):
         """trade_allowed=False is a warning, not a fatal failure."""
@@ -387,6 +388,7 @@ class TestStepOrdering:
             "singleton_lock",
             "mt5_connect",
             "account_validate",
+            "live_trading_guard",
             "orphan_recovery",
             "reconciliation",
             "daily_stats",

@@ -194,13 +194,6 @@ class AutoRecovery:
                 result.failed_step = step
                 return result
 
-            if config.LIVE_TRADING and is_demo:
-                logger.critical(
-                    "AutoRecovery: LIVE_TRADING=true but account is DEMO — aborting"
-                )
-                result.failed_step = step
-                return result
-
             if not trade_allowed:
                 msg = "AutoRecovery: MT5 account trade_allowed=False"
                 logger.warning(msg)
@@ -213,6 +206,38 @@ class AutoRecovery:
             )
         except Exception as exc:
             logger.critical("AutoRecovery: account validation failed: %s", exc)
+            result.failed_step = step
+            return result
+
+        # ----------------------------------------------------------------
+        # Step 3b — Live trading guard (Phase 20)
+        # ----------------------------------------------------------------
+        step = "live_trading_guard"
+        try:
+            from app.security.live_trading_guards import LiveTradingGuard  # noqa: PLC0415
+
+            guard = LiveTradingGuard()
+            live_result = guard.validate(config, account_info)
+
+            if config.LIVE_TRADING and not live_result.live_trading_permitted:
+                logger.critical(
+                    "AutoRecovery: live trading guard BLOCKED — %s",
+                    live_result.warning_message,
+                )
+                result.warnings.append(
+                    f"live_trading_blocked: {live_result.warning_message}"
+                )
+                # Abort — do not proceed with a misconfigured live session
+                result.failed_step = step
+                return result
+
+            result.steps_completed.append(step)
+            logger.info(
+                "AutoRecovery [3b]: live trading guard passed — mode=%s",
+                live_result.actual_mode,
+            )
+        except Exception as exc:
+            logger.critical("AutoRecovery: live trading guard step failed: %s", exc)
             result.failed_step = step
             return result
 

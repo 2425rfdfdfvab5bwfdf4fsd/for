@@ -10,9 +10,10 @@ logs/
 *.log
 
 # --- Data directories (large files / generated output) ---
-data/historical/
-data/screenshots/
-data/reports/
+data/
+screenshots/
+results/
+backups/
 
 # --- Database files ---
 *.db
