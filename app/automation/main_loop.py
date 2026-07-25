@@ -79,6 +79,7 @@ class MainLoop:
 
         self._running: bool = False
         self._error_count: int = 0
+        self._tick_filter_results: dict = {}   # populated per-symbol each tick
 
     # ------------------------------------------------------------------
     # Public API
@@ -176,6 +177,7 @@ class MainLoop:
         symbols_scanned = 0
         signals_accepted = 0
         trades_placed = 0
+        self._tick_filter_results = {}          # reset before each scan cycle
 
         for symbol in self._config.BOT_PAIRS:
             try:
@@ -211,7 +213,7 @@ class MainLoop:
             logger.error("MainLoop: position management error: %s", exc, exc_info=True)
 
         # Step 10 — write scan state for dashboard (Why No Trade? panel)
-        self._write_scan_state(now, list(self._config.BOT_PAIRS))
+        self._write_scan_state(now, list(self._config.BOT_PAIRS), self._tick_filter_results)
 
         # Step 11 — tick summary
         logger.info(
@@ -248,6 +250,16 @@ class MainLoop:
             spread_pips=spread_pips,
             atr_pips=atr_pips,
         )
+
+        # Record per-symbol filter outcome for the dashboard scan state
+        self._tick_filter_results[symbol] = {
+            "passed": filter_result.passed,
+            "blocked_by": filter_result.filter_name if not filter_result.passed else None,
+            "reason": filter_result.reason,
+            "atr_pips": round(atr_pips, 2),
+            "spread_pips": round(spread_pips, 2),
+        }
+
         if not filter_result.passed:
             logger.debug(
                 "MainLoop: %s blocked — %s", symbol, filter_result.reason
@@ -452,16 +464,55 @@ class MainLoop:
             logger.debug("_fetch_spread_pips: MT5 error for %s — %s", symbol, exc)
         return 1.0
 
-    def _fetch_atr_pips(self, symbol: str) -> float:  # noqa: ARG002
-        """
-        Return current H1 ATR in pips for *symbol*.
+    _ATR_PERIOD = 14
+    _ATR_H1_TIMEFRAME = 60          # mt5.TIMEFRAME_H1 integer constant
+    _ATR_BARS_NEEDED = 20           # 14-period ATR needs ~20 closed bars
+    _ATR_FALLBACK_PIPS = 15.0       # safe default when MT5 unavailable
 
-        Phase 11 limitation: returns a safe static default (15 pips) rather
-        than a live calculation.  The VolatilityFilter uses this value; since
-        the default MIN_ATR_PIPS=5 and MAX_ATR_PIPS=80, 15 pips passes.
-        Full ATR wiring via MarketDataFetcher is deferred to Phase 11 polish.
+    def _fetch_atr_pips(self, symbol: str) -> float:
         """
-        return 15.0
+        Return current H1 ATR(14) in pips for *symbol*.
+
+        Fetches the last 20 closed H1 bars from MT5, computes ATR(14) using
+        the strategy indicators module, and converts the result to pips.
+        Falls back to _ATR_FALLBACK_PIPS (15.0) when MT5 is unavailable or
+        data is insufficient — this keeps the VolatilityFilter passing safely
+        during connection issues or test runs without a live terminal.
+        """
+        import pandas as pd
+        from app.strategy.indicators import atr_to_pips, get_current_atr
+
+        mt5 = _mt5()
+        if mt5 is None:
+            return self._ATR_FALLBACK_PIPS
+
+        try:
+            # Fetch one extra bar so we can drop the currently-forming candle
+            rates = mt5.copy_rates_from_pos(
+                symbol, self._ATR_H1_TIMEFRAME, 0, self._ATR_BARS_NEEDED + 1
+            )
+            if rates is None or len(rates) < 2:
+                logger.debug(
+                    "_fetch_atr_pips: no H1 data for %s — using fallback %.1f pips",
+                    symbol, self._ATR_FALLBACK_PIPS,
+                )
+                return self._ATR_FALLBACK_PIPS
+
+            df = pd.DataFrame(rates).iloc[:-1]   # drop forming candle
+            atr_price = get_current_atr(df, period=self._ATR_PERIOD)
+            if atr_price <= 0:
+                return self._ATR_FALLBACK_PIPS
+
+            atr_pips = round(atr_to_pips(atr_price, symbol), 2)
+            logger.debug(
+                "_fetch_atr_pips: %s ATR=%.5f → %.2f pips",
+                symbol, atr_price, atr_pips,
+            )
+            return atr_pips
+
+        except Exception as exc:                  # noqa: BLE001
+            logger.debug("_fetch_atr_pips: error for %s — %s", symbol, exc)
+            return self._ATR_FALLBACK_PIPS
 
     def _build_risk_context(self, symbol: str, mt5_positions: list):
         """
@@ -506,25 +557,50 @@ class MainLoop:
     # Dashboard scan state (Why No Trade? — Feature D08)
     # ------------------------------------------------------------------
 
-    def _write_scan_state(self, now: datetime, symbols: list[str]) -> None:
+    def _write_scan_state(
+        self,
+        now: datetime,
+        symbols: list[str],
+        filter_results: Optional[dict] = None,
+    ) -> None:
         """
         Atomically write data/scan_state.json after each scan cycle.
 
         The dashboard reads this file to populate the "Why No Trade?" panel.
         Writes to a temp file then renames to avoid partial-read races.
         Errors are logged and silently suppressed — never crash the bot loop.
+
+        Args:
+            now:            Current UTC datetime.
+            symbols:        Symbols that were scheduled for scanning this tick.
+            filter_results: Per-symbol filter outcome dict built by _process_symbol,
+                            keyed by symbol name.  None or empty when no symbols
+                            were processed (e.g. on a connection-failed tick).
         """
+        fr: dict = filter_results or {}
+
+        # Derive session_active / news_blackout from collected filter results.
+        # session_active  → True when at least one symbol passed the session filter
+        #                   (i.e. none were blocked by SESSION or CUTOFF).
+        # news_blackout   → True when any symbol was blocked specifically by NEWS.
+        any_passed = any(v.get("passed") for v in fr.values())
+        session_blocked = any(
+            v.get("blocked_by") in ("SESSION", "CUTOFF") for v in fr.values()
+        )
+        news_blocked = any(v.get("blocked_by") == "NEWS" for v in fr.values())
+
+        if not fr:
+            # No symbols processed this tick — leave ambiguous fields as None
+            session_active = None
+        else:
+            session_active = any_passed or not session_blocked
+
         state: dict[str, Any] = {
             "timestamp_utc": now.isoformat(),
             "symbols_scanned": symbols,
-            # session_active / news_blackout / filter_results are populated
-            # as best-effort from what is available in the main loop context.
-            # Phase 14 enrichment: filter_results come from _process_symbol
-            # when run in the same tick; here we write the minimal stub so
-            # the dashboard always has a fresh timestamp to display.
-            "session_active": None,
-            "news_blackout": False,
-            "filter_results": {},
+            "session_active": session_active,
+            "news_blackout": news_blocked,
+            "filter_results": fr,
             "nearest_signal": None,
         }
         path = self._config.SCAN_STATE_FILE_PATH
