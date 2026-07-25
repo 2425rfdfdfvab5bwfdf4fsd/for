@@ -1,0 +1,186 @@
+
+============================================================
+ MT5 Automated Forex Trading Bot ΓÇö Dashboard
+============================================================
+
+ Dashboard URL: http://127.0.0.1:8080
+ Press Ctrl+C to stop the dashboard.
+
+ * Serving Flask app 'app.dashboard.app'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:8080
+Press CTRL+C to quit
+127.0.0.1 - - [25/Jul/2026 10:08:53] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:53] "GET /static/css/dashboard.css HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:53] "GET /static/js/dashboard.js HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:53] "GET /api/why-no-trade HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:53] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:53] "GET /api/positions HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:53] "GET /api/trades HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:53] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [25/Jul/2026 10:08:56] "GET /scanner HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:56] "GET /static/css/dashboard.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:08:56] "GET /static/js/dashboard.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:08:56] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:56] "GET /api/positions HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:56] "GET /api/trades HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:57] "GET /positions HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:57] "GET /static/css/dashboard.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:08:57] "GET /static/js/dashboard.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:08:57] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:57] "GET /api/positions HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:57] "GET /api/trades HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:58] "GET /analytics HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:58] "GET /static/css/dashboard.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:08:58] "GET /static/js/dashboard.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:08:58] "GET /static/js/analytics.js HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:58] "GET /api/trades?limit=500 HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:58] "GET /api/rejections HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:58] "GET /api/trades?limit=500 HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:58] "GET /api/rejections HTTP/1.1" 200 -
+SQL execute error:
+                SELECT * FROM trade_journal_entries
+                 WHERE entry_time_utc LIKE ?
+                 ORDER | params=('2026-07-19%',) | error=bad parameter or other API misuse
+Failed to fetch journal entries for date 2026-07-19
+127.0.0.1 - - [25/Jul/2026 10:08:58] "GET /api/equity_curve?period=7d HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:58] "GET /api/stats?period=7d HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:58] "GET /api/equity_curve?period=7d HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:58] "GET /api/stats?period=7d HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:59] "GET /analytics HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:59] "GET /static/js/dashboard.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:08:59] "GET /static/css/dashboard.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:08:59] "GET /static/js/analytics.js HTTP/1.1" 304 -
+SQL execute error:
+                SELECT * FROM trade_journal_entries
+                 WHERE entry_time_utc LIKE ?
+                 ORDER | params=('2026-07-21%',) | error=bad parameter or other API misuse
+Failed to fetch journal entries for date 2026-07-21
+get_trades failed: tuple index out of range
+127.0.0.1 - - [25/Jul/2026 10:08:59] "GET /api/trades?limit=500 HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:59] "GET /api/rejections HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:59] "GET /api/equity_curve?period=7d HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:59] "GET /api/stats?period=7d HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:59] "GET /api/trades?limit=500 HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:59] "GET /api/rejections HTTP/1.1" 200 -
+SQL execute error:
+                SELECT * FROM trade_journal_entries
+                 WHERE entry_time_utc LIKE ?
+                 ORDER | params=('2026-07-19%',) | error=bad parameter or other API misuse
+Failed to fetch journal entries for date 2026-07-19
+127.0.0.1 - - [25/Jul/2026 10:08:59] "GET /api/equity_curve?period=7d HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:08:59] "GET /api/stats?period=7d HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:01] "GET /logs HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:01] "GET /logs HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:01] "GET /static/css/dashboard.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:09:01] "GET /static/js/dashboard.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:09:01] "GET /static/js/logs.js HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:01] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:01] "GET /api/positions HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:01] "GET /api/trades HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:01] "GET /api/logs?lines=500 HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:02] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:02] "GET /static/css/dashboard.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:09:02] "GET /static/js/dashboard.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:09:02] "GET /static/js/health.js HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:02] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:02] "GET /api/positions HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:02] "GET /api/trades HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:02] "GET /api/health HTTP/1.1" 503 -
+127.0.0.1 - - [25/Jul/2026 10:09:18] "GET /logs HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:18] "GET /static/css/dashboard.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:09:18] "GET /static/js/dashboard.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:09:18] "GET /static/js/logs.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:09:18] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:18] "GET /api/trades HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:18] "GET /api/positions HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:18] "GET /api/logs?lines=500 HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:29] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:29] "GET /static/css/dashboard.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:09:29] "GET /static/js/dashboard.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:09:29] "GET /static/js/health.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:09:29] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:29] "GET /api/positions HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:29] "GET /api/trades HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:09:29] "GET /api/health HTTP/1.1" 503 -
+127.0.0.1 - - [25/Jul/2026 10:10:00] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:00] "GET /api/positions HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:00] "GET /api/trades HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:00] "GET /api/health HTTP/1.1" 503 -
+127.0.0.1 - - [25/Jul/2026 10:10:30] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:30] "GET /api/positions HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:30] "GET /api/trades HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:30] "GET /api/health HTTP/1.1" 503 -
+127.0.0.1 - - [25/Jul/2026 10:10:48] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:48] "GET /static/css/dashboard.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:48] "GET /static/js/dashboard.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:48] "GET /static/js/health.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:48] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:48] "GET /api/positions HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:48] "GET /api/trades HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:48] "GET /api/health HTTP/1.1" 503 -
+127.0.0.1 - - [25/Jul/2026 10:10:48] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:48] "GET /static/css/dashboard.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:48] "GET /static/js/dashboard.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:48] "GET /static/js/health.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:48] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:48] "GET /api/positions HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:48] "GET /api/trades HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:48] "GET /api/health HTTP/1.1" 503 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /static/css/dashboard.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /static/js/dashboard.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /static/js/health.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /api/trades HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /api/positions HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /api/health HTTP/1.1" 503 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /static/css/dashboard.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /static/js/dashboard.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /static/js/health.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /api/positions HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /api/trades HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /api/health HTTP/1.1" 503 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /static/css/dashboard.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /static/js/dashboard.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /static/js/health.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /api/positions HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /api/trades HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /api/health HTTP/1.1" 503 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /static/css/dashboard.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /static/js/dashboard.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /static/js/health.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /api/positions HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /api/trades HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:49] "GET /api/health HTTP/1.1" 503 -
+127.0.0.1 - - [25/Jul/2026 10:10:50] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:50] "GET /static/css/dashboard.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:50] "GET /static/js/dashboard.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:50] "GET /static/js/health.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:50] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:50] "GET /api/trades HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:50] "GET /api/positions HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:50] "GET /api/health HTTP/1.1" 503 -
+127.0.0.1 - - [25/Jul/2026 10:10:50] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:50] "GET /static/css/dashboard.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:50] "GET /static/js/dashboard.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:50] "GET /static/js/health.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:50] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:50] "GET /api/trades HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:50] "GET /api/positions HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:50] "GET /api/health HTTP/1.1" 503 -
+127.0.0.1 - - [25/Jul/2026 10:10:50] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:50] "GET /static/css/dashboard.css HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:50] "GET /static/js/dashboard.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:50] "GET /static/js/health.js HTTP/1.1" 304 -
+127.0.0.1 - - [25/Jul/2026 10:10:51] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:51] "GET /api/positions HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:51] "GET /api/trades HTTP/1.1" 200 -
+127.0.0.1 - - [25/Jul/2026 10:10:51] "GET /api/health HTTP/1.1" 503 -
