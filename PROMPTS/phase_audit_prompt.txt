@@ -1,0 +1,39 @@
+================================================================================
+PHASE AUDIT PROMPT
+================================================================================
+Use this prompt to verify that a phase is fully implemented in the codebase.
+Replace [PHASE NAME OR NUMBER] with the target phase before sending.
+================================================================================
+
+Please audit Phase [PHASE NAME OR NUMBER] and confirm whether it is fully
+implemented. Base your findings entirely on the actual codebase — do NOT use
+ROADMAP/00_PROJECT_STATUS.txt as evidence of completion.
+
+Specifically:
+
+1. Read every task file inside ROADMAP/[PHASE FOLDER]/ to extract the exact
+   acceptance criteria, required files, required functions/classes, and
+   validation commands.
+
+2. Check the codebase against each requirement:
+   - Verify every required file exists.
+   - Verify every required function, class, or attribute is present and
+     correctly implemented (not just stubbed or empty).
+   - Run all validation commands listed in the task files.
+   - Run the phase's test suite (if one exists) and report pass/fail counts.
+
+3. Report your findings in this format:
+
+   TASK [ID] — [TASK NAME]
+   ✅ PASS  — [item] — [brief evidence, e.g. "imports OK", "N tests pass"]
+   ❌ FAIL  — [item] — [exact gap: what is missing or wrong]
+
+4. End with a clear overall verdict:
+   ✅ FULLY IMPLEMENTED — all acceptance criteria met
+   ⚠️  PARTIALLY IMPLEMENTED — list of specific gaps
+   ❌ NOT IMPLEMENTED — list of critical missing pieces
+
+If you find gaps, fix them immediately after reporting — do not wait for a
+follow-up message.
+
+================================================================================
