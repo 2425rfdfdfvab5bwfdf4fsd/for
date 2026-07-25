@@ -1,0 +1,86 @@
+
+============================================================
+ MT5 Automated Forex Trading Bot ΓÇö Backtest
+============================================================
+ DISCLAIMER: Past performance does not guarantee future results.
+============================================================
+
+Symbol(s) to backtest [EURUSD GBPUSD USDJPY]:
+Start date [YYYY-MM-DD, default 2023-01-01]: 2026-07-10
+End date   [YYYY-MM-DD, default 2024-01-01]: 2026-07-20
+Starting capital in USD [default 10000]: 477
+
+ Running backtest:
+   Symbols:  EURUSD GBPUSD USDJPY
+   From:     2026-07-10
+   To:       2026-07-20
+   Capital:  $477
+   Output:   data\reports
+
+
+============================================================
+  MT5 Backtest Runner
+  Symbols:  EURUSD, GBPUSD, USDJPY
+  Period:   2026-07-10 → 2026-07-20
+  Capital:  $477.00
+  Output:   data\reports
+============================================================
+  DISCLAIMER: Past performance does not guarantee future results.
+============================================================
+
+ConsecutiveLossChecker: no repository provided — consecutive-loss counter is NOT persisted across bot restarts. Inject a DailyRiskRepository so the DB value is the authoritative source.
+MT5 returned no data for EURUSD M5: (-1, 'Terminal: Call failed')
+No data for EURUSD M5
+MT5 returned no data for EURUSD M15: (-1, 'Terminal: Call failed')
+No data for EURUSD M15
+MT5 returned no data for EURUSD H1: (-1, 'Terminal: Call failed')
+No data for EURUSD H1
+MT5 returned no data for EURUSD H4: (-1, 'Terminal: Call failed')
+No data for EURUSD H4
+MT5 returned no data for GBPUSD M5: (-1, 'Terminal: Call failed')
+No data for GBPUSD M5
+MT5 returned no data for GBPUSD M15: (-1, 'Terminal: Call failed')
+No data for GBPUSD M15
+MT5 returned no data for GBPUSD H1: (-1, 'Terminal: Call failed')
+No data for GBPUSD H1
+MT5 returned no data for GBPUSD H4: (-1, 'Terminal: Call failed')
+No data for GBPUSD H4
+MT5 returned no data for USDJPY M5: (-1, 'Terminal: Call failed')
+No data for USDJPY M5
+MT5 returned no data for USDJPY M15: (-1, 'Terminal: Call failed')
+No data for USDJPY M15
+MT5 returned no data for USDJPY H1: (-1, 'Terminal: Call failed')
+No data for USDJPY H1
+MT5 returned no data for USDJPY H4: (-1, 'Terminal: Call failed')
+No data for USDJPY H4
+BacktestEngine.run: no valid M15 data for any symbol
+Backtest completed with 0 trades. Check that historical data is available in data/historical/ or that MT5 is running (Windows only).
+
+⚠️  No trades were generated. Possible reasons:
+   • No historical data cached in data/historical/
+   • MT5 terminal not running (Windows only)
+   • Date range too narrow or confluence threshold too high
+
+MetricsCalculator.calculate: no trades — returning empty metrics
+
+📊 Backtest Results (0 bars, 0.0s)
+   Trades:        0
+   Win Rate:      0.0%
+   Profit Factor: 0.00
+   Total P&L:     +0.00
+   Max Drawdown:  0.00%
+   Sharpe Ratio:  0.000
+   Significance:  LOW
+
+   ⚠️  Only 0 trades — minimum 30 required for statistical significance.
+
+BacktestReporter._write_csv: no trades to export
+
+✅ Reports generated:
+   HTML: data\reports\backtest_EURUSD_20260710_20260720.html
+   CSV:  data\reports\trades_EURUSD_20260710_20260720.csv
+
+
+ Backtest complete. Reports saved to: data\reports
+
+Press any key to continue . .
