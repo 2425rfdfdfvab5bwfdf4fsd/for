@@ -29,6 +29,8 @@ class TestResolveSymbol:
 
     def test_resolve_exact_match(self, mock_mt5, test_config):
         """resolve_symbol() returns exact name when broker has it."""
+        # Pin to base name so any .env EURUSD_SYMBOL override doesn't interfere
+        test_config.EURUSD_SYMBOL = "EURUSD"
         mock_mt5.symbol_info.return_value = MagicMock(name="EURUSD")
 
         sm = _make_symbol_manager(test_config, mock_mt5)
