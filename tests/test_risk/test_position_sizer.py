@@ -92,6 +92,7 @@ def test_respects_min_lot(test_config):
         pip_value_per_lot=10.0,
         pip_size=0.0001,
     )
+    test_config.MIN_TRADE_RISK_USD = 0.0   # disable dollar floor so only lot guard fires
     sizer = PositionSizer(test_config)
     # equity=1000, risk=0.5% → risk_amount=5, sl=100 pips → raw=5/(100*10)=0.005 < 0.10
     result = sizer.calculate(
@@ -103,6 +104,37 @@ def test_respects_min_lot(test_config):
     assert result.lot_size == 0.0, f"Expected 0.0 (below min), got {result.lot_size}"
     assert result.below_min_lot is True
     assert result.reason == "BELOW_MIN_LOT"
+
+
+def test_below_min_trade_value(test_config, eurusd_info):
+    """When risk_amount < MIN_TRADE_RISK_USD, reject with BELOW_MIN_TRADE_VALUE."""
+    test_config.MIN_TRADE_RISK_USD = 50.0
+    sizer = PositionSizer(test_config)
+    # equity=1000, risk=0.5% → risk_amount=5.0 < 50.0
+    result = sizer.calculate(
+        account_equity=1_000.0,
+        sl_pips=20.0,
+        symbol="EURUSD",
+        symbol_info=eurusd_info,
+    )
+    assert result.lot_size == 0.0
+    assert result.below_min_lot is False
+    assert result.reason == "BELOW_MIN_TRADE_VALUE"
+
+
+def test_min_trade_value_disabled(test_config, eurusd_info):
+    """MIN_TRADE_RISK_USD=0.0 disables the dollar floor — small equity still sizes."""
+    test_config.MIN_TRADE_RISK_USD = 0.0
+    sizer = PositionSizer(test_config)
+    # equity=1000, risk=0.5% → risk_amount=5.0, sl=20 pips → 0.02 lots (≥ volume_min 0.01)
+    result = sizer.calculate(
+        account_equity=1_000.0,
+        sl_pips=20.0,
+        symbol="EURUSD",
+        symbol_info=eurusd_info,
+    )
+    assert result.lot_size > 0.0
+    assert result.reason is None
 
 
 def test_respects_max_lot(test_config):

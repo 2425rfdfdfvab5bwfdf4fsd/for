@@ -106,6 +106,7 @@ class Config:
     # RISK MANAGEMENT
     # ------------------------------------------------------------------
     RISK_PER_TRADE: float
+    MIN_TRADE_RISK_USD: float           # default 50.0 — reject trades whose risk amount is below this
     MAX_DAILY_TRADES: int
     MAX_DAILY_LOSS_PCT: float
     MAX_CONSECUTIVE_LOSSES: int
@@ -568,6 +569,7 @@ class Config:
         self.DEDUP_WINDOW_SECONDS = _get_int("DEDUP_WINDOW_SECONDS", 3600)
 
         # --- RISK ENGINE (Phase 07) ---
+        self.MIN_TRADE_RISK_USD = _get_float("MIN_TRADE_RISK_USD", 50.0)
         self.MIN_SL_PIPS = _get_float("MIN_SL_PIPS", 10.0)
         self.MARGIN_SAFETY_FACTOR = _get_float("MARGIN_SAFETY_FACTOR", 3.0)
         self.CORRELATION_BLOCK_THRESHOLD = _get_float("CORRELATION_BLOCK_THRESHOLD", 0.80)
@@ -649,6 +651,11 @@ class Config:
         if not (0.01 <= self.RISK_PER_TRADE <= 5.0):
             errors.append(
                 f"RISK_PER_TRADE={self.RISK_PER_TRADE} is out of range [0.01, 5.0]"
+            )
+
+        if self.MIN_TRADE_RISK_USD < 0.0:
+            errors.append(
+                f"MIN_TRADE_RISK_USD={self.MIN_TRADE_RISK_USD} must be >= 0"
             )
 
         if not (0.1 <= self.MAX_DAILY_LOSS_PCT <= 20.0):

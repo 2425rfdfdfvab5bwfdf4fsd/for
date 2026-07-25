@@ -75,6 +75,24 @@ class PositionSizer:
 
         cfg = self._config
         risk_amount = account_equity * (cfg.RISK_PER_TRADE / 100.0)
+
+        # Minimum trade risk guard — reject before sizing if risk amount is too small
+        if cfg.MIN_TRADE_RISK_USD > 0.0 and risk_amount < cfg.MIN_TRADE_RISK_USD:
+            logger.warning(
+                "PositionSizer | %s | risk_amount=%.2f < MIN_TRADE_RISK_USD=%.2f — BELOW_MIN_TRADE_VALUE",
+                symbol, risk_amount, cfg.MIN_TRADE_RISK_USD,
+            )
+            return PositionSizeResult(
+                lot_size=0.0,
+                risk_amount=risk_amount,
+                pip_value_per_lot=symbol_info.pip_value_per_lot,
+                sl_pips=sl_pips,
+                max_loss_amount=0.0,
+                within_margin=False,
+                below_min_lot=False,
+                reason="BELOW_MIN_TRADE_VALUE",
+            )
+
         pip_value = symbol_info.pip_value_per_lot
         lot_step = symbol_info.volume_step
 

@@ -1,0 +1,82 @@
+
+============================================================
+ MT5 Automated Forex Trading Bot ΓÇö Test Suite
+============================================================
+
+ Running full test suite...
+ (All MT5 calls are mocked ΓÇö no live connection needed)
+
+================================================= test session starts =================================================
+platform win32 -- Python 3.14.6, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\Saif Khan\Downloads\trading_bot
+configfile: pytest.ini
+plugins: anyio-4.14.2, cov-7.1.0, mock-3.15.1
+collected 1516 items
+
+tests\e2e\test_dry_run.py ........                                                                               [  0%]
+tests\failure\test_data_failure.py ........                                                                      [  1%]
+tests\failure\test_mt5_failure.py ............                                                                   [  1%]
+tests\integration\test_execution_pipeline.py ...                                                                 [  2%]
+tests\integration\test_full_pipeline.py ...                                                                      [  2%]
+tests\integration\test_risk_pipeline.py ..                                                                       [  2%]
+tests\recovery\test_connection_recovery.py .....                                                                 [  2%]
+tests\recovery\test_crash_recovery.py ........                                                                   [  3%]
+tests\test_automation\test_auto_recovery.py ...................                                                  [  4%]
+tests\test_automation\test_heartbeat.py ..................                                                       [  5%]
+tests\test_automation\test_main_loop.py ..................                                                       [  6%]
+tests\test_automation\test_singleton.py ................                                                         [  7%]
+tests\test_automation\test_watchdog.py .....................                                                     [  9%]
+tests\test_backtesting\test_engine.py .............................                                              [ 11%]
+tests\test_backtesting\test_historical_data.py .......................                                           [ 12%]
+tests\test_backtesting\test_metrics.py .............................................................             [ 16%]
+tests\test_backtesting\test_realistic_execution.py ....................................                          [ 19%]
+tests\test_backtesting\test_reports.py .........................................                                 [ 21%]
+tests\test_confluence\test_deduplication.py ..........                                                           [ 22%]
+tests\test_confluence\test_quality.py ................                                                           [ 23%]
+tests\test_confluence\test_scorer.py ...........                                                                 [ 24%]
+tests\test_dashboard\test_api.py .................                                                               [ 25%]
+tests\test_dashboard\test_why_no_trade.py .........                                                              [ 25%]
+tests\test_execution\test_duplicate_protection.py ............                                                   [ 26%]
+tests\test_execution\test_order_executor.py ...............                                                      [ 27%]
+tests\test_execution\test_order_validator.py ................                                                    [ 28%]
+tests\test_execution\test_orphan_recovery.py ..........                                                          [ 29%]
+tests\test_execution\test_reconciliation.py ............                                                         [ 30%]
+tests\test_filters\test_cutoffs.py ..........................                                                    [ 31%]
+tests\test_filters\test_news.py ......................                                                           [ 33%]
+tests\test_filters\test_pipeline.py ..............                                                               [ 34%]
+tests\test_filters\test_session.py .........................                                                     [ 36%]
+tests\test_filters\test_spread.py ................                                                               [ 37%]
+tests\test_filters\test_volatility.py ................                                                           [ 38%]
+tests\test_journal\test_missed_trade.py .............                                                            [ 38%]
+tests\test_journal\test_rejection_journal.py ...........                                                         [ 39%]
+tests\test_journal\test_screenshots.py .............                                                             [ 40%]
+tests\test_journal\test_trade_journal.py .............                                                           [ 41%]
+tests\test_notifications\test_daily_reporter.py ..........................                                       [ 43%]
+tests\test_notifications\test_telegram.py .....................                                                  [ 44%]
+tests\test_position_management\test_break_even.py ........                                                       [ 45%]
+tests\test_position_management\test_expiration.py ...........                                                    [ 45%]
+tests\test_position_management\test_partial_profit.py ..........                                                 [ 46%]
+tests\test_position_management\test_partial_profit_integration.py ......                                         [ 46%]
+tests\test_position_management\test_position_manager.py .........                                                [ 47%]
+tests\test_position_management\test_schema_migration.py ......                                                   [ 47%]
+tests\test_position_management\test_trailing_stop.py ..........                                                  [ 48%]
+tests\test_risk\test_consecutive_loss.py ........                                                                [ 49%]
+tests\test_risk\test_correlation.py ........                                                                     [ 49%]
+tests\test_risk\test_daily_limits.py ......                                                                      [ 49%]
+tests\test_risk\test_margin_safety.py .....                                                                      [ 50%]
+tests\test_risk\test_position_sizer.py ........                                                                  [ 50%]
+tests\test_risk\test_risk_manager.py ..........                                                                  [ 51%]
+tests\test_risk\test_rr_validator.py .....                                                                       [ 51%]
+tests\test_risk\test_sl_tp.py .......                                                                            [ 52%]
+tests\test_security\test_audit.py ....F...F...F......                                                            [ 53%]
+tests\test_security\test_live_guards.py ......................                                                   [ 54%]
+tests\test_security\test_secrets.py ................EEEEEEEE                                                     [ 56%]
+tests\test_self_improvement\test_analytics.py .................                                                  [ 57%]
+tests\test_self_improvement\test_evidence_gates.py ................                                              [ 58%]
+tests\test_self_improvement\test_recommendations.py ................                                             [ 59%]
+tests\test_self_improvement\test_segment.py ..................                                                   [ 60%]
+tests\test_validation\test_demo_monitor.py ....................                                                  [ 62%]
+tests\test_validation\test_in_sample.py ................................                                         [ 64%]
+tests\test_validation\test_out_of_sample.py .......................................                              [ 66%]
+tests\test_validation\test_overfitting.py ...................................                                    [ 69%]
+tests\test_validation\test_production_readiness.py ................F........
