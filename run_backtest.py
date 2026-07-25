@@ -45,9 +45,9 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--symbol",
         nargs="+",
-        default=["EURUSD", "GBPUSD", "USDJPY"],
+        default=["EURUSDm", "GBPUSDm", "USDJPYm"],
         metavar="SYM",
-        help="Symbols to backtest (default: EURUSD GBPUSD USDJPY)",
+        help="Symbols to backtest (default: EURUSDm GBPUSDm USDJPYm — Exness suffix)",
     )
     parser.add_argument(
         "--from",

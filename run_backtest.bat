@@ -30,8 +30,8 @@ call venv\Scripts\activate.bat
 
 :: ── Prompt for parameters ────────────────────────────────────────────────────
 
-set /p BT_SYMBOL="  Symbol(s) to backtest [EURUSD GBPUSD USDJPY]: "
-if "!BT_SYMBOL!"=="" set BT_SYMBOL=EURUSD GBPUSD USDJPY
+set /p BT_SYMBOL="  Symbol(s) to backtest [EURUSDm GBPUSDm USDJPYm]: "
+if "!BT_SYMBOL!"=="" set BT_SYMBOL=EURUSDm GBPUSDm USDJPYm
 
 set /p BT_FROM="  Start date [YYYY-MM-DD, default 2023-01-01]: "
 if "!BT_FROM!"=="" set BT_FROM=2023-01-01
