@@ -101,6 +101,17 @@ class HistoricalDataManager:
             return pd.DataFrame()
 
         try:
+            # Initialise the IPC connection if it is not already open.
+            # copy_rates_range() returns error -10004 ("No IPC connection") when
+            # mt5.initialize() has not been called before fetching data.
+            if not mt5.initialize():
+                err = mt5.last_error()
+                logger.error(
+                    "mt5.initialize() failed before downloading %s %s: %s",
+                    symbol, timeframe, err,
+                )
+                return pd.DataFrame()
+
             mt5_tf = self._resolve_mt5_timeframe(mt5, timeframe)
             rates = mt5.copy_rates_range(symbol, mt5_tf, from_date, to_date)
             if rates is None or len(rates) == 0:
@@ -116,6 +127,9 @@ class HistoricalDataManager:
                 df["time"].iloc[0] if not df.empty else "N/A",
                 df["time"].iloc[-1] if not df.empty else "N/A",
             )
+
+            # Cache immediately so subsequent backtests work without MT5
+            self.save_to_cache(symbol, timeframe, df)
             return df
 
         except Exception as e:
