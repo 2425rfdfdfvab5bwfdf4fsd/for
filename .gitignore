@@ -6,14 +6,20 @@
 .env
 
 # --- Log files ---
-logs/
+logs/*
+!logs/.gitkeep
 *.log
 
 # --- Data directories (large files / generated output) ---
-data/
-screenshots/
-results/
-backups/
+data/historical/*
+!data/historical/.gitkeep
+data/screenshots/*
+!data/screenshots/.gitkeep
+data/reports/*
+!data/reports/.gitkeep
+/screenshots/
+/results/
+/backups/
 
 # --- Database files ---
 *.db
@@ -23,6 +29,7 @@ backups/
 # --- Python cache ---
 __pycache__/
 *.py[cod]
+*.pyc
 *.pyo
 *$py.class
 
