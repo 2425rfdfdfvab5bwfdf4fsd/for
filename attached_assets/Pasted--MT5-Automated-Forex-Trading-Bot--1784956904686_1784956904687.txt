@@ -1,0 +1,285 @@
+
+============================================================
+ MT5 Automated Forex Trading Bot ΓÇö Test Suite
+============================================================
+
+ Running full test suite...
+ (All MT5 calls are mocked ΓÇö no live connection needed)
+
+================================================= test session starts =================================================
+platform win32 -- Python 3.14.6, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\Saif Khan\Downloads\trading_bot
+configfile: pytest.ini
+plugins: anyio-4.14.2, cov-7.1.0, mock-3.15.1
+collected 1516 items
+
+tests\e2e\test_dry_run.py ........                                                                               [  0%]
+tests\failure\test_data_failure.py ........                                                                      [  1%]
+tests\failure\test_mt5_failure.py ............                                                                   [  1%]
+tests\integration\test_execution_pipeline.py ...                                                                 [  2%]
+tests\integration\test_full_pipeline.py ...                                                                      [  2%]
+tests\integration\test_risk_pipeline.py ..                                                                       [  2%]
+tests\recovery\test_connection_recovery.py .....                                                                 [  2%]
+tests\recovery\test_crash_recovery.py ........                                                                   [  3%]
+tests\test_automation\test_auto_recovery.py ...................                                                  [  4%]
+tests\test_automation\test_heartbeat.py ..................                                                       [  5%]
+tests\test_automation\test_main_loop.py ..................                                                       [  6%]
+tests\test_automation\test_singleton.py ................                                                         [  7%]
+tests\test_automation\test_watchdog.py .....................                                                     [  9%]
+tests\test_backtesting\test_engine.py .............................                                              [ 11%]
+tests\test_backtesting\test_historical_data.py .......................                                           [ 12%]
+tests\test_backtesting\test_metrics.py .............................................................             [ 16%]
+tests\test_backtesting\test_realistic_execution.py ....................................                          [ 19%]
+tests\test_backtesting\test_reports.py .........................................                                 [ 21%]
+tests\test_confluence\test_deduplication.py ..........                                                           [ 22%]
+tests\test_confluence\test_quality.py ................                                                           [ 23%]
+tests\test_confluence\test_scorer.py ...........                                                                 [ 24%]
+tests\test_dashboard\test_api.py .................                                                               [ 25%]
+tests\test_dashboard\test_why_no_trade.py .........                                                              [ 25%]
+tests\test_execution\test_duplicate_protection.py ............                                                   [ 26%]
+tests\test_execution\test_order_executor.py ...............                                                      [ 27%]
+tests\test_execution\test_order_validator.py ................                                                    [ 28%]
+tests\test_execution\test_orphan_recovery.py ..........                                                          [ 29%]
+tests\test_execution\test_reconciliation.py ............                                                         [ 30%]
+tests\test_filters\test_cutoffs.py ..........................                                                    [ 31%]
+tests\test_filters\test_news.py ......................                                                           [ 33%]
+tests\test_filters\test_pipeline.py ..............                                                               [ 34%]
+tests\test_filters\test_session.py .........................                                                     [ 36%]
+tests\test_filters\test_spread.py ................                                                               [ 37%]
+tests\test_filters\test_volatility.py ................                                                           [ 38%]
+tests\test_journal\test_missed_trade.py .............                                                            [ 38%]
+tests\test_journal\test_rejection_journal.py ...........                                                         [ 39%]
+tests\test_journal\test_screenshots.py .............                                                             [ 40%]
+tests\test_journal\test_trade_journal.py .............                                                           [ 41%]
+tests\test_notifications\test_daily_reporter.py ..........................                                       [ 43%]
+tests\test_notifications\test_telegram.py .....................                                                  [ 44%]
+tests\test_position_management\test_break_even.py ........                                                       [ 45%]
+tests\test_position_management\test_expiration.py ...........                                                    [ 45%]
+tests\test_position_management\test_partial_profit.py ..........                                                 [ 46%]
+tests\test_position_management\test_partial_profit_integration.py ......                                         [ 46%]
+tests\test_position_management\test_position_manager.py .........                                                [ 47%]
+tests\test_position_management\test_schema_migration.py ......                                                   [ 47%]
+tests\test_position_management\test_trailing_stop.py ..........                                                  [ 48%]
+tests\test_risk\test_consecutive_loss.py ........                                                                [ 49%]
+tests\test_risk\test_correlation.py ........                                                                     [ 49%]
+tests\test_risk\test_daily_limits.py ......                                                                      [ 49%]
+tests\test_risk\test_margin_safety.py .....                                                                      [ 50%]
+tests\test_risk\test_position_sizer.py ........                                                                  [ 50%]
+tests\test_risk\test_risk_manager.py ..........                                                                  [ 51%]
+tests\test_risk\test_rr_validator.py .....                                                                       [ 51%]
+tests\test_risk\test_sl_tp.py .......                                                                            [ 52%]
+tests\test_security\test_audit.py ....F...F...F......                                                            [ 53%]
+tests\test_security\test_live_guards.py ......................                                                   [ 54%]
+tests\test_security\test_secrets.py ................EEEEEEEE                                                     [ 56%]
+tests\test_self_improvement\test_analytics.py .................                                                  [ 57%]
+tests\test_self_improvement\test_evidence_gates.py ................                                              [ 58%]
+tests\test_self_improvement\test_recommendations.py ................                                             [ 59%]
+tests\test_self_improvement\test_segment.py ..................                                                   [ 60%]
+tests\test_validation\test_demo_monitor.py ....................                                                  [ 62%]
+tests\test_validation\test_in_sample.py ................................                                         [ 64%]
+tests\test_validation\test_out_of_sample.py .......................................                              [ 66%]
+tests\test_validation\test_overfitting.py ...................................                                    [ 69%]
+tests\test_validation\test_production_readiness.py ................F........F.                                   [ 71%]
+tests\test_validation\test_robustness.py ..................................                                      [ 73%]
+tests\test_validation\test_walk_forward.py ...................................                                   [ 75%]
+tests\unit\test_bos_choch.py ..........                                                                          [ 76%]
+tests\unit\test_daily_limits_coverage.py ............                                                            [ 77%]
+tests\unit\test_database.py ..................                                                                   [ 78%]
+tests\unit\test_displacement.py ..............                                                                   [ 79%]
+tests\unit\test_fvg.py ..............                                                                            [ 80%]
+tests\unit\test_indicators.py ..........................                                                         [ 81%]
+tests\unit\test_liquidity.py ..............                                                                      [ 82%]
+tests\unit\test_market_regime.py ..............                                                                  [ 83%]
+tests\unit\test_market_structure.py ................                                                             [ 84%]
+tests\unit\test_mt5_account.py ......................                                                            [ 86%]
+tests\unit\test_mt5_connection.py ..................                                                             [ 87%]
+tests\unit\test_mt5_market_data.py ................                                                              [ 88%]
+tests\unit\test_mt5_recovery.py ................                                                                 [ 89%]
+tests\unit\test_mt5_symbols.py F.............                                                                    [ 90%]
+tests\unit\test_news_cache_coverage.py ...............................                                           [ 92%]
+tests\unit\test_order_blocks.py .............                                                                    [ 93%]
+tests\unit\test_repositories.py ..................................                                               [ 95%]
+tests\unit\test_signal_engine.py .............                                                                   [ 96%]
+tests\unit\test_signal_engine_coverage.py .....................................                                  [ 98%]
+tests\unit\test_state_recovery.py ..................                                                             [100%]
+
+======================================================= ERRORS ========================================================
+_______________________ ERROR at setup of TestGitignoreContainsEnv.test_gitignore_contains_env ________________________
+tests\test_security\test_secrets.py:231: in gitignore_text
+    assert path.exists(), ".gitignore must exist at the project root"
+E   AssertionError: .gitignore must exist at the project root
+E   assert False
+E    +  where False = exists()
+E    +    where exists = WindowsPath('C:/Users/Saif Khan/Downloads/trading_bot/.gitignore').exists
+_______________________ ERROR at setup of TestGitignoreContainsEnv.test_gitignore_contains_venv _______________________
+tests\test_security\test_secrets.py:231: in gitignore_text
+    assert path.exists(), ".gitignore must exist at the project root"
+E   AssertionError: .gitignore must exist at the project root
+E   assert False
+E    +  where False = exists()
+E    +    where exists = WindowsPath('C:/Users/Saif Khan/Downloads/trading_bot/.gitignore').exists
+_____________________ ERROR at setup of TestGitignoreContainsEnv.test_gitignore_contains_pycache ______________________
+tests\test_security\test_secrets.py:231: in gitignore_text
+    assert path.exists(), ".gitignore must exist at the project root"
+E   AssertionError: .gitignore must exist at the project root
+E   assert False
+E    +  where False = exists()
+E    +    where exists = WindowsPath('C:/Users/Saif Khan/Downloads/trading_bot/.gitignore').exists
+_______________________ ERROR at setup of TestGitignoreContainsEnv.test_gitignore_contains_data _______________________
+tests\test_security\test_secrets.py:231: in gitignore_text
+    assert path.exists(), ".gitignore must exist at the project root"
+E   AssertionError: .gitignore must exist at the project root
+E   assert False
+E    +  where False = exists()
+E    +    where exists = WindowsPath('C:/Users/Saif Khan/Downloads/trading_bot/.gitignore').exists
+_______________________ ERROR at setup of TestGitignoreContainsEnv.test_gitignore_contains_logs _______________________
+tests\test_security\test_secrets.py:231: in gitignore_text
+    assert path.exists(), ".gitignore must exist at the project root"
+E   AssertionError: .gitignore must exist at the project root
+E   assert False
+E    +  where False = exists()
+E    +    where exists = WindowsPath('C:/Users/Saif Khan/Downloads/trading_bot/.gitignore').exists
+___________________ ERROR at setup of TestGitignoreContainsEnv.test_gitignore_contains_screenshots ____________________
+tests\test_security\test_secrets.py:231: in gitignore_text
+    assert path.exists(), ".gitignore must exist at the project root"
+E   AssertionError: .gitignore must exist at the project root
+E   assert False
+E    +  where False = exists()
+E    +    where exists = WindowsPath('C:/Users/Saif Khan/Downloads/trading_bot/.gitignore').exists
+_____________________ ERROR at setup of TestGitignoreContainsEnv.test_gitignore_contains_results ______________________
+tests\test_security\test_secrets.py:231: in gitignore_text
+    assert path.exists(), ".gitignore must exist at the project root"
+E   AssertionError: .gitignore must exist at the project root
+E   assert False
+E    +  where False = exists()
+E    +    where exists = WindowsPath('C:/Users/Saif Khan/Downloads/trading_bot/.gitignore').exists
+_____________________ ERROR at setup of TestGitignoreContainsEnv.test_gitignore_contains_backups ______________________
+tests\test_security\test_secrets.py:231: in gitignore_text
+    assert path.exists(), ".gitignore must exist at the project root"
+E   AssertionError: .gitignore must exist at the project root
+E   assert False
+E    +  where False = exists()
+E    +    where exists = WindowsPath('C:/Users/Saif Khan/Downloads/trading_bot/.gitignore').exists
+====================================================== FAILURES =======================================================
+_________________________ TestAuditPassesCleanCodebase.test_real_codebase_no_critical_issues __________________________
+tests\test_security\test_audit.py:105: in test_real_codebase_no_critical_issues
+    assert not report.critical_issues, (
+E   AssertionError: Unexpected CRITICAL issues in real codebase:
+E       [C2_GITIGNORE_ENV] .gitignore:None — .gitignore file is missing — .env could be committed
+E   assert not [SecurityIssue(severity='CRITICAL', check_name='C2_GITIGNORE_ENV', file_path='.gitignore', line_number=None, descripti...gnore file is missing — .env could be committed', recommendation='Create .gitignore and add .env as the first entry.')]
+E    +  where [SecurityIssue(severity='CRITICAL', check_name='C2_GITIGNORE_ENV', file_path='.gitignore', line_number=None, descripti...gnore file is missing — .env could be committed', recommendation='Create .gitignore and add .env as the first entry.')] = SecurityAuditReport(critical_issues=[SecurityIssue(severity='CRITICAL', check_name='C2_GITIGNORE_ENV', file_path='.git...s path traversal vectors found', 'M3_PLACEHOLDER_SECRET_KEY: no placeholder secret keys found'], overall_status='FAIL').critical_issues
+______________________________ TestAuditPassesCleanCodebase.test_overall_status_not_fail ______________________________
+tests\test_security\test_audit.py:136: in test_overall_status_not_fail
+    assert report.overall_status != "FAIL", (
+E   AssertionError: Audit FAILED. Critical: [SecurityIssue(severity='CRITICAL', check_name='C2_GITIGNORE_ENV', file_path='.gitignore', line_number=None, description='.gitignore file is missing — .env could be committed', recommendation='Create .gitignore and add .env as the first entry.')]
+E   assert 'FAIL' != 'FAIL'
+E    +  where 'FAIL' = SecurityAuditReport(critical_issues=[SecurityIssue(severity='CRITICAL', check_name='C2_GITIGNORE_ENV', file_path='.git...s path traversal vectors found', 'M3_PLACEHOLDER_SECRET_KEY: no placeholder secret keys found'], overall_status='FAIL').overall_status
+________________________________ TestGitignoreCheck.test_real_project_gitignore_passes ________________________________
+tests\test_security\test_audit.py:193: in test_real_project_gitignore_passes
+    assert not c2_issues, "Real .gitignore must include .env"
+E   AssertionError: Real .gitignore must include .env
+E   assert not [SecurityIssue(severity='CRITICAL', check_name='C2_GITIGNORE_ENV', file_path='.gitignore', line_number=None, descripti...gnore file is missing — .env could be committed', recommendation='Create .gitignore and add .env as the first entry.')]
+________________________________ TestSecurityChecks.test_real_project_gitignore_passes ________________________________
+tests\test_validation\test_production_readiness.py:221: in test_real_project_gitignore_passes
+    assert gi_item.status == "PASS", gi_item.detail
+E   AssertionError: .env is NOT in .gitignore — credentials at risk
+E   assert 'FAIL' == 'PASS'
+E
+E     - PASS
+E     + FAIL
+______________________________ TestFullRunRealCodebase.test_real_codebase_not_not_ready _______________________________
+tests\test_validation\test_production_readiness.py:304: in test_real_codebase_not_not_ready
+    assert report.overall_verdict != "NOT_READY", (
+E   AssertionError: Blocking failures detected:
+E       • [SECURITY] gitignore_protects_env: .env is NOT in .gitignore — credentials at risk
+E   assert 'NOT_READY' != 'NOT_READY'
+E    +  where 'NOT_READY' = ReadinessReport(items=[ReadinessItem(category='CONFIGURATION', name='env_loaded', status='PASS', blocking=True, detail...es=['[SECURITY] gitignore_protects_env: .env is NOT in .gitignore — credentials at risk'], overall_verdict='NOT_READY').overall_verdict
+_____________________________________ TestResolveSymbol.test_resolve_exact_match ______________________________________
+tests\unit\test_mt5_symbols.py:37: in test_resolve_exact_match
+    assert result == "EURUSD"
+E   AssertionError: assert 'EURUSDm' == 'EURUSD'
+E
+E     - EURUSD
+E     + EURUSDm
+E     ?       +
+================================================== warnings summary ===================================================
+tests/test_backtesting/test_engine.py: 1030 warnings
+  C:\Users\Saif Khan\Downloads\trading_bot\tests\test_backtesting\test_engine.py:56: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ts = base + pd.Timedelta(minutes=i * 15)
+
+tests/test_backtesting/test_engine.py: 280 warnings
+  C:\Users\Saif Khan\Downloads\trading_bot\tests\test_backtesting\test_engine.py:76: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ts = base + pd.Timedelta(hours=i * 4)
+
+tests/test_backtesting/test_engine.py: 556 warnings
+  C:\Users\Saif Khan\Downloads\trading_bot\backtesting\backtest_engine.py:192: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    td = pd.Timedelta(minutes=tf_mins)
+
+tests/test_backtesting/test_engine.py::TestBacktestDataProvider::test_get_ohlcv_h4_only_includes_fully_closed_bars
+tests/test_backtesting/test_engine.py::TestBacktestDataProvider::test_get_ohlcv_h4_only_includes_fully_closed_bars
+tests/test_backtesting/test_engine.py::TestBacktestDataProvider::test_get_ohlcv_h4_only_includes_fully_closed_bars
+tests/test_backtesting/test_engine.py::TestBacktestDataProvider::test_get_ohlcv_h4_only_includes_fully_closed_bars
+tests/test_backtesting/test_engine.py::TestBacktestDataProvider::test_get_ohlcv_h4_only_includes_fully_closed_bars
+tests/test_backtesting/test_engine.py::TestBacktestDataProvider::test_get_ohlcv_h4_only_includes_fully_closed_bars
+tests/test_backtesting/test_engine.py::TestBacktestDataProvider::test_get_ohlcv_h4_only_includes_fully_closed_bars
+tests/test_backtesting/test_engine.py::TestBacktestDataProvider::test_get_ohlcv_h4_only_includes_fully_closed_bars
+  C:\Users\Saif Khan\Downloads\trading_bot\tests\test_backtesting\test_engine.py:207: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    close_time = row["time"] + pd.Timedelta(hours=4)
+
+tests/test_backtesting/test_engine.py: 1800 warnings
+  C:\Users\Saif Khan\Downloads\trading_bot\tests\test_backtesting\test_engine.py:114: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ts = base + pd.Timedelta(minutes=i * 5)
+
+tests/test_backtesting/test_engine.py: 600 warnings
+  C:\Users\Saif Khan\Downloads\trading_bot\tests\test_backtesting\test_engine.py:95: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ts = base + pd.Timedelta(hours=i)
+
+tests/test_backtesting/test_historical_data.py: 285 warnings
+  C:\Users\Saif Khan\Downloads\trading_bot\tests\test_backtesting\test_historical_data.py:28: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    times = [base + pd.Timedelta(minutes=i * timeframe_minutes) for i in range(n)]
+
+tests/test_backtesting/test_historical_data.py::TestGapDetection::test_detects_single_gap
+  C:\Users\Saif Khan\Downloads\trading_bot\tests\test_backtesting\test_historical_data.py:97: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    df.loc[20:, "time"] = df.loc[20:, "time"] + pd.Timedelta(minutes=120)
+
+tests/test_backtesting/test_historical_data.py::TestGapDetection::test_gap_detail_contains_timestamp
+  C:\Users\Saif Khan\Downloads\trading_bot\tests\test_backtesting\test_historical_data.py:108: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    df.loc[10:, "time"] = df.loc[10:, "time"] + pd.Timedelta(hours=3)
+
+tests/test_backtesting/test_historical_data.py::TestGapDetection::test_gap_at_terminal_interval_does_not_raise
+  C:\Users\Saif Khan\Downloads\trading_bot\tests\test_backtesting\test_historical_data.py:129: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    df.loc[19, "time"] = df.loc[18, "time"] + pd.Timedelta(hours=3)
+
+tests/test_backtesting/test_historical_data.py::TestGapDetection::test_gap_bar_count_is_correct
+  C:\Users\Saif Khan\Downloads\trading_bot\tests\test_backtesting\test_historical_data.py:143: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    df.loc[11:, "time"] = df.loc[11:, "time"] + pd.Timedelta(minutes=90)
+
+tests/unit/test_mt5_account.py::TestDetectServerTimezone::test_detect_server_timezone_returns_integer
+  C:\Users\Saif Khan\Downloads\trading_bot\app\mt5\account.py:245: DeprecationWarning: datetime.datetime.utcfromtimestamp() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.fromtimestamp(timestamp, datetime.UTC).
+    server_dt = datetime.utcfromtimestamp(server_time_unix)
+
+tests/unit/test_mt5_account.py::TestDetectServerTimezone::test_detect_server_timezone_returns_integer
+  C:\Users\Saif Khan\Downloads\trading_bot\app\mt5\account.py:246: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    utc_now = datetime.utcnow()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================================== short test summary info ===============================================
+FAILED tests/test_security/test_audit.py::TestAuditPassesCleanCodebase::test_real_codebase_no_critical_issues - AssertionError: Unexpected CRITICAL issues in real codebase:
+FAILED tests/test_security/test_audit.py::TestAuditPassesCleanCodebase::test_overall_status_not_fail - AssertionError: Audit FAILED. Critical: [SecurityIssue(severity='CRITICAL', check_name='C2_GITIGNORE_ENV', file_pat...
+FAILED tests/test_security/test_audit.py::TestGitignoreCheck::test_real_project_gitignore_passes - AssertionError: Real .gitignore must include .env
+FAILED tests/test_validation/test_production_readiness.py::TestSecurityChecks::test_real_project_gitignore_passes - AssertionError: .env is NOT in .gitignore — credentials at risk
+FAILED tests/test_validation/test_production_readiness.py::TestFullRunRealCodebase::test_real_codebase_not_not_ready - AssertionError: Blocking failures detected:
+FAILED tests/unit/test_mt5_symbols.py::TestResolveSymbol::test_resolve_exact_match - AssertionError: assert 'EURUSDm' == 'EURUSD'
+ERROR tests/test_security/test_secrets.py::TestGitignoreContainsEnv::test_gitignore_contains_env - AssertionError: .gitignore must exist at the project root
+ERROR tests/test_security/test_secrets.py::TestGitignoreContainsEnv::test_gitignore_contains_venv - AssertionError: .gitignore must exist at the project root
+ERROR tests/test_security/test_secrets.py::TestGitignoreContainsEnv::test_gitignore_contains_pycache - AssertionError: .gitignore must exist at the project root
+ERROR tests/test_security/test_secrets.py::TestGitignoreContainsEnv::test_gitignore_contains_data - AssertionError: .gitignore must exist at the project root
+ERROR tests/test_security/test_secrets.py::TestGitignoreContainsEnv::test_gitignore_contains_logs - AssertionError: .gitignore must exist at the project root
+ERROR tests/test_security/test_secrets.py::TestGitignoreContainsEnv::test_gitignore_contains_screenshots - AssertionError: .gitignore must exist at the project root
+ERROR tests/test_security/test_secrets.py::TestGitignoreContainsEnv::test_gitignore_contains_results - AssertionError: .gitignore must exist at the project root
+ERROR tests/test_security/test_secrets.py::TestGitignoreContainsEnv::test_gitignore_contains_backups - AssertionError: .gitignore must exist at the project root
+========================= 6 failed, 1502 passed, 4565 warnings, 8 errors in 152.33s (0:02:32) =========================
+
+[!] Some tests failed. Review output above.
+
+Press any key to continue . . .

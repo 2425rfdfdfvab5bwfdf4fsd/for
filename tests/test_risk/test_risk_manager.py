@@ -347,6 +347,57 @@ def test_consecutive_loss_checker_without_repo_logs_warning(test_config, caplog)
     )
 
 
+def test_below_min_account_equity_rejected(test_config, good_stats, good_account, eurusd_symbol_info):
+    """Account equity below MIN_ACCOUNT_EQUITY_USD → REJECTED before all other checks."""
+    test_config.MIN_ACCOUNT_EQUITY_USD = 50.0
+    manager = RiskManager(test_config)
+    signal = _make_scored_signal()
+
+    ctx = RiskContext(
+        current_equity=49.99,   # just below the $50 floor
+        open_positions=[],
+        daily_stats=good_stats,
+        account_info=good_account,
+        symbol_info=eurusd_symbol_info,
+        atr=0.00080,
+        pip_size=0.0001,
+        swing_levels=[1.13000],
+    )
+
+    result = manager.validate(signal, ctx)
+
+    assert result.approved is False
+    assert result.failed_check == "ACCOUNT_EQUITY"
+    assert result.rejection_reason == "BELOW_MIN_ACCOUNT_EQUITY"
+    assert result.trade_params is None
+
+
+def test_min_account_equity_disabled(test_config, good_stats, good_account, eurusd_symbol_info):
+    """MIN_ACCOUNT_EQUITY_USD=0.0 disables the floor — tiny equity still proceeds."""
+    test_config.MIN_ACCOUNT_EQUITY_USD = 0.0
+    test_config.MIN_SL_PIPS = 5.0
+    test_config.MIN_RR_RATIO = 2.0
+    test_config.MARGIN_SAFETY_FACTOR = 1.0
+    test_config.MARGIN_SAFETY_LEVEL = 100.0
+    manager = RiskManager(test_config)
+    signal = _make_scored_signal()
+
+    ctx = RiskContext(
+        current_equity=10_000.0,
+        open_positions=[],
+        daily_stats=good_stats,
+        account_info=good_account,
+        symbol_info=eurusd_symbol_info,
+        atr=0.00080,
+        pip_size=0.0001,
+        equal_levels=[],
+        swing_levels=[1.13000],
+    )
+
+    result = manager.validate(signal, ctx)
+    assert result.approved is True
+
+
 def test_margin_fails_rejected(test_config, good_stats, eurusd_symbol_info):
     """Extremely low free margin → REJECTED at MARGIN_SAFETY check."""
     test_config.MIN_SL_PIPS = 5.0

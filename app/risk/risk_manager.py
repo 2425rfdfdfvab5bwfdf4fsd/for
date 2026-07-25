@@ -5,13 +5,14 @@ Single orchestration entry point for all 7 risk sub-components.
 A trade signal must pass EVERY check before receiving APPROVED status.
 
 Validation order (short-circuit on first failure):
-  1. DailyLimitsChecker     — trade count + daily loss %
-  2. ConsecutiveLossChecker — consecutive loss streak
-  3. CorrelationFilter      — pair correlation exposure
-  4. SLTPCalculator         — structural SL/TP derivation
-  5. RRValidator            — independent R:R confirmation
-  6. PositionSizer          — lot size calculation
-  7. MarginSafetyChecker    — free margin + margin level
+  1. Minimum equity guard   — account equity >= MIN_ACCOUNT_EQUITY_USD
+  2. DailyLimitsChecker     — trade count + daily loss %
+  3. ConsecutiveLossChecker — consecutive loss streak
+  4. CorrelationFilter      — pair correlation exposure
+  5. SLTPCalculator         — structural SL/TP derivation
+  6. RRValidator            — independent R:R confirmation
+  7. PositionSizer          — lot size calculation
+  8. MarginSafetyChecker    — free margin + margin level
 
 The caller is responsible for assembling a RiskContext and passing it in.
 """
@@ -115,7 +116,20 @@ class RiskManager:
         )
 
         # ================================================================
-        # CHECK 1 — Daily limits
+        # CHECK 1 — Minimum account equity
+        # Block all trading if equity is below the configured floor.
+        # ================================================================
+        if cfg.MIN_ACCOUNT_EQUITY_USD > 0.0 and context.current_equity < cfg.MIN_ACCOUNT_EQUITY_USD:
+            logger.warning(
+                "RiskManager: equity=%.2f < MIN_ACCOUNT_EQUITY_USD=%.2f — "
+                "blocking %s %s (BELOW_MIN_ACCOUNT_EQUITY)",
+                context.current_equity, cfg.MIN_ACCOUNT_EQUITY_USD,
+                signal.symbol, signal.direction,
+            )
+            return self._reject("ACCOUNT_EQUITY", "BELOW_MIN_ACCOUNT_EQUITY", signal)
+
+        # ================================================================
+        # CHECK 2 — Daily limits
         # Fail CLOSED: if daily_stats is absent we cannot verify the 2% loss
         # limit or trade-count limit — safer to block than to silently skip.
         # ================================================================
