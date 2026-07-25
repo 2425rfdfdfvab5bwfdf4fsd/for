@@ -855,8 +855,12 @@ def _build_symbol_info(symbol: str) -> SymbolInfo:
     pip_size and pip_value_per_lot are determined by the symbol family:
     - JPY pairs:   pip_size = 0.01,   pip_value_per_lot ≈ 9.0  USD
     - Other pairs: pip_size = 0.0001, pip_value_per_lot = 10.0 USD
+
+    The check uses ``"JPY" in symbol.upper()`` (not ``endswith``) so that
+    broker-suffixed symbols such as USDJPYm, USDJPYpro, USDJPY.ecn, etc.
+    are all recognised correctly as JPY pairs.
     """
-    if symbol.endswith("JPY"):
+    if "JPY" in symbol.upper():
         pip_size = 0.01
         pip_value = 9.0      # Approximate; varies with rate
         point = 0.001

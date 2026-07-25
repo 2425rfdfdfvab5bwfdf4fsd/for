@@ -1,0 +1,60 @@
+
+============================================================
+ MT5 Automated Forex Trading Bot ΓÇö Backtest
+============================================================
+ DISCLAIMER: Past performance does not guarantee future results.
+============================================================
+
+Symbol(s) to backtest [EURUSDm GBPUSDm USDJPYm]:
+Start date [YYYY-MM-DD, default 2026-01-01]:
+End date   [YYYY-MM-DD, default 2026-07-25]:
+Starting capital in USD [default 10000]: 445
+
+ Download fresh data from MT5?
+   Y = Always re-download from MT5 (use when changing the date range)
+   N = Use cached data if it covers the requested window (faster)
+
+Force fresh download? [Y/N, default N]: y
+
+ Running backtest:
+   Symbols:  EURUSDm GBPUSDm USDJPYm
+   From:     2026-01-01
+   To:       2026-07-25
+   Capital:  $445
+   Output:   data\reports
+   Mode:     FORCE RE-DOWNLOAD (cache bypassed)
+
+
+  🗑  --force-download: cleared 0 cached file(s) — fresh data will be downloaded from MT5.
+
+
+============================================================
+  MT5 Backtest Runner
+  Symbols:  EURUSDm, GBPUSDm, USDJPYm
+  Period:   2026-01-01 → 2026-07-25
+  Capital:  $445.00
+  Output:   data\reports
+  Mode:     FORCE RE-DOWNLOAD (cache bypassed)
+============================================================
+  DISCLAIMER: Past performance does not guarantee future results.
+============================================================
+
+ConsecutiveLossChecker: no repository provided — consecutive-loss counter is NOT persisted across bot restarts. Inject a DailyRiskRepository so the DB value is the authoritative source.
+PositionSizer | USDJPYm | lot_size=0.0000 < volume_min=0.0100 — BELOW_MIN_LOT
+PositionSizer | USDJPYm | lot_size=0.0000 < volume_min=0.0100 — BELOW_MIN_LOT
+PositionSizer | USDJPYm | lot_size=0.0000 < volume_min=0.0100 — BELOW_MIN_LOT
+PositionSizer | USDJPYm | lot_size=0.0000 < volume_min=0.0100 — BELOW_MIN_LOT
+PositionSizer | USDJPYm | lot_size=0.0000 < volume_min=0.0100 — BELOW_MIN_LOT
+PositionSizer | USDJPYm | lot_size=0.0000 < volume_min=0.0100 — BELOW_MIN_LOT
+PositionSizer | USDJPYm | lot_size=0.0000 < volume_min=0.0100 — BELOW_MIN_LOT
+PositionSizer | USDJPYm | lot_size=0.0000 < volume_min=0.0100 — BELOW_MIN_LOT
+PositionSizer | USDJPYm | lot_size=0.0000 < volume_min=0.0100 — BELOW_MIN_LOT
+PositionSizer | USDJPYm | lot_size=0.0000 < volume_min=0.0100 — BELOW_MIN_LOT
+PositionSizer | USDJPYm | lot_size=0.0000 < volume_min=0.0100 — BELOW_MIN_LOT
+PositionSizer | USDJPYm | lot_size=0.0000 < volume_min=0.0100 — BELOW_MIN_LOT
+PositionSizer | USDJPYm | lot_size=0.0000 < volume_min=0.0100 — BELOW_MIN_LOT
+PositionSizer | USDJPYm | lot_size=0.0000 < volume_min=0.0100 — BELOW_MIN_LOT
+PositionSizer | USDJPYm | lot_size=0.0000 < volume_min=0.0100 — BELOW_MIN_LOT
+PositionSizer | USDJPYm | lot_size=0.0000 < volume_min=0.0100 — BELOW_MIN_LOT
+PositionSizer | USDJPYm | lot_size=0.0000 < volume_min=0.0100 — BELOW_MIN_LOT
+PositionSizer | USDJPYm | lot_size=0.0000 < volume_min=0.0100 — BELOW_MIN_LOT

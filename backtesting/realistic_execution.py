@@ -42,9 +42,10 @@ _DEFAULT_PIP_SIZE: float = 0.0001
 def _pip_size_for(symbol: str) -> float:
     """Return the pip size for *symbol*.
 
-    JPY pairs (e.g. USDJPY) use 0.01; all others use 0.0001.
+    JPY pairs (e.g. USDJPY, USDJPYm, USDJPYpro) use 0.01; all others use 0.0001.
+    Uses ``"JPY" in symbol.upper()`` so broker suffixes are handled correctly.
     """
-    return _JPY_PIP_SIZE if symbol.upper().endswith("JPY") else _DEFAULT_PIP_SIZE
+    return _JPY_PIP_SIZE if "JPY" in symbol.upper() else _DEFAULT_PIP_SIZE
 
 
 # ---------------------------------------------------------------------------
