@@ -784,9 +784,14 @@ class BacktestEngine:
         # Weekends mean the last bar can legitimately be up to 3 days before to_dt.
         _END_TOLERANCE = timedelta(days=3)
 
+        total_files = len(symbols) * 4
+        file_num = 0
+        print(f"\n  Loading data ({from_date} → {to_date})...")
+
         for symbol in symbols:
             all_data[symbol] = {}
             for tf in ("M5", "M15", "H1", "H4"):
+                file_num += 1
 
                 # ── 1. Attempt to load from cache ───────────────────────────
                 df = None if force_download else manager.load_from_cache(symbol, tf)
@@ -825,21 +830,33 @@ class BacktestEngine:
 
                 # ── 3. Download from MT5 when needed ────────────────────────
                 if needs_download:
+                    print(
+                        f"  [{file_num}/{total_files}] Downloading {symbol} {tf} from MT5"
+                        f" (this may take 10-60 s for large date ranges)...",
+                        flush=True,
+                    )
                     logger.info("Downloading %s %s from MT5...", symbol, tf)
                     df = manager.download(symbol, tf, from_dt, to_dt)
+                else:
+                    print(f"  [{file_num}/{total_files}] {symbol} {tf} — using cache", flush=True)
 
                 # ── 4. Filter to exact requested window and store ────────────
                 if df is not None and not df.empty:
                     if "time" in df.columns:
                         df = df[(df["time"] >= from_dt) & (df["time"] <= to_dt)]
                     all_data[symbol][tf] = df.reset_index(drop=True)
+                    bar_count = len(all_data[symbol][tf])
+                    print(f"       → {bar_count:,} bars loaded", flush=True)
                     logger.info(
                         "Loaded %d bars for %s %s after date filter",
-                        len(df), symbol, tf,
+                        bar_count, symbol, tf,
                     )
                 else:
                     all_data[symbol][tf] = pd.DataFrame()
+                    print(f"       → ⚠ no data available", flush=True)
                     logger.warning("No data available for %s %s", symbol, tf)
+
+        print()
 
         return all_data
 
