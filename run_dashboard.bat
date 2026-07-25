@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 
 :: =============================================================================
 :: MT5 Automated Forex Trading Bot — Dashboard
@@ -45,6 +45,6 @@ echo.
 start "" /b cmd /c "timeout /t 2 /nobreak >nul && start http://!DASHBOARD_HOST!:!DASHBOARD_PORT!"
 
 :: Start dashboard (foreground — blocks until Ctrl+C)
-python app\dashboard\app.py
+python -c "from app.dashboard.app import run_dashboard; run_dashboard()"
 
 endlocal
