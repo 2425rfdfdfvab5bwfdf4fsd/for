@@ -1,0 +1,61 @@
+
+============================================================
+ MT5 Automated Forex Trading Bot ΓÇö Backtest
+============================================================
+ DISCLAIMER: Past performance does not guarantee future results.
+============================================================
+
+Symbol(s) to backtest [EURUSDm GBPUSDm USDJPYm]:
+Start date [YYYY-MM-DD, default 2026-07-10]:
+End date   [YYYY-MM-DD, default 2026-07-20]:
+Starting capital in USD [default 10000]: 445
+
+ Running backtest:
+   Symbols:  EURUSDm GBPUSDm USDJPYm
+   From:     2026-07-10
+   To:       2026-07-20
+   Capital:  $445
+   Output:   data\reports
+
+
+============================================================
+  MT5 Backtest Runner
+  Symbols:  EURUSDm, GBPUSDm, USDJPYm
+  Period:   2026-07-10 → 2026-07-20
+  Capital:  $445.00
+  Output:   data\reports
+============================================================
+  DISCLAIMER: Past performance does not guarantee future results.
+============================================================
+
+ConsecutiveLossChecker: no repository provided — consecutive-loss counter is NOT persisted across bot restarts. Inject a DailyRiskRepository so the DB value is the authoritative source.
+Backtest completed with 0 trades. Check that historical data is available in data/historical/ or that MT5 is running (Windows only).
+
+⚠️  No trades were generated. Possible reasons:
+   • No historical data cached in data/historical/
+   • MT5 terminal not running (Windows only)
+   • Date range too narrow or confluence threshold too high
+
+MetricsCalculator.calculate: no trades — returning empty metrics
+
+📊 Backtest Results (612 bars, 18.4s)
+   Trades:        0
+   Win Rate:      0.0%
+   Profit Factor: 0.00
+   Total P&L:     +0.00
+   Max Drawdown:  0.00%
+   Sharpe Ratio:  0.000
+   Significance:  LOW
+
+   ⚠️  Only 0 trades — minimum 30 required for statistical significance.
+
+BacktestReporter._write_csv: no trades to export
+
+✅ Reports generated:
+   HTML: data\reports\backtest_EURUSDm_20260710_20260720.html
+   CSV:  data\reports\trades_EURUSDm_20260710_20260720.csv
+
+
+ Backtest complete. Reports saved to: data\reports
+
+Press any key to continue . . .
