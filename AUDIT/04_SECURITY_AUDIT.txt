@@ -1,0 +1,54 @@
+================================================================================
+AUDIT — SECURITY AUDIT
+================================================================================
+Project:  MT5 Automated Forex Trading Bot
+Date:     2026-07-25
+================================================================================
+
+FINDING-S1: Hardcoded Credentials — PASS
+  No hardcoded secrets, API keys, passwords, or tokens found in any source file.
+  All credentials loaded exclusively via python-dotenv from .env.
+  .gitignore correctly excludes .env, logs/, data/, *.db.
+  app/security/secret_manager.py provides centralized masked access.
+
+FINDING-S2: Dashboard API Authentication — ACCEPTABLE (localhost-only)
+  The dashboard API has no token or session-based authentication.
+  ACCEPTED: DASHBOARD_HOST defaults to 127.0.0.1. The API is only accessible
+  from the local machine. Rate limiting and auth not required for a local-only
+  tool. If the user ever exposes the dashboard to a network interface, this
+  becomes a HIGH risk.
+  Recommendation: Document this in README and warn if DASHBOARD_HOST != 127.0.0.1.
+
+FINDING-S3: API Error Detail Leakage — FIXED
+  9 endpoints returned str(e) in 500 responses, exposing internal paths and
+  schema details. Fixed in FIX-003: all 500 responses now return
+  {"error": "internal error"} only. Full error logged server-side.
+
+FINDING-S4: SQL Injection — LOW RISK (parameterized queries)
+  app/database/repositories.py uses f-strings to build IN-clause placeholders
+  (e.g., "?,?,?") but passes actual values as query parameters. This is safe
+  against injection. The pattern is slightly risky if copy-pasted incorrectly,
+  but correct as implemented.
+
+FINDING-S5: Live Trading Safety Guards — STRONG
+  app/security/live_trading_guards.py implements 5-point safety check:
+  1. LIVE_TRADING env var must be explicitly "true"
+  2. TRADING_MODE must be "LIVE"
+  3. MT5 account must be a real (non-demo) account
+  4. Account number must match configured LIVE_ACCOUNT_NUMBER
+  5. Per-call validation required before every order
+  Account numbers are masked in all log output.
+
+FINDING-S6: Secrets in Logs — PASS
+  Telegram tokens, MT5 passwords never appear in log output.
+  app/logger.py mask_account() used consistently.
+  app/dashboard/api/data_service.py explicitly pops mt5_password and
+  telegram_token from heartbeat data before returning in API responses.
+
+FINDING-S7: CORS — NOT APPLICABLE
+  Dashboard is same-origin (served and consumed on 127.0.0.1). No CORS needed.
+
+================================================================================
+SECURITY SCORE: 14/15
+  -1: No auth on dashboard API (acceptable for local tool; documented)
+================================================================================

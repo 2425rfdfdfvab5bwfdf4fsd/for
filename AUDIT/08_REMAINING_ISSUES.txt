@@ -1,0 +1,46 @@
+================================================================================
+AUDIT — REMAINING ISSUES
+================================================================================
+Project:  MT5 Automated Forex Trading Bot
+Date:     2026-07-25
+================================================================================
+
+ISSUE-005 — Hardcoded ATR bypasses volatility filter (PRODUCTION BLOCKER)
+  Severity:    MEDIUM
+  File:        app/automation/main_loop.py, method _fetch_atr_pips()
+  Description: Returns static 15.0 pips for all symbols. The VolatilityFilter
+               compares current ATR against this value, so the filter always
+               passes (15 pips is within the default MIN_ATR_PIPS=5 /
+               MAX_ATR_PIPS=80 band). The bot will attempt trades even during
+               genuinely abnormal volatility (e.g., post-NFP flash crashes).
+  Impact:      Volatility filter non-functional in live trading.
+  Required Fix: Wire app/mt5/market_data.MarketDataFetcher to compute H1 ATR
+               from real OHLCV data and return it from _fetch_atr_pips().
+  Blocker For: LIVE trading mode. Acceptable for DEMO trading.
+
+ISSUE-006 — "Why No Trade?" dashboard panel shows no real rejection data
+  Severity:    MEDIUM
+  File:        app/automation/main_loop.py, method _write_scan_state()
+  Description: scan_state.json filter_results are minimal stubs
+               (session_active=None, filter_results={}). The dashboard
+               panel "Why No Trade?" cannot display actual per-symbol
+               rejection reasons from the live scan pipeline.
+  Impact:      Dashboard diagnostics reduced. Operator cannot see which
+               filter blocked a potential trade in real-time.
+  Required Fix: Collect filter pipeline outcomes in _process_symbol() and
+               pass them to _write_scan_state() for each symbol.
+  Blocker For: Not a blocker for trading. Dashboard polish work.
+
+ISSUE-007 — NumPy Timedelta DeprecationWarnings in test helpers
+  Severity:    LOW (test-only)
+  File:        tests/test_backtesting/test_historical_data.py
+               Lines: 28, 97, 108, 129, 143
+  Description: pd.Timedelta with bare integer arguments triggers
+               DeprecationWarning for NumPy 'generic' unit. Will become
+               an error in a future NumPy release.
+  Impact:      Test-only — no production code affected. Tests still pass.
+  Required Fix: Update Timedelta construction in test helpers to use
+               explicit units, e.g. pd.Timedelta(minutes=int(N)).
+  Blocker For: Nothing currently. Future NumPy upgrade.
+
+================================================================================

@@ -1,14 +1,15 @@
 """
-MT5 order execution stub — fully implemented in Phase 09 (Execution Engine).
+MT5 order execution stub — superseded by app/execution/ (Phase 09).
 
-This stub exists so that Phase 03 module imports resolve cleanly and the
-architecture file-list is satisfied.  No business logic lives here yet.
+This file exists so that Phase 03 module imports resolve cleanly.
+The production execution engine lives in app/execution/:
+  - order_validator.py      — pre-execution validation
+  - order_executor.py       — market order placement with retry logic
+  - execution_reconciler.py — post-execution verification
+  - duplicate_protection.py — duplicate trade prevention
+  - orphan_recovery.py      — orphan position handling
 
-Phase 09 will implement:
-  - Pre-execution order validation
-  - Market order placement with retry logic
-  - Post-execution verification
-  - Duplicate trade prevention
+Do not use MT5Executor in new code — use app/execution/ instead.
 """
 
 from app.config import Config

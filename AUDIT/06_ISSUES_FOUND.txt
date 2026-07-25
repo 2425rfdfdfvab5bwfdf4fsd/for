@@ -1,0 +1,154 @@
+================================================================================
+AUDIT — ISSUES FOUND
+================================================================================
+Project:    MT5 Automated Forex Trading Bot
+Audited:    2026-07-25
+Auditor:    Replit Agent (Principal Architect / QA Lead)
+Test Suite: 1518/1518 passed (pre-audit baseline)
+================================================================================
+
+--------------------------------------------------------------------------------
+ISSUE-001
+--------------------------------------------------------------------------------
+Severity:      HIGH
+Category:      Deprecated API / Future Error
+Description:   app/mt5/account.py used datetime.utcfromtimestamp() and
+               datetime.utcnow() — both deprecated in Python 3.12 and scheduled
+               for removal in Python 3.14+. Would cause DeprecationWarning in
+               3.12, RuntimeError in future versions.
+Root Cause:    Code written before Python 3.12 deprecation policy tightened.
+Affected File: app/mt5/account.py lines 245–246
+Impact:        Broker server UTC offset detection would break on Python 3.13+,
+               preventing correct daily loss limit reset alignment.
+Fix Applied:   Replaced with datetime.fromtimestamp(ts, tz=timezone.utc) and
+               datetime.now(timezone.utc). timezone already imported.
+Test Required: Existing test_detect_server_timezone_returns_integer covers this.
+Status:        RESOLVED
+
+--------------------------------------------------------------------------------
+ISSUE-002
+--------------------------------------------------------------------------------
+Severity:      MEDIUM
+Category:      Observability / Silent Failure
+Description:   4 bare "pass" exception handlers in app/automation/main_loop.py
+               (lines 435, 452, 485, 491) swallowed exceptions with zero logging.
+               Helper methods _fetch_current_prices, _fetch_spread_pips, and
+               _build_risk_context would silently fall back to defaults without
+               any trace that an MT5 API error had occurred.
+Root Cause:    Bot loop design correctly avoids crashing on transient MT5 errors,
+               but logging was omitted during Phase 11 implementation.
+Affected File: app/automation/main_loop.py
+Impact:        Impossible to diagnose transient MT5 connectivity issues from logs.
+               Operator would not know why spread/equity values appeared stale.
+Fix Applied:   Added logger.debug() before each pass, capturing the exception
+               message and symbol context.
+Test Required: No new tests needed — behavior is defensive by design; logging
+               is verified by log output during live operation.
+Status:        RESOLVED
+
+--------------------------------------------------------------------------------
+ISSUE-003
+--------------------------------------------------------------------------------
+Severity:      MEDIUM
+Category:      Security / Information Disclosure
+Description:   All 9 exception handlers in app/dashboard/api/routes.py returned
+               {"error": "internal error", "detail": str(e)} in HTTP 500
+               responses. str(e) can expose internal file paths, database schema
+               details, column names, and Python module structure to any client
+               that can reach the dashboard.
+Root Cause:    Development-era debug responses not hardened for production use.
+Affected File: app/dashboard/api/routes.py (9 locations)
+Impact:        Information leakage to dashboard clients. Mitigated somewhat by
+               localhost-only binding (127.0.0.1 default), but not acceptable
+               for production hardening.
+Fix Applied:   Removed "detail": str(e) from all 500 responses. Errors are still
+               fully logged server-side via logger.error().
+Test Required: Existing dashboard API tests verify 500 response shape.
+Status:        RESOLVED
+
+--------------------------------------------------------------------------------
+ISSUE-004
+--------------------------------------------------------------------------------
+Severity:      LOW
+Category:      Documentation / Stale Code
+Description:   app/mt5/execution.py docstring stated "Phase 09 not yet
+               implemented" and listed futures like "Market order placement with
+               retry logic." Phase 09 is complete — the real engine lives in
+               app/execution/. The stale docstring was misleading to any
+               developer reading the file.
+Root Cause:    Phase 03 stub file never updated after Phase 09 delivered.
+Affected File: app/mt5/execution.py
+Impact:        Developer confusion; could cause incorrect imports if refactoring.
+Fix Applied:   Updated docstring to accurately describe that the production
+               engine is in app/execution/ and list its actual modules.
+Test Required: None — documentation change only.
+Status:        RESOLVED
+
+--------------------------------------------------------------------------------
+ISSUE-005 (DOCUMENTED — NOT FIXED)
+--------------------------------------------------------------------------------
+Severity:      MEDIUM
+Category:      Known Limitation / Deferred
+Description:   app/automation/main_loop.py _fetch_atr_pips() returns a hardcoded
+               15.0 pips for all symbols regardless of actual market conditions.
+               This bypasses the VolatilityFilter's real ATR check and causes
+               every symbol to pass volatility validation unconditionally.
+Root Cause:    Phase 11 limitation explicitly documented in code comment. Full
+               ATR wiring via MarketDataFetcher deferred.
+Affected File: app/automation/main_loop.py line 464
+Impact:        Volatility filter is non-functional in live trading. Trades may
+               be taken during genuinely abnormal volatility conditions.
+Fix Applied:   NOT FIXED — requires Phase 11 polish work (MarketDataFetcher
+               wiring). Flagged as a blocker for live trading readiness.
+Status:        OPEN — PRODUCTION BLOCKER FOR LIVE MODE
+
+--------------------------------------------------------------------------------
+ISSUE-006 (DOCUMENTED — NOT FIXED)
+--------------------------------------------------------------------------------
+Severity:      MEDIUM
+Category:      Known Limitation / Deferred
+Description:   app/automation/main_loop.py _write_scan_state() writes minimal
+               stub data for filter_results (session_active=None, filter_results=
+               {}). The "Why No Trade?" dashboard panel does not show actual
+               per-symbol rejection reasons from the live scan pipeline.
+Root Cause:    Phase 14 known issue documented in ROADMAP/00_PROJECT_STATUS.txt.
+               Requires main_loop to collect and pass filter outcomes per symbol.
+Affected File: app/automation/main_loop.py (~line 517)
+Impact:        "Why No Trade?" panel is not populated with real rejection data
+               during live operation. Dashboard is less useful for diagnostics.
+Fix Applied:   NOT FIXED — deferred to Phase 15+ polish as per project status.
+Status:        OPEN — DEMO TRADING ACCEPTABLE, LIVE TRADING SUBOPTIMAL
+
+--------------------------------------------------------------------------------
+ISSUE-007 (VERIFIED — NO FIX NEEDED)
+--------------------------------------------------------------------------------
+Severity:      INFO
+Category:      Test Deprecation Warnings
+Description:   5 DeprecationWarnings from tests/test_backtesting/
+               test_historical_data.py regarding pd.Timedelta with bare integers
+               (NumPy 'generic' unit deprecated). These are in test helper
+               functions, not production code.
+Root Cause:    pandas/NumPy API change for Timedelta construction.
+Affected File: tests/test_backtesting/test_historical_data.py lines 28, 97,
+               108, 129, 143
+Impact:        None on production. Tests still pass. Will become errors when
+               NumPy drops the 'generic' unit (future release).
+Fix Applied:   NOT FIXED in this audit — test-only, low urgency.
+               Recommendation: change pd.Timedelta(minutes=N) helpers to use
+               pd.Timedelta(minutes=N) with explicit unit or np.timedelta64.
+Status:        OPEN — LOW PRIORITY
+
+================================================================================
+SUMMARY
+================================================================================
+Total Issues Found:    7
+  CRITICAL:            0
+  HIGH:                1  (ISSUE-001 — RESOLVED)
+  MEDIUM:              4  (ISSUE-002, 003 RESOLVED; ISSUE-005, 006 OPEN)
+  LOW:                 1  (ISSUE-004 — RESOLVED)
+  INFO:                1  (ISSUE-007 — OPEN, LOW PRIORITY)
+
+Issues Resolved:       4  (001, 002, 003, 004)
+Issues Remaining:      3  (005, 006, 007)
+Production Blockers:   1  (ISSUE-005 — hardcoded ATR, blocks live mode only)
+================================================================================

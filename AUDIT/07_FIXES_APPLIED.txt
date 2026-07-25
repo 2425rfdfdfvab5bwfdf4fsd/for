@@ -1,0 +1,60 @@
+================================================================================
+AUDIT — FIXES APPLIED
+================================================================================
+Project:  MT5 Automated Forex Trading Bot
+Date:     2026-07-25
+Auditor:  Replit Agent
+================================================================================
+
+FIX-001 — Deprecated datetime API in server timezone detection
+  Issue:         ISSUE-001
+  File:          app/mt5/account.py
+  Lines Changed: 244–248
+  Before:        datetime.utcfromtimestamp(server_time_unix)  [deprecated]
+                 datetime.utcnow()  [deprecated]
+  After:         datetime.fromtimestamp(server_time_unix, tz=timezone.utc)
+                 datetime.now(timezone.utc)
+  Tests Run:     Full suite — 1518/1518 passed
+  Regression:    None
+
+FIX-002 — Silent exception swallows in main loop helpers
+  Issue:         ISSUE-002
+  File:          app/automation/main_loop.py
+  Lines Changed: 434–435, 451–452, 484–485, 490–491
+  Before:        except Exception:  # noqa: BLE001
+                     pass
+  After:         except Exception as exc:  # noqa: BLE001
+                     logger.debug("<method>: MT5 error for <symbol> — %s", exc)
+  Tests Run:     Full suite — 1518/1518 passed
+  Regression:    None
+
+FIX-003 — Internal error detail leakage in dashboard API 500 responses
+  Issue:         ISSUE-003
+  File:          app/dashboard/api/routes.py
+  Lines Changed: 9 exception handlers (routes: status, positions, trades,
+                 rejections, stats, equity_curve, logs, health,
+                 signals/history, why-no-trade)
+  Before:        {"error": "internal error", "detail": str(e)}
+  After:         {"error": "internal error"}
+                 (full error still logged server-side via logger.error())
+  Tests Run:     Full suite — 1518/1518 passed
+  Regression:    None
+
+FIX-004 — Stale Phase 03 stub docstring in app/mt5/execution.py
+  Issue:         ISSUE-004
+  File:          app/mt5/execution.py
+  Change:        Updated module docstring to accurately state that the
+                 production execution engine is in app/execution/, and
+                 lists its actual modules (order_validator, order_executor,
+                 execution_reconciler, duplicate_protection, orphan_recovery).
+                 Removed forward-looking "Phase 09 will implement" language.
+  Tests Run:     Full suite — 1518/1518 passed
+  Regression:    None
+
+================================================================================
+POST-FIX TEST RESULTS
+================================================================================
+Command:  python -m pytest tests/ -q
+Result:   1518 passed, 4563 warnings in 49.03s
+Status:   ALL TESTS PASS — NO REGRESSIONS
+================================================================================

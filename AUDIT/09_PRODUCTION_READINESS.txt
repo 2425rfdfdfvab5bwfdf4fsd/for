@@ -1,0 +1,40 @@
+================================================================================
+AUDIT — PRODUCTION READINESS ASSESSMENT
+================================================================================
+Project:  MT5 Automated Forex Trading Bot
+Date:     2026-07-25
+================================================================================
+
+DEMO TRADING READINESS: READY
+  All 1518 tests pass.
+  MT5 connection verified working (612 bars fetched in live backtest).
+  Configuration correctly loaded (Exness-MT5Trial15, EURUSDm/GBPUSDm/USDJPYm).
+  LIVE_TRADING guard confirmed active (DEMO/safe).
+  Dashboard accessible at 127.0.0.1:8080.
+  All critical and high bugs resolved.
+
+LIVE TRADING READINESS: NOT YET READY
+  Required before any LIVE_TRADING=true:
+
+  BLOCKER-1: Volatility filter hardcoded (ISSUE-005)
+    _fetch_atr_pips() returns static 15.0 pips — filter non-functional.
+    Requires: Wire real H1 ATR from MarketDataFetcher.
+
+  BLOCKER-2: Minimum 4-week demo validation period
+    Per ROADMAP and TRADING_RULES.md, live trading is only permitted after:
+    - 4+ weeks of demo trading with real MT5 terminal
+    - Win rate ≥ 50% over ≥ 30 trades
+    - Max drawdown < 5% during demo period
+    - All checks in docs/LIVE_READINESS_CHECKLIST.md satisfied
+
+  BLOCKER-3: Walk-forward validation
+    validation/ module exists. Must run full walk-forward + robustness tests
+    against 12+ months of historical data before live deployment.
+
+NON-BLOCKERS FOR DEMO:
+  - _write_scan_state() stub (ISSUE-006): "Why No Trade?" panel cosmetic
+  - NumPy Timedelta warnings (ISSUE-007): test-only, no impact
+
+================================================================================
+FINAL STATUS: DEMO READY — NOT LIVE READY
+================================================================================

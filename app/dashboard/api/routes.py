@@ -41,7 +41,7 @@ def status():
         return jsonify(data), 200
     except Exception as e:
         logger.error("/api/status error: %s", e)
-        return jsonify({"error": "internal error", "detail": str(e)}), 500
+        return jsonify({"error": "internal error"}), 500
 
 
 @api_bp.route("/positions", methods=["GET"])
@@ -52,7 +52,7 @@ def positions():
         return jsonify({"positions": data, "count": len(data)}), 200
     except Exception as e:
         logger.error("/api/positions error: %s", e)
-        return jsonify({"error": "internal error", "detail": str(e)}), 500
+        return jsonify({"error": "internal error"}), 500
 
 
 @api_bp.route("/trades", methods=["GET"])
@@ -68,7 +68,7 @@ def trades():
         return jsonify({"trades": data, "count": len(data)}), 200
     except Exception as e:
         logger.error("/api/trades error: %s", e)
-        return jsonify({"error": "internal error", "detail": str(e)}), 500
+        return jsonify({"error": "internal error"}), 500
 
 
 @api_bp.route("/rejections", methods=["GET"])
@@ -80,7 +80,7 @@ def rejections():
         return jsonify({"rejections": data, "count": len(data)}), 200
     except Exception as e:
         logger.error("/api/rejections error: %s", e)
-        return jsonify({"error": "internal error", "detail": str(e)}), 500
+        return jsonify({"error": "internal error"}), 500
 
 
 @api_bp.route("/stats", methods=["GET"])
@@ -94,7 +94,7 @@ def stats():
         return jsonify(data), 200
     except Exception as e:
         logger.error("/api/stats error: %s", e)
-        return jsonify({"error": "internal error", "detail": str(e)}), 500
+        return jsonify({"error": "internal error"}), 500
 
 
 @api_bp.route("/equity_curve", methods=["GET"])
@@ -108,7 +108,7 @@ def equity_curve():
         return jsonify({"equity_curve": data, "count": len(data)}), 200
     except Exception as e:
         logger.error("/api/equity_curve error: %s", e)
-        return jsonify({"error": "internal error", "detail": str(e)}), 500
+        return jsonify({"error": "internal error"}), 500
 
 
 @api_bp.route("/logs", methods=["GET"])
@@ -124,7 +124,7 @@ def logs():
         return jsonify(data), 200
     except Exception as e:
         logger.error("/api/logs error: %s", e)
-        return jsonify({"error": "internal error", "detail": str(e)}), 500
+        return jsonify({"error": "internal error"}), 500
 
 
 @api_bp.route("/health", methods=["GET"])
@@ -136,7 +136,7 @@ def health():
         return jsonify(data), http_status
     except Exception as e:
         logger.error("/api/health error: %s", e)
-        return jsonify({"error": "internal error", "detail": str(e)}), 500
+        return jsonify({"error": "internal error"}), 500
 
 
 @api_bp.route("/signals/history", methods=["GET"])
@@ -148,7 +148,7 @@ def signals_history():
         return jsonify({"signals": data, "count": len(data)}), 200
     except Exception as e:
         logger.error("/api/signals/history error: %s", e)
-        return jsonify({"error": "internal error", "detail": str(e)}), 500
+        return jsonify({"error": "internal error"}), 500
 
 
 @api_bp.route("/why-no-trade", methods=["GET"])
@@ -168,4 +168,4 @@ def why_no_trade():
         return jsonify(data), 200
     except Exception as e:
         logger.error("/api/why-no-trade error: %s", e)
-        return jsonify({"error": "internal error", "detail": str(e)}), 500
+        return jsonify({"error": "internal error"}), 500

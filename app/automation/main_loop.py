@@ -431,8 +431,8 @@ class MainLoop:
                         bid = getattr(tick, "bid", 0.0)
                         ask = getattr(tick, "ask", 0.0)
                         prices[symbol] = (bid + ask) / 2.0
-                except Exception:              # noqa: BLE001
-                    pass
+                except Exception as exc:              # noqa: BLE001
+                    logger.debug("_fetch_current_prices: MT5 tick error for %s — %s", symbol, exc)
         return prices
 
     def _fetch_spread_pips(self, symbol: str) -> float:
@@ -448,8 +448,8 @@ class MainLoop:
                 point = getattr(info, "point", 0.00001)
                 pip = point * 10          # 1 pip = 10 points for 5-digit pairs
                 return round(spread_price / pip, 2) if pip > 0 else 1.0
-        except Exception:                      # noqa: BLE001
-            pass
+        except Exception as exc:                      # noqa: BLE001
+            logger.debug("_fetch_spread_pips: MT5 error for %s — %s", symbol, exc)
         return 1.0
 
     def _fetch_atr_pips(self, symbol: str) -> float:  # noqa: ARG002
@@ -481,14 +481,14 @@ class MainLoop:
                 if acc:
                     equity = float(getattr(acc, "equity", 10_000.0))
                     account_info = acc
-            except Exception:                  # noqa: BLE001
-                pass
+            except Exception as exc:                  # noqa: BLE001
+                logger.debug("_build_risk_context: MT5 account_info error — %s", exc)
             try:
                 info = mt5.symbol_info(symbol)
                 if info:
                     symbol_info = info
-            except Exception:                  # noqa: BLE001
-                pass
+            except Exception as exc:                  # noqa: BLE001
+                logger.debug("_build_risk_context: MT5 symbol_info error for %s — %s", symbol, exc)
 
         pip_size = 0.01 if "JPY" in symbol else 0.0001
 

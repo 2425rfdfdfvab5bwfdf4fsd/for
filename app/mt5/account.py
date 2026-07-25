@@ -241,9 +241,9 @@ class AccountManager:
             if server_time_unix is None:
                 raise ValueError("Tick has no 'time' attribute")
 
-            # Server time expressed as naive UTC datetime (broker convention)
-            server_dt = datetime.utcfromtimestamp(server_time_unix)
-            utc_now = datetime.utcnow()
+            # Server time expressed as UTC datetime (timezone-aware)
+            server_dt = datetime.fromtimestamp(server_time_unix, tz=timezone.utc)
+            utc_now = datetime.now(timezone.utc)
 
             diff_seconds = (server_dt - utc_now).total_seconds()
             detected_offset = round(diff_seconds / 3600)

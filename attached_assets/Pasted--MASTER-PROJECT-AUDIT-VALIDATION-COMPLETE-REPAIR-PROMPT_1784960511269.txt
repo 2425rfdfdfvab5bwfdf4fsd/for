@@ -1,0 +1,1201 @@
+# MASTER PROJECT AUDIT, VALIDATION & COMPLETE REPAIR PROMPT
+
+You are now acting as a **Principal Software Architect, Senior Full-Stack Engineer, Senior Code Reviewer, QA Lead, Security Engineer, DevOps Engineer, SRE, Performance Engineer, Product Engineer, and AI Coding Agent Quality Auditor**.
+
+The project has been developed by following the approved project roadmap located in:
+
+```text
+ROADMAP/
+```
+
+The project may now appear complete, but you must NOT assume it is actually complete, correct, secure, reliable, or production-ready.
+
+Your job is to perform a **deep, systematic, evidence-based audit of the ENTIRE created project**, compare it against the original requirements and approved roadmap, identify every possible problem, and then FIX the problems directly in the codebase.
+
+This is a **full audit + repair operation**.
+
+Do not only report problems.
+
+Find problems → Understand root causes → Fix them → Test fixes → Re-audit → Fix remaining issues → Validate the complete project.
+
+---
+
+# 1. PRIMARY OBJECTIVE
+
+The final project must be:
+
+* Functionally complete
+* Consistent with the original requirements
+* Consistent with the approved architecture
+* Consistent with the roadmap
+* Secure
+* Reliable
+* Maintainable
+* Testable
+* Performant
+* Recoverable
+* Production-ready
+
+The project must not merely "run."
+
+Every important feature must actually work correctly.
+
+Every important requirement must be implemented.
+
+Every critical workflow must be tested.
+
+Every critical failure scenario must be handled.
+
+---
+
+# 2. IMPORTANT RULES
+
+Follow these rules throughout the audit.
+
+### Rule 1 — Do not blindly trust the existing code.
+
+The code may contain:
+
+* Bugs
+* Incomplete implementations
+* Placeholder logic
+* TODOs
+* Mock data
+* Fake success responses
+* Missing error handling
+* Security vulnerabilities
+* Incorrect assumptions
+* Broken integrations
+* Dead code
+* Duplicate code
+* Architecture drift
+
+Find them.
+
+---
+
+### Rule 2 — Do not blindly trust the roadmap.
+
+The roadmap may itself contain:
+
+* Missing requirements
+* Incorrect assumptions
+* Incorrect dependencies
+* Incomplete tasks
+* Missing tests
+* Ambiguous instructions
+
+If the roadmap conflicts with the original requirements, identify the conflict and determine the correct behavior based on the authoritative requirements.
+
+Do not silently change important product requirements.
+
+---
+
+### Rule 3 — Do not rewrite the entire project unnecessarily.
+
+Prefer:
+
+1. Root-cause fixes.
+2. Minimal safe changes.
+3. Targeted refactoring.
+4. Architectural improvements only when justified.
+
+Do not rewrite working code simply because you prefer another implementation.
+
+---
+
+### Rule 4 — Do not hide failures.
+
+If something cannot be fixed automatically:
+
+1. Document the problem.
+2. Explain why.
+3. Explain what is required.
+4. Mark it as a blocker.
+
+Never fake success.
+
+---
+
+### Rule 5 — Do not stop after finding the first problems.
+
+Continue auditing until the entire project has been systematically reviewed.
+
+---
+
+# 3. READ AND UNDERSTAND THE AUTHORITATIVE MATERIALS
+
+Before modifying code, inspect:
+
+```text
+ROADMAP/00_MASTER_ROADMAP.txt
+ROADMAP/00_REQUIREMENT_DECISIONS.txt
+ROADMAP/00_PROJECT_STATUS.txt
+ROADMAP/00_AGENT_WORKFLOW.txt
+ROADMAP/00_DEFINITION_OF_DONE.txt
+```
+
+Then inspect:
+
+* Every phase overview
+* Every completed task
+* Every acceptance criterion
+* Every relevant project documentation file
+* Existing architecture documentation
+* Existing tests
+* Configuration files
+
+Also inspect the complete source tree.
+
+Do not audit only the most recently modified files.
+
+---
+
+# 4. CREATE AN INITIAL PROJECT INVENTORY
+
+Before making changes, inspect the complete project structure.
+
+Identify:
+
+* Frontend
+* Backend
+* APIs
+* Database
+* Authentication
+* Authorization
+* Integrations
+* Background workers
+* Scheduled jobs
+* Automation scripts
+* Configuration
+* Environment variables
+* Tests
+* Documentation
+* Deployment files
+* CI/CD
+* Monitoring
+* Logging
+
+Create an internal understanding of:
+
+```text
+Component
+Purpose
+Files
+Dependencies
+Inputs
+Outputs
+Database
+External Services
+Tests
+Status
+```
+
+---
+
+# 5. REQUIREMENTS TRACEABILITY AUDIT
+
+Compare the final implementation against the original project requirements.
+
+Create:
+
+```text
+AUDIT/
+01_REQUIREMENTS_TRACEABILITY.txt
+```
+
+For every requirement, map:
+
+```text
+Requirement ID
+Requirement
+Source
+Priority
+Roadmap Phase
+Roadmap Task
+Actual Implementation
+Implementation Files
+Tests
+Acceptance Criteria
+Current Status
+```
+
+Classify each requirement:
+
+```text
+FULLY IMPLEMENTED
+PARTIALLY IMPLEMENTED
+NOT IMPLEMENTED
+BROKEN
+INCORRECT
+DUPLICATED
+CONFLICTING
+UNTESTED
+```
+
+The goal is:
+
+```text
+Requirement
+↓
+Roadmap Phase
+↓
+Task
+↓
+Code
+↓
+Test
+↓
+Validation
+```
+
+Any requirement without this complete chain must be flagged.
+
+---
+
+# 6. ROADMAP COMPLIANCE AUDIT
+
+For every roadmap phase:
+
+1. Confirm the phase was implemented.
+2. Confirm every task was completed.
+3. Confirm every task's acceptance criteria.
+4. Confirm expected files exist.
+5. Confirm expected functionality exists.
+6. Confirm tests exist.
+7. Confirm tests pass.
+
+Create:
+
+```text
+AUDIT/
+02_ROADMAP_COMPLIANCE.txt
+```
+
+Use:
+
+```text
+Phase
+Task
+Expected Result
+Actual Result
+Status
+Missing Work
+Required Fix
+```
+
+Do not mark a task complete merely because its files exist.
+
+Verify actual behavior.
+
+---
+
+# 7. FUNCTIONAL AUDIT
+
+Test the complete application as a real user would.
+
+Verify every major workflow from start to finish.
+
+For each feature:
+
+```text
+Start
+↓
+Input
+↓
+Validation
+↓
+Processing
+↓
+Database
+↓
+External APIs
+↓
+Output
+↓
+User Feedback
+```
+
+Test:
+
+* Happy path
+* Invalid input
+* Empty input
+* Boundary values
+* Duplicate operations
+* Rapid repeated actions
+* Unauthorized actions
+* Expired sessions
+* Network failure
+* API failure
+* Database failure
+
+Identify every broken workflow.
+
+---
+
+# 8. PLACEHOLDER AND FAKE IMPLEMENTATION AUDIT
+
+Search the entire codebase for:
+
+```text
+TODO
+FIXME
+HACK
+PLACEHOLDER
+MOCK
+MOCKED
+DUMMY
+FAKE
+TEMP
+TEMPORARY
+STUB
+NOT IMPLEMENTED
+COMING SOON
+return null
+return {}
+return []
+pass
+NotImplementedError
+console.log
+print(
+```
+
+Do not assume all are bugs.
+
+For every result, determine whether it is:
+
+* Legitimate
+* Temporary
+* Production-blocking
+* Dead code
+* Missing implementation
+
+Fix all production-blocking placeholders.
+
+Create:
+
+```text
+AUDIT/
+03_PLACEHOLDER_AUDIT.txt
+```
+
+---
+
+# 9. FRONTEND AUDIT
+
+If the project has a frontend, inspect:
+
+* Routing
+* Navigation
+* Authentication state
+* Authorization
+* Loading states
+* Error states
+* Empty states
+* Form validation
+* API integration
+* State management
+* Caching
+* Data fetching
+* Race conditions
+* Responsive behavior
+* Accessibility
+* Mobile usability
+* Browser compatibility
+
+Test:
+
+* Refreshing pages
+* Direct URL access
+* Back/forward navigation
+* Unauthorized pages
+* Expired sessions
+* Slow network
+* Failed API requests
+
+Fix all issues discovered.
+
+---
+
+# 10. BACKEND AUDIT
+
+Inspect:
+
+* API routes
+* Controllers
+* Services
+* Business logic
+* Validation
+* Authentication
+* Authorization
+* Database queries
+* Transactions
+* Error handling
+* Rate limiting
+* Logging
+
+Check for:
+
+* Missing validation
+* Incorrect HTTP status codes
+* Leaked internal errors
+* Unhandled exceptions
+* Duplicate logic
+* Race conditions
+* N+1 queries
+* Unsafe queries
+* Missing transactions
+
+Fix all critical and high-priority issues.
+
+---
+
+# 11. DATABASE AUDIT
+
+Inspect:
+
+* Schema
+* Relationships
+* Indexes
+* Constraints
+* Migrations
+* Queries
+* Transactions
+* Data integrity
+
+Check for:
+
+* Missing indexes
+* Incorrect indexes
+* Missing foreign keys
+* Duplicate records
+* Race conditions
+* Data loss risks
+* Unsafe migrations
+* Missing constraints
+
+Verify:
+
+```text
+Create
+Read
+Update
+Delete
+```
+
+operations.
+
+Test invalid and concurrent operations.
+
+---
+
+# 12. AUTHENTICATION AND AUTHORIZATION AUDIT
+
+Verify:
+
+* Registration
+* Login
+* Logout
+* Session handling
+* Password security
+* Token handling
+* Password reset
+* Role management
+* Permission checks
+
+Test:
+
+* Unauthenticated access
+* Unauthorized access
+* Privilege escalation
+* Direct API access
+* Expired sessions
+* Invalid tokens
+
+Ensure authorization is enforced on the backend, not only hidden in the frontend.
+
+Fix all security issues.
+
+---
+
+# 13. SECURITY AUDIT
+
+Perform a complete security review.
+
+Check for:
+
+* Hardcoded secrets
+* Exposed API keys
+* Exposed credentials
+* `.env` leaks
+* Weak authentication
+* Broken authorization
+* SQL injection
+* NoSQL injection
+* XSS
+* CSRF
+* SSRF
+* Command injection
+* Path traversal
+* Unsafe file uploads
+* Insecure deserialization
+* Dependency vulnerabilities
+* Sensitive data leakage
+* Excessive permissions
+* Missing rate limits
+
+Search:
+
+```text
+API_KEY
+SECRET
+PASSWORD
+TOKEN
+PRIVATE_KEY
+DATABASE_URL
+```
+
+Do not expose secret values in the final report.
+
+If secrets are found:
+
+1. Remove them from source code.
+2. Move them to environment variables.
+3. Update `.env.example`.
+4. Ensure `.gitignore` is correct.
+5. Recommend rotation if the secret may have been exposed.
+
+Create:
+
+```text
+AUDIT/
+04_SECURITY_AUDIT.txt
+```
+
+---
+
+# 14. ERROR HANDLING AUDIT
+
+Every important operation must handle:
+
+* Invalid input
+* Missing data
+* Network failures
+* External API failures
+* Database errors
+* Authentication errors
+* Authorization errors
+* Timeout
+* Rate limits
+* Unexpected exceptions
+
+Verify errors are:
+
+* Logged appropriately
+* User-friendly
+* Secure
+* Actionable
+
+Never expose sensitive stack traces to users.
+
+---
+
+# 15. RELIABILITY AND RECOVERY AUDIT
+
+Test:
+
+### Application crash
+
+### Process restart
+
+### Machine restart
+
+### Network disconnect
+
+### External service outage
+
+### Database outage
+
+### Partial operation failure
+
+### Duplicate operation
+
+### Timeout
+
+### Unknown operation result
+
+Verify the system can recover safely.
+
+For stateful systems, verify:
+
+```text
+State Before Failure
+↓
+Failure
+↓
+Restart
+↓
+State Reconciliation
+↓
+Recovery
+↓
+Validation
+```
+
+Fix missing recovery mechanisms.
+
+---
+
+# 16. CONCURRENCY AND RACE CONDITION AUDIT
+
+Look for:
+
+* Duplicate requests
+* Double submissions
+* Concurrent writes
+* Race conditions
+* Lost updates
+* Duplicate records
+* Multiple workers processing the same task
+* Multiple application instances
+
+Implement appropriate:
+
+* Locks
+* Idempotency
+* Unique constraints
+* Transactions
+* Singleton protection
+* Queue semantics
+
+where required.
+
+---
+
+# 17. EXTERNAL INTEGRATION AUDIT
+
+For every external integration verify:
+
+* Authentication
+* Configuration
+* Timeout
+* Retry
+* Backoff
+* Rate limits
+* Error handling
+* Failure recovery
+* Response validation
+
+Test:
+
+```text
+Success
+Failure
+Timeout
+Invalid Response
+Rate Limit
+Service Unavailable
+```
+
+Do not retry operations blindly if they may create duplicate side effects.
+
+---
+
+# 18. PERFORMANCE AUDIT
+
+Inspect:
+
+* Slow API endpoints
+* Slow database queries
+* N+1 queries
+* Excessive network calls
+* Memory usage
+* CPU usage
+* Large payloads
+* Unnecessary rendering
+* Missing caching
+
+Fix obvious performance problems.
+
+Do not optimize prematurely.
+
+Prioritize measurable bottlenecks.
+
+---
+
+# 19. TESTING AUDIT
+
+Inspect all existing tests.
+
+Verify:
+
+* Tests actually execute.
+* Tests are meaningful.
+* Tests are not fake.
+* Tests do not merely assert that code runs.
+* Tests cover critical behavior.
+
+Run:
+
+* Unit tests
+* Integration tests
+* End-to-end tests
+* Security tests
+* Regression tests
+
+Create:
+
+```text
+AUDIT/
+05_TEST_COVERAGE_AUDIT.txt
+```
+
+Identify:
+
+* Missing tests
+* Weak tests
+* Failing tests
+* Flaky tests
+* Untested critical paths
+
+Add missing tests where practical.
+
+---
+
+# 20. BUILD AND DEPLOYMENT AUDIT
+
+Verify the project can be:
+
+* Installed
+* Configured
+* Built
+* Tested
+* Started
+* Stopped
+* Restarted
+* Deployed
+
+Check:
+
+* Environment variables
+* Production configuration
+* Build scripts
+* Start scripts
+* Deployment configuration
+* Database migrations
+* Health checks
+
+If the project uses Windows automation, verify all `.bat` files.
+
+They must:
+
+* Work from any working directory.
+* Return meaningful exit codes.
+* Handle missing dependencies.
+* Handle errors.
+* Avoid duplicate processes.
+* Log failures.
+
+---
+
+# 21. DOCUMENTATION AUDIT
+
+Verify documentation accurately reflects the actual project.
+
+Check:
+
+* README
+* Installation
+* Setup
+* Configuration
+* Environment variables
+* Usage
+* Troubleshooting
+* Deployment
+* Architecture
+* API documentation
+
+Do not leave documentation describing features that do not exist.
+
+Do not leave documentation missing critical setup steps.
+
+Update inaccurate documentation.
+
+---
+
+# 22. CODE QUALITY AUDIT
+
+Review:
+
+* Naming
+* Structure
+* Duplication
+* Complexity
+* Dead code
+* Maintainability
+* Type safety
+* Error handling
+* Separation of concerns
+
+Identify unnecessary complexity.
+
+Do not perform cosmetic refactoring unless it improves maintainability or prevents bugs.
+
+---
+
+# 23. OBSERVABILITY AUDIT
+
+Verify critical operations provide enough information to answer:
+
+> What happened?
+
+> Why did it happen?
+
+> When did it happen?
+
+> What failed?
+
+> What should happen next?
+
+Check:
+
+* Structured logs
+* Error logs
+* Health checks
+* Application status
+* Critical event tracking
+
+Never log secrets or sensitive personal data.
+
+---
+
+# 24. AUTOMATED REPAIR LOOP
+
+After the audit, create:
+
+```text
+AUDIT/
+06_ISSUES_FOUND.txt
+```
+
+Classify every issue:
+
+```text
+CRITICAL
+HIGH
+MEDIUM
+LOW
+```
+
+For each issue:
+
+```text
+Issue ID
+Severity
+Category
+Description
+Root Cause
+Affected Files
+Impact
+Recommended Fix
+Test Required
+Status
+```
+
+Then follow this loop:
+
+```text
+FIND ISSUE
+↓
+UNDERSTAND ROOT CAUSE
+↓
+PLAN FIX
+↓
+IMPLEMENT FIX
+↓
+RUN TARGETED TEST
+↓
+RUN REGRESSION TESTS
+↓
+VERIFY FIX
+↓
+MARK RESOLVED
+```
+
+Do not fix symptoms while leaving the root cause.
+
+---
+
+# 25. PRIORITY ORDER FOR FIXES
+
+Fix problems in this order:
+
+### Priority 1 — Critical Security
+
+### Priority 2 — Data Loss / Data Integrity
+
+### Priority 3 — Critical Functional Bugs
+
+### Priority 4 — Reliability / Recovery
+
+### Priority 5 — Authentication / Authorization
+
+### Priority 6 — Critical Performance
+
+### Priority 7 — Testing Gaps
+
+### Priority 8 — Maintainability
+
+### Priority 9 — Documentation
+
+### Priority 10 — Cosmetic Improvements
+
+Do not spend time on cosmetic improvements while critical bugs remain.
+
+---
+
+# 26. DO NOT BREAK WORKING FEATURES
+
+Before changing an existing feature:
+
+1. Understand its current behavior.
+2. Identify dependencies.
+3. Add or verify tests.
+4. Make the smallest safe change.
+5. Run regression tests.
+
+After every significant fix:
+
+```text
+Run Targeted Tests
+↓
+Run Related Tests
+↓
+Run Full Test Suite
+```
+
+If a fix breaks another feature:
+
+1. Identify the regression.
+2. Fix the root cause.
+3. Re-run tests.
+
+---
+
+# 27. FINAL FULL SYSTEM VALIDATION
+
+After all repairs are completed, perform a second complete audit.
+
+Do NOT assume that fixing one issue solved everything.
+
+Re-check:
+
+* Requirements
+* Roadmap compliance
+* Features
+* Frontend
+* Backend
+* Database
+* Authentication
+* Authorization
+* Security
+* Integrations
+* Error handling
+* Reliability
+* Recovery
+* Concurrency
+* Performance
+* Testing
+* Deployment
+* Documentation
+
+Run the complete test suite again.
+
+---
+
+# 28. CREATE FINAL AUDIT DOCUMENTATION
+
+Create:
+
+```text
+AUDIT/
+├── 00_FINAL_AUDIT_REPORT.txt
+├── 01_REQUIREMENTS_TRACEABILITY.txt
+├── 02_ROADMAP_COMPLIANCE.txt
+├── 03_PLACEHOLDER_AUDIT.txt
+├── 04_SECURITY_AUDIT.txt
+├── 05_TEST_COVERAGE_AUDIT.txt
+├── 06_ISSUES_FOUND.txt
+├── 07_FIXES_APPLIED.txt
+├── 08_REMAINING_ISSUES.txt
+└── 09_PRODUCTION_READINESS.txt
+```
+
+---
+
+# 29. FINAL REPORT
+
+Create:
+
+```text
+AUDIT/00_FINAL_AUDIT_REPORT.txt
+```
+
+Include:
+
+# Executive Summary
+
+# Project Status
+
+# Original Requirements Compliance
+
+# Roadmap Compliance
+
+# Features Verified
+
+# Bugs Found
+
+# Bugs Fixed
+
+# Security Issues Found
+
+# Security Issues Fixed
+
+# Testing Results
+
+# Performance Findings
+
+# Reliability Findings
+
+# Recovery Findings
+
+# Documentation Findings
+
+# Remaining Issues
+
+# Known Limitations
+
+# Production Readiness
+
+# Final Score
+
+Score:
+
+```text
+Requirements Compliance /15
+Functional Correctness /15
+Architecture /10
+Security /15
+Reliability /10
+Testing /10
+Performance /5
+Maintainability /5
+Deployment /5
+Documentation /5
+```
+
+Total:
+
+```text
+XX / 100
+```
+
+Final status:
+
+```text
+PRODUCTION READY
+
+PRODUCTION READY AFTER MINOR FIXES
+
+NOT PRODUCTION READY
+
+NO-GO
+```
+
+---
+
+# 30. FINAL CHAT RESPONSE
+
+After completing the audit and fixes, provide a concise summary containing:
+
+1. Final score.
+2. Final production-readiness status.
+3. Total issues found.
+4. Total issues fixed.
+5. Critical issues found.
+6. Critical issues remaining.
+7. High-priority issues remaining.
+8. Requirements fully implemented.
+9. Requirements partially implemented.
+10. Requirements missing.
+11. Tests run.
+12. Tests passed.
+13. Tests failed.
+14. Security issues fixed.
+15. Major files changed.
+16. Remaining blockers.
+17. Exact next steps.
+
+Do not claim the project is production-ready if critical issues remain.
+
+If something cannot be verified because the environment or external service is unavailable, clearly state:
+
+```text
+UNVERIFIED
+```
+
+Do not falsely claim that it works.
+
+---
+
+# 31. FINAL PRINCIPLE
+
+The goal is not:
+
+"Make the project look finished."
+
+The goal is:
+
+```text
+ORIGINAL REQUIREMENTS
+        ↓
+APPROVED ROADMAP
+        ↓
+ACTUAL IMPLEMENTATION
+        ↓
+COMPLETE AUDIT
+        ↓
+FIND ALL PROBLEMS
+        ↓
+FIX ROOT CAUSES
+        ↓
+TEST FIXES
+        ↓
+REGRESSION TEST
+        ↓
+SECOND COMPLETE AUDIT
+        ↓
+FINAL VALIDATION
+        ↓
+PRODUCTION READINESS
+```
+
+Continue the audit and repair process until:
+
+* All critical issues are fixed.
+* All high-priority issues are fixed or explicitly accepted.
+* All core requirements are implemented.
+* All critical workflows are tested.
+* Security is validated.
+* Reliability is validated.
+* Recovery is validated.
+* The project passes the final production-readiness audit.
+
+Do not stop after the first successful test run.
+
+Do not stop after the application starts.
+
+Do not stop because there are no obvious errors.
+
+Perform a complete, systematic, evidence-based audit of the entire project and repair every issue that can be safely fixed.
