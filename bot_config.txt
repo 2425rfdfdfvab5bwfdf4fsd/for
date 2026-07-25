@@ -33,6 +33,25 @@ MAGIC_NUMBER=20260001
 
 
 # =============================================================================
+# LIVE TRADING GUARDS (Phase 20)
+# =============================================================================
+# Triple-confirmation system — all three must be true before live orders fire.
+# Leave as defaults (false / empty) for demo/paper trading.
+
+# Third explicit confirmation flag (in addition to LIVE_TRADING=true)
+LIVE_TRADING_CONFIRMED=false
+
+# Expected real account number — must match the connected MT5 account exactly
+LIVE_ACCOUNT_NUMBER=
+
+# Hard cap on lot size in live mode (default 0.1 — much tighter than demo)
+LIVE_MAX_LOT_SIZE=0.1
+
+# More conservative daily-loss cap for live trading (default 1.0%)
+LIVE_MAX_DAILY_LOSS_PERCENT=1.0
+
+
+# =============================================================================
 # MT5 CONNECTION
 # =============================================================================
 # Leave blank if MT5 terminal is already open and logged in.
@@ -131,6 +150,18 @@ EQUAL_LEVEL_ATR_MULTIPLIER=0.1
 # 0.75 = for a bullish displacement, close must be in upper 25% of candle range
 DISPLACEMENT_CLOSE_RATIO=0.75
 
+# Displacement candle body multiplier — body must be >= this × previous candle body
+DISPLACEMENT_BODY_MULTIPLIER=1.5
+
+# Displacement candle body ratio — body must be >= this fraction of total candle range
+DISPLACEMENT_BODY_RATIO=0.60
+
+# Maximum age (in candles) of an order block before it is considered expired
+OB_MAX_AGE_CANDLES=50
+
+# Minimum FVG size as a multiplier of ATR (filters out micro-gaps)
+MIN_FVG_SIZE_MULT=0.1
+
 # M5 confirmation lookback (Decision-022)
 # How many M5 candles back to look for BOS/Displacement/CHoCH entry confirmation
 M5_CONFIRMATION_LOOKBACK_CANDLES=5
@@ -186,11 +217,23 @@ BREAK_EVEN_BUFFER_PIPS=2
 ENABLE_TRAILING_STOP=true
 TRAILING_STOP_TYPE=structure
 
+# ATR multiplier for ATR-based trailing stop (only used when TRAILING_STOP_TYPE=atr)
+TRAIL_ATR_MULTIPLIER=1.5
+
 # Partial profit taking — DISABLED by default (Decision-006)
 # Enable only after backtesting confirms it improves performance
 ENABLE_PARTIAL_PROFIT=false
 PARTIAL_PROFIT_R_TRIGGER=1.0
 PARTIAL_PROFIT_PCT=0.5
+
+# Maximum hours a trade may stay open before being force-closed
+MAX_TRADE_DURATION_HOURS=48
+
+# Close all open positions at end-of-day cutoff (EOD_CUTOFF_UTC)
+EOD_CLOSE_ENABLED=true
+
+# Close all open positions before Friday close cutoff (FRIDAY_CLOSE_UTC)
+FRIDAY_CLOSE_ENABLED=true
 
 
 # =============================================================================
@@ -225,10 +268,27 @@ TP_FALLBACK_TO_SWING=true
 # FILTERS
 # =============================================================================
 
+# Master switches for each filter type
+ENABLE_SESSION_FILTER=true
+ENABLE_SPREAD_FILTER=true
+ENABLE_VOLATILITY_FILTER=true
+ENABLE_CUTOFF_FILTER=true
+
 # News filter — avoid trading around high-impact news events (Decision-004)
 ENABLE_NEWS_FILTER=true
 NEWS_FILTER_MINUTES_BEFORE=30
 NEWS_FILTER_MINUTES_AFTER=30
+
+# What to do when the news feed is unavailable
+# BLOCK = treat as if news is imminent (safe default)
+# ALLOW = ignore the failed feed and allow trading
+NEWS_FILTER_FAIL_SAFE=BLOCK
+
+# How many hours to cache the news feed before re-fetching
+NEWS_CACHE_TTL_HOURS=4
+
+# HTTP timeout (seconds) for the news feed request
+NEWS_REQUEST_TIMEOUT_SECONDS=5
 
 # Maximum allowed spread per pair (in pips) before trade is rejected
 MAX_SPREAD_EURUSD=3.0
@@ -240,6 +300,19 @@ MAX_SPREAD_USDJPY=3.0
 # MAX: reject if ATR > MULT * average_ATR (too volatile — unpredictable)
 VOLATILITY_MIN_ATR_MULT=0.5
 VOLATILITY_MAX_ATR_MULT=3.0
+
+# Absolute ATR bounds in pips (hard floor/ceiling independent of average)
+MIN_ATR_PIPS=5.0
+MAX_ATR_PIPS=80.0
+
+# End-of-day cutoff — no new entries after this UTC time
+EOD_CUTOFF_UTC=19:30
+
+# Monday open — no new entries before this UTC time on Monday
+MONDAY_OPEN_UTC=07:00
+
+# Friday close — close ALL existing positions before this UTC time on Friday
+FRIDAY_CLOSE_UTC=19:30
 
 
 # =============================================================================
@@ -274,6 +347,9 @@ DASHBOARD_PORT=8080
 # =============================================================================
 
 DATABASE_PATH=data/trading_bot.db
+
+# Root directory for data files (CSV, DB, lock files, screenshots)
+DATA_DIR=data
 
 
 # =============================================================================
@@ -314,6 +390,43 @@ BACKTEST_COMMISSION_PER_LOT=7.0
 BACKTEST_OVERNIGHT_SWAP_LONG=-0.50
 BACKTEST_OVERNIGHT_SWAP_SHORT=-0.30
 
+# Gap detection: warn if price jumps more than N bar-widths between bars
+BACKTEST_GAP_THRESHOLD_BARS=5
+
+# Warn if backtest produces fewer than this many trades (statistical floor)
+BACKTEST_MIN_SAMPLE_TRADES=30
+
+# M15 bars in a forex trading year — used for Sharpe/Sortino annualisation
+# 4 bars/hr × 24 hrs × 252 trading days ≈ 24,192
+BACKTEST_M15_BARS_PER_YEAR=24192
+
+
+# =============================================================================
+# WALK-FORWARD VALIDATION
+# =============================================================================
+
+# In-sample window length in months
+WF_IS_MONTHS=12
+
+# Out-of-sample step size in months
+WF_OOS_MONTHS=3
+
+
+# =============================================================================
+# OVERFITTING CHECK
+# =============================================================================
+
+# Maximum allowed % performance change per parameter variation before flagging
+SENSITIVITY_THRESHOLD=50.0
+
+
+# =============================================================================
+# ROBUSTNESS TESTING
+# =============================================================================
+
+# Maximum allowed P&L degradation % in robustness tests before failing
+ROBUSTNESS_DEGRADATION_THRESHOLD=50.0
+
 
 # =============================================================================
 # BROKER SERVER TIMEZONE (CHG-008)
@@ -324,6 +437,44 @@ BACKTEST_OVERNIGHT_SWAP_SHORT=-0.30
 # Exness servers run on UTC+3.
 
 SERVER_UTC_OFFSET_HOURS=3
+
+
+# =============================================================================
+# CONFLUENCE ENGINE — Factor weights (Phase 06)
+# =============================================================================
+# Each weight contributes to the total confluence score.
+# True max score = 1+1+1+1+1+1+1+0.5+0.5+1 = 9.0
+# Only change these if you have backtesting evidence for the new values.
+
+CONFLUENCE_WEIGHT_H4_TREND_ALIGNMENT=1.0
+CONFLUENCE_WEIGHT_H1_STRUCTURE_CONFIRMATION=1.0
+CONFLUENCE_WEIGHT_ORDER_BLOCK=1.0
+CONFLUENCE_WEIGHT_FVG_PRESENT=1.0
+CONFLUENCE_WEIGHT_LIQUIDITY_SWEEP=1.0
+CONFLUENCE_WEIGHT_DISPLACEMENT_CANDLE=1.0
+CONFLUENCE_WEIGHT_HTF_OB_CONFLUENCE=1.0
+CONFLUENCE_WEIGHT_ATR_ACCEPTABLE=0.5
+CONFLUENCE_WEIGHT_SPREAD_ACCEPTABLE=0.5
+CONFLUENCE_WEIGHT_M5_ENTRY_CONFIRMATION=1.0
+
+
+# =============================================================================
+# CONFLUENCE ENGINE — Grade thresholds (Phase 06)
+# =============================================================================
+# Max achievable score is 9.0. Set A+ to 9.0 so only perfect setups qualify.
+
+CONFLUENCE_GRADE_APLUS_THRESHOLD=9.0
+CONFLUENCE_GRADE_A_THRESHOLD=8.5
+CONFLUENCE_GRADE_B_THRESHOLD=8.0
+
+
+# =============================================================================
+# CONFLUENCE ENGINE — Deduplication (Phase 06)
+# =============================================================================
+
+# Seconds within which an identical signal on the same pair/direction is
+# considered a duplicate and suppressed (default: 3600 = 1 hour)
+DEDUP_WINDOW_SECONDS=3600
 
 
 # =============================================================================
@@ -376,6 +527,59 @@ ORDER_FILLING_MODE=FOK
 # close = auto-close at market price
 # adopt = reconstruct and add to bot management (best-effort parameters)
 ORPHAN_POLICY=alert
+
+
+# =============================================================================
+# AUTOMATION (Phase 11)
+# =============================================================================
+
+# Seconds between main loop ticks
+LOOP_INTERVAL_SECONDS=60
+
+# Dry-run mode: run the full pipeline but skip actual order placement
+# Useful for shadow-trading and signal verification without risk
+DRY_RUN=false
+
+# Consecutive tick errors before graceful shutdown
+MAX_CONSECUTIVE_ERRORS=5
+
+# PID lock file — prevents two bot instances running simultaneously
+LOCK_FILE_PATH=data/bot.lock
+
+# Heartbeat file — updated every tick so the watchdog knows the bot is alive
+HEARTBEAT_FILE_PATH=data/heartbeat.txt
+
+# Per-cycle scan state JSON — stores which pairs were scanned each tick
+SCAN_STATE_FILE_PATH=data/scan_state.json
+
+# Watchdog: seconds without a heartbeat before declaring the bot stale
+WATCHDOG_TIMEOUT_SECONDS=120
+
+# Watchdog: max consecutive automatic restarts before giving up
+WATCHDOG_MAX_RESTARTS=5
+
+# Watchdog: base backoff delay (seconds) between restart attempts
+WATCHDOG_RESTART_DELAY_SECONDS=30
+
+
+# =============================================================================
+# SELF-IMPROVEMENT ANALYTICS (Phase 17)
+# =============================================================================
+
+# Minimum trades per segment for statistical significance
+MINIMUM_SEGMENT_SAMPLE=15
+
+# Hard global gate — total closed trades needed to unlock analysis
+GLOBAL_MIN_TRADES=20
+
+# Hard segment gate — min trades in a specific segment to unlock per-segment analysis
+SEGMENT_MIN_TRADES=8
+
+# Minimum calendar-day span of trade history required before analysis runs
+MINIMUM_PERIOD_DAYS=30
+
+# Minimum win-rate gap (percentage points) to pass the significance gate
+STATISTICAL_SIGNIFICANCE_THRESHOLD=10.0
 
 
 # =============================================================================
