@@ -76,6 +76,16 @@ def _parse_args() -> argparse.Namespace:
         metavar="DIR",
         help="Output directory for report files (default: data/reports)",
     )
+    parser.add_argument(
+        "--force-download",
+        action="store_true",
+        default=False,
+        help=(
+            "Bypass the historical data cache and re-download everything from MT5. "
+            "Use this when you change the date range and the cached data no longer "
+            "covers the requested window."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -95,11 +105,15 @@ def main() -> int:
     args = _parse_args()
     cfg = Config()
 
-    default_from = date(2026, 7, 10)
-    default_to = date(2026, 7, 20)
+    # Sensible defaults: 6-month window ending today so users get meaningful data
+    today = datetime.now(timezone.utc).date()
+    default_to   = today
+    default_from = date(today.year - (1 if today.month <= 6 else 0),
+                        (today.month + 6) % 12 or 12,
+                        1)
 
     from_date = _parse_date(args.from_date, default_from)
-    to_date = _parse_date(args.to_date, default_to)
+    to_date   = _parse_date(args.to_date,   default_to)
 
     if from_date >= to_date:
         logger.error(
@@ -108,12 +122,28 @@ def main() -> int:
         return 1
 
     output_dir = Path(args.output) if args.output else Path("data") / "reports"
-    symbols: list = args.symbol
+    symbols: list          = args.symbol
     initial_capital: float = args.capital
+    force_download: bool   = args.force_download
+
+    # ── Optional: clear cache before downloading ─────────────────────────────
+    if force_download:
+        try:
+            from backtesting.historical_data import HistoricalDataManager
+            manager = HistoricalDataManager(cfg)
+            removed = manager.clear_cache()
+            print(
+                f"\n  🗑  --force-download: cleared {removed} cached file(s) — "
+                "fresh data will be downloaded from MT5.\n"
+            )
+            logger.info("force_download: cleared %d cache file(s)", removed)
+        except Exception as exc:
+            logger.warning("force_download: cache clear failed: %s", exc)
 
     logger.info(
-        "=== Backtest starting | symbols=%s | %s → %s | capital=%.2f ===",
-        symbols, from_date, to_date, initial_capital,
+        "=== Backtest starting | symbols=%s | %s → %s | capital=%.2f "
+        "| force_download=%s ===",
+        symbols, from_date, to_date, initial_capital, force_download,
     )
     print(
         f"\n{'='*60}\n"
@@ -122,6 +152,7 @@ def main() -> int:
         f"  Period:   {from_date} → {to_date}\n"
         f"  Capital:  ${initial_capital:,.2f}\n"
         f"  Output:   {output_dir}\n"
+        + (f"  Mode:     FORCE RE-DOWNLOAD (cache bypassed)\n" if force_download else "") +
         f"{'='*60}\n"
         f"  DISCLAIMER: Past performance does not guarantee future results.\n"
         f"{'='*60}\n"
@@ -135,18 +166,20 @@ def main() -> int:
         logger.error("Failed to import backtesting modules: %s", exc)
         return 1
 
-    engine = BacktestEngine(cfg)
-    calc = MetricsCalculator(cfg)
+    engine   = BacktestEngine(cfg)
+    calc     = MetricsCalculator(cfg)
     reporter = BacktestReporter(cfg)
 
-    # Run backtest — if no historical data is cached, engine will attempt MT5
-    # download (Windows only). On Linux, pre-load CSV data into all_data dict.
+    # Run backtest — if no historical data is cached (or cache is stale / doesn't
+    # cover the requested window), the engine will download from MT5 automatically.
+    # Use --force-download to bypass the cache check entirely.
     try:
         result = engine.run(
             symbols=symbols,
             from_date=from_date,
             to_date=to_date,
             initial_capital=initial_capital,
+            force_download=force_download,
         )
     except Exception as exc:
         logger.error("BacktestEngine.run failed: %s", exc, exc_info=True)
@@ -156,14 +189,17 @@ def main() -> int:
     if not result.trades:
         logger.warning(
             "Backtest completed with 0 trades. "
-            "Check that historical data is available in data/historical/ "
+            "Check that historical data covers the full requested window "
             "or that MT5 is running (Windows only)."
         )
         print(
             "\n⚠️  No trades were generated. Possible reasons:\n"
-            "   • No historical data cached in data/historical/\n"
+            "   • Cached data covers a different date window than requested\n"
+            "     → Re-run with --force-download (or answer Y to the prompt\n"
+            "       in run_backtest.bat) to pull fresh data from MT5\n"
             "   • MT5 terminal not running (Windows only)\n"
-            "   • Date range too narrow or confluence threshold too high\n"
+            "   • Date range too narrow (use at least 3–6 months of data)\n"
+            "   • Confluence threshold too high (try MIN_CONFLUENCE_SCORE=6 in .env)\n"
         )
 
     # Calculate metrics

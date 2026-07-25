@@ -292,6 +292,7 @@ class BacktestEngine:
         to_date: date,
         initial_capital: float,
         all_data: Optional[dict] = None,
+        force_download: bool = False,
     ) -> BacktestResult:
         """
         Run a full backtest over the specified symbols and date range.
@@ -305,6 +306,8 @@ class BacktestEngine:
                              {symbol: {"M5": df, "M15": df, "H1": df, "H4": df}}.
                              When None, HistoricalDataManager is used (requires
                              MT5 or cached CSV files).
+            force_download:  When True, bypass the cache and download fresh data
+                             from MT5 for the full requested window.
 
         Returns:
             BacktestResult with all trades, equity curve, and daily stats.
@@ -313,7 +316,7 @@ class BacktestEngine:
         cfg = self._config
 
         if all_data is None:
-            all_data = self._load_data(symbols, from_date, to_date)
+            all_data = self._load_data(symbols, from_date, to_date, force_download=force_download)
 
         if not all_data:
             logger.error("BacktestEngine.run: no data available — aborting")
@@ -438,11 +441,27 @@ class BacktestEngine:
                     continue
 
                 # Confluence scoring
+                #
+                # MarketContext values are sourced independently of the
+                # TradeSetup flags used by ORDER_BLOCK and M5_ENTRY_CONFIRMATION
+                # to avoid double-counting the same signal:
+                #
+                #   htf_ob_at_level     → H1 structure aligned (H1 BOS in H4
+                #                         direction) is the best backtest proxy
+                #                         for "an H4/H1 OB exists at this level".
+                #                         Distinct from has_valid_ob (M15 OB).
+                #
+                #   displacement_present → True only when M5 confirmed via a
+                #                         displacement candle specifically.
+                #                         Distinct from has_m5_confirmation
+                #                         which is True for any BOS/CHoCH/disp.
                 ctx = MarketContext(
                     current_spread=cfg.BACKTEST_SPREAD_PIPS,
                     avg_atr=setup.atr,
-                    htf_ob_at_level=setup.has_valid_ob,
-                    displacement_present=setup.m5_confirmation,
+                    htf_ob_at_level=setup.has_h1_structure,
+                    displacement_present=(
+                        setup.m5_confirmation_type == "DISPLACEMENT"
+                    ),
                 )
                 try:
                     scored = self._scorer.score(setup, ctx)
@@ -722,8 +741,32 @@ class BacktestEngine:
             swing_levels=[],
         )
 
-    def _load_data(self, symbols: list, from_date: date, to_date: date) -> dict:
-        """Load historical data via HistoricalDataManager (requires MT5 or CSV cache)."""
+    def _load_data(
+        self,
+        symbols: list,
+        from_date: date,
+        to_date: date,
+        force_download: bool = False,
+    ) -> dict:
+        """
+        Load historical data via HistoricalDataManager (requires MT5 or CSV cache).
+
+        Cache-coverage logic
+        --------------------
+        The cache is only reused when it fully covers the requested date range.
+        If the cached CSV starts after ``from_date`` or ends more than 3 calendar
+        days before ``to_date`` (tolerance for weekends / holidays), the cache is
+        considered stale and MT5 is queried for the full requested window.
+
+        This prevents the silent bug where a previous short-window backtest caches
+        a handful of bars and every subsequent longer-window backtest reuses that
+        tiny slice instead of downloading the full history.
+
+        Args:
+            force_download: When True, skip the cache entirely and always download
+                            fresh data from MT5. Exposed via ``--force-download``
+                            CLI flag.
+        """
         try:
             from backtesting.historical_data import HistoricalDataManager
         except ImportError as exc:
@@ -738,22 +781,65 @@ class BacktestEngine:
         to_dt = datetime(
             to_date.year, to_date.month, to_date.day, 23, 59, 59, tzinfo=timezone.utc
         )
+        # Weekends mean the last bar can legitimately be up to 3 days before to_dt.
+        _END_TOLERANCE = timedelta(days=3)
 
         for symbol in symbols:
             all_data[symbol] = {}
             for tf in ("M5", "M15", "H1", "H4"):
-                df = manager.load_from_cache(symbol, tf)
-                if df is None or df.empty:
+
+                # ── 1. Attempt to load from cache ───────────────────────────
+                df = None if force_download else manager.load_from_cache(symbol, tf)
+
+                needs_download = df is None or df.empty
+
+                # ── 2. Validate coverage when cache is present ───────────────
+                if not needs_download:
+                    try:
+                        cache_start = df["time"].min()
+                        cache_end   = df["time"].max()
+                        # Re-download when the cache is missing the leading or
+                        # trailing portion of the requested window.
+                        insufficient_start = cache_start > from_dt
+                        insufficient_end   = cache_end < (to_dt - _END_TOLERANCE)
+                        if insufficient_start or insufficient_end:
+                            logger.info(
+                                "%s %s: cache covers %s → %s but %s → %s "
+                                "was requested — re-downloading from MT5",
+                                symbol, tf,
+                                cache_start.date(), cache_end.date(),
+                                from_date, to_date,
+                            )
+                            needs_download = True
+                        else:
+                            logger.info(
+                                "%s %s: cache covers requested range (%s → %s) — using cache",
+                                symbol, tf, cache_start.date(), cache_end.date(),
+                            )
+                    except Exception as exc:
+                        logger.warning(
+                            "Cache coverage check failed for %s %s: %s — re-downloading",
+                            symbol, tf, exc,
+                        )
+                        needs_download = True
+
+                # ── 3. Download from MT5 when needed ────────────────────────
+                if needs_download:
                     logger.info("Downloading %s %s from MT5...", symbol, tf)
                     df = manager.download(symbol, tf, from_dt, to_dt)
+
+                # ── 4. Filter to exact requested window and store ────────────
                 if df is not None and not df.empty:
                     if "time" in df.columns:
                         df = df[(df["time"] >= from_dt) & (df["time"] <= to_dt)]
                     all_data[symbol][tf] = df.reset_index(drop=True)
-                    logger.info("Loaded %d bars for %s %s", len(df), symbol, tf)
+                    logger.info(
+                        "Loaded %d bars for %s %s after date filter",
+                        len(df), symbol, tf,
+                    )
                 else:
                     all_data[symbol][tf] = pd.DataFrame()
-                    logger.warning("No data for %s %s", symbol, tf)
+                    logger.warning("No data available for %s %s", symbol, tf)
 
         return all_data
 

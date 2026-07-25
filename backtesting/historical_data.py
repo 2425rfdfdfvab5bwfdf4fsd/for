@@ -170,6 +170,45 @@ class HistoricalDataManager:
         except Exception as e:
             logger.error("Failed to save cache %s: %s", path, e)
 
+    def clear_cache(
+        self,
+        symbol: str | None = None,
+        timeframe: str | None = None,
+    ) -> int:
+        """
+        Delete cached CSV files and return the number of files removed.
+
+        Args:
+            symbol:    When provided, only files for this symbol are deleted.
+            timeframe: When also provided, only the specific symbol+timeframe
+                       file is deleted. Ignored when ``symbol`` is None.
+
+        Returns:
+            Number of cache files deleted.
+        """
+        removed = 0
+        if symbol and timeframe:
+            path = self._cache_path(symbol, timeframe.upper())
+            if path.exists():
+                path.unlink()
+                logger.info("Cleared cache: %s", path.name)
+                removed += 1
+        elif symbol:
+            for tf in self.TIMEFRAME_MINUTES:
+                path = self._cache_path(symbol, tf)
+                if path.exists():
+                    path.unlink()
+                    logger.info("Cleared cache: %s", path.name)
+                    removed += 1
+        else:
+            for path in sorted(self._cache_dir.glob("*.csv")):
+                path.unlink()
+                logger.info("Cleared cache: %s", path.name)
+                removed += 1
+        if removed == 0:
+            logger.info("clear_cache: no cache files found to delete")
+        return removed
+
     def validate(self, df: pd.DataFrame, timeframe: str = "M15") -> DataValidationResult:
         """
         Validate an OHLCV DataFrame for data quality.
