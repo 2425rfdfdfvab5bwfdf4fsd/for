@@ -95,11 +95,11 @@ def main() -> int:
     args = _parse_args()
     cfg = Config()
 
-    today = datetime.now(timezone.utc).date()
-    two_years_ago = date(today.year - 2, today.month, today.day)
+    default_from = date(2026, 7, 10)
+    default_to = date(2026, 7, 20)
 
-    from_date = _parse_date(args.from_date, two_years_ago)
-    to_date = _parse_date(args.to_date, today)
+    from_date = _parse_date(args.from_date, default_from)
+    to_date = _parse_date(args.to_date, default_to)
 
     if from_date >= to_date:
         logger.error(

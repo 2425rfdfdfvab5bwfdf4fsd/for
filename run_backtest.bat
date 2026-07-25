@@ -33,11 +33,11 @@ call venv\Scripts\activate.bat
 set /p BT_SYMBOL="  Symbol(s) to backtest [EURUSDm GBPUSDm USDJPYm]: "
 if "!BT_SYMBOL!"=="" set BT_SYMBOL=EURUSDm GBPUSDm USDJPYm
 
-set /p BT_FROM="  Start date [YYYY-MM-DD, default 2023-01-01]: "
-if "!BT_FROM!"=="" set BT_FROM=2023-01-01
+set /p BT_FROM="  Start date [YYYY-MM-DD, default 2026-07-10]: "
+if "!BT_FROM!"=="" set BT_FROM=2026-07-10
 
-set /p BT_TO="  End date   [YYYY-MM-DD, default 2024-01-01]: "
-if "!BT_TO!"=="" set BT_TO=2024-01-01
+set /p BT_TO="  End date   [YYYY-MM-DD, default 2026-07-20]: "
+if "!BT_TO!"=="" set BT_TO=2026-07-20
 
 set /p BT_CAPITAL="  Starting capital in USD [default 10000]: "
 if "!BT_CAPITAL!"=="" set BT_CAPITAL=10000
