@@ -200,3 +200,153 @@ run_dashboard.bat  → Start local web dashboard
 run_backtest.bat   → Run backtest on historical data
 run_tests.bat      → Run full test suite with coverage
 ```
+
+---
+
+## Database Schema
+
+All state is stored in a single SQLite file (default: `data/trading_bot.db`). The schema is initialised by `DatabaseManager.initialize()` from `app/database/database.py`.
+
+### Tables
+
+| Table | Purpose |
+|---|---|
+| `trades` | Every executed trade — entry, exit, management state, P&L |
+| `rejected_signals` | Every evaluated signal that was NOT traded, with reason |
+| `daily_risk_state` | Per-day risk counters (trade count, P&L, block state) |
+| `daily_stats` | Per-day equity snapshot used by `DailyLimitsChecker` |
+| `consecutive_loss_state` | Consecutive loss counter (single row, id=1) |
+| `position_management_events` | Break-even / trailing / partial-close events per trade |
+| `trade_journal_entries` | Full lifecycle journal record (entry → management → exit) |
+| `rejection_journal_entries` | Categorised rejection records for self-improvement analysis |
+| `performance_snapshots` | Daily / weekly / monthly performance metric snapshots |
+| `system_events` | System-level events (start, stop, MT5 disconnect, limit hits) |
+| `schema_version` | Migration tracking (version integer + applied_at timestamp) |
+
+### Key Design Decisions
+
+- **SQLite only** — no server, $0 cost, portable single file, backed up with a file copy
+- **ISO 8601 strings for all timestamps** — stored as TEXT in UTC; never rely on SQLite date functions
+- **No raw SQL in business logic** — all access through `app/database/repositories.py`
+- **Schema initialised with `CREATE TABLE IF NOT EXISTS`** — restarts never destroy data
+- **Risk counters persist across restarts** — the bot resumes correctly after a crash or shutdown
+
+---
+
+## Configuration System
+
+All runtime configuration comes from a `.env` file loaded by `app/config.py`.
+
+### How It Works
+
+```
+.env file
+    ↓
+python-dotenv (loads at import time)
+    ↓
+app/config.py → Config class
+    ↓
+All modules receive a Config instance as a constructor argument
+```
+
+- `app/config.py` is the **only** file that reads `os.environ`
+- Every other module receives a `Config` instance as a constructor or function argument
+- Tests pass a `Config` instance built from known test values — never from a real `.env`
+- Config values have safe defaults; the bot runs in DEMO mode with no `.env` at all
+
+### Adding a New Setting
+
+1. Add `NEW_SETTING=default_value` to `.env.example` with a comment
+2. Add `self.NEW_SETTING: type = os.environ.get("NEW_SETTING", "default")` to `Config.__init__`
+3. Apply appropriate type casting (`int()`, `float()`, `bool()`)
+4. Reference as `config.NEW_SETTING` everywhere — never read `os.environ` directly
+
+### Environment Files
+
+| File | Purpose |
+|---|---|
+| `.env.example` | Template — committed to git, no real credentials |
+| `.env` | Actual runtime config — **never committed** (in `.gitignore`) |
+
+---
+
+## Logging Architecture
+
+The bot uses four rotating log files managed by `app/logger.py`.
+
+### Log Streams
+
+| File | Level | Contents |
+|---|---|---|
+| `logs/app.log` | INFO+ | All general application events |
+| `logs/trading.log` | DEBUG+ | Trade opens, closes, rejections, position updates |
+| `logs/errors.log` | WARNING+ | Warnings, errors, and critical failures |
+| `logs/strategy.log` | DEBUG+ | Strategy decisions, confluence scores, filter results |
+
+### How to Use
+
+```python
+from app.logger import get_logger
+
+# Standard module logger (writes to app.log)
+logger = get_logger(__name__)
+
+# Trading-specific logger (writes to trading.log + app.log)
+from app.logger import get_trading_logger
+logger = get_trading_logger(__name__)
+
+# Strategy-specific logger (writes to strategy.log + app.log)
+from app.logger import get_strategy_logger
+logger = get_strategy_logger(__name__)
+```
+
+### Rules
+
+- Call `setup_logging(config)` **once** at bot startup in `main.py`
+- Use `logger = get_logger(__name__)` at **module level** — not inside functions
+- Use `%` formatting (`logger.info("Price: %.5f", price)`) — never f-strings in logger calls
+- **Never** use `print()` — use the logger
+- Logs rotate at `LOG_MAX_BYTES` (default 10 MB) and keep `LOG_BACKUP_COUNT` (default 5) backups
+- Account numbers are masked before logging: `mask_account(account_number)` → `XXXXX7890`
+
+---
+
+## Security Architecture
+
+### Credential Protection
+
+- MT5 credentials (`MT5_LOGIN`, `MT5_PASSWORD`) and Telegram tokens live only in `.env`
+- `.env` is in `.gitignore` — never committed to version control
+- `app/config.py` never logs credential fields
+- `app/logger.py` provides `mask_account()` for safe account number logging
+
+### Trading Safety Guards
+
+Every order placement path enforces all of the following (in code — not just config):
+
+| Guard | What It Prevents |
+|---|---|
+| `LIVE_TRADING=false` check | Real orders placed without explicit operator consent |
+| `EXECUTION_ENABLED=false` check | All order placement (positions still managed) |
+| Risk manager pre-check | Trading beyond daily loss / trade count / consecutive loss limits |
+| Confluence minimum (8/10) | Low-quality signals reaching execution |
+| R:R minimum (1:2) | Unfavourable risk/reward trades |
+| Margin safety check | Trades that would drop margin level below 150% |
+| Duplicate trade guard | Opening a second position on the same symbol |
+| Correlation guard | Holding EURUSD + GBPUSD in the same direction simultaneously |
+
+### No External Write Access
+
+- The dashboard is **read-only** — it has no API endpoints that modify bot state
+- The bot does not accept any external commands (no webhook, no socket server)
+- All operational control is via `.bat` files or direct process signals
+
+### Orphan Position Handling
+
+If MT5 contains positions with no matching database record (e.g. manual trades or a crash during execution):
+
+- `ORPHAN_POLICY=alert` (default) — logs `CRITICAL`, flags for human review, does **not** auto-close
+- `ORPHAN_POLICY=adopt` — reconstructs a database record and manages the position
+- `ORPHAN_POLICY=close` — closes the orphan at market price
+
+The safe default is `alert`. Never change this without understanding the implications.
