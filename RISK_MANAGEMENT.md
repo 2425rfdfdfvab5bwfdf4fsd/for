@@ -164,6 +164,39 @@ catastrophically oversized position.
 
 ---
 
+## Live Trading Additional Guards
+
+Before any real-money order is submitted, **all six conditions** below must be
+true simultaneously. A single failing condition forces DEMO fallback and logs
+a CRITICAL alert. These guards are implemented in
+`app/security/live_trading_guards.py` and called by `app/automation/auto_recovery.py`
+at startup and before every order cycle.
+
+| Guard | Config key | What it checks |
+|-------|-----------|---------------|
+| G1 — Live flag set | `LIVE_TRADING=true` | Explicit opt-in required |
+| G2 — Confirmation flag | `LIVE_TRADING_CONFIRMED=true` | Second explicit opt-in |
+| G3 — Trading mode | `TRADING_MODE=LIVE` | Mode must match intent |
+| G4 — Account number | `LIVE_ACCOUNT_NUMBER` | Must match connected MT5 account |
+| G5 — Not demo account | MT5 `account.server` | Broker server must not be a demo server |
+| G6 — Max lot size | `LIVE_MAX_LOT_SIZE` | Hard cap on maximum position size |
+
+```python
+from app.security.live_trading_guards import LiveTradingGuard
+from app.config import Config
+
+guard = LiveTradingGuard(Config())
+result = guard.validate(mt5_account_info)
+if not result.allowed:
+    # System automatically falls back to DEMO — no manual intervention needed
+    logger.critical("Live trading guard FAILED: %s", result.reason)
+```
+
+**⚠️ NEVER modify or bypass these guards. They are the last line of defence
+before real money is at risk.**
+
+---
+
 ## Risk State Persistence
 
 All risk counters are stored in SQLite and survive bot restarts:

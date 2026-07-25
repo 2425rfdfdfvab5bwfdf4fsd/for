@@ -27,6 +27,34 @@ No paid APIs. $0 software cost.
 
 ---
 
+## MANDATORY READING BEFORE ANY CHANGE
+
+Read the following files **in this order** before writing a single line of code:
+
+1. `AI_RULES.md` — this file (you are reading it)
+2. `ARCHITECTURE.md` — module layout, data flow, dependency rules
+3. `CODE_STANDARDS.md` — style, naming, error handling, testing conventions
+4. `TRADING_RULES.md` — strategy logic, entry conditions, session windows
+5. `RISK_MANAGEMENT.md` — all risk rules; **never bypass these**
+6. `ROADMAP/00_PROJECT_STATUS.txt` — current phase and outstanding work
+
+Then read the specific task file for the work you are about to do.
+
+---
+
+## CONTEXT FILES (read in this order)
+
+| # | File | Purpose |
+|---|------|---------|
+| 1 | `AI_RULES.md` | Rules for this agent session |
+| 2 | `ARCHITECTURE.md` | System structure and module boundaries |
+| 3 | `CODE_STANDARDS.md` | Coding conventions — follow exactly |
+| 4 | `TRADING_RULES.md` | All strategy and signal rules |
+| 5 | `RISK_MANAGEMENT.md` | All risk controls — never override |
+| 6 | `ROADMAP/00_PROJECT_STATUS.txt` | Where the build currently stands |
+
+---
+
 ## NEVER ❌
 
 - **Modify files outside task scope** — if the task says touch 2 files, touch exactly 2
