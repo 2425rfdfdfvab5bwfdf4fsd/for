@@ -2,16 +2,16 @@
 PHASE AUDIT PROMPT
 ================================================================================
 Use this prompt to verify that a phase is fully implemented in the codebase.
-Replace ROADMAP/04_DATA_LAYER with the target phase before sending.
+Replace ROADMAP/05_STRATEGY_ENGINE with the target phase before sending.
 ================================================================================
 
-Please audit Phase ROADMAP/04_DATA_LAYER and confirm whether it is fully
+Please audit Phase ROADMAP/05_STRATEGY_ENGINE and confirm whether it is fully
 implemented. Base your findings entirely on the actual codebase — do NOT use
 ROADMAP/00_PROJECT_STATUS.txt as evidence of completion.
 
 Specifically:
 
-1. Read every task file inside ROADMAP/04_DATA_LAYER/ to extract the exact
+1. Read every task file inside ROADMAP/05_STRATEGY_ENGINE/ to extract the exact
    acceptance criteria, required files, required functions/classes, and
    validation commands.
 
