@@ -9,11 +9,11 @@ EXECUTIVE SUMMARY
 ================================================================================
 A full audit was performed across all 22 completed phases. The codebase is
 well-structured, deterministic, and thoroughly tested. 7 issues were identified.
-4 were fixed immediately. 3 remain open (1 medium blocker for live mode only,
-1 medium dashboard cosmetic, 1 low test-only warning).
+All 7 have now been resolved.
 
-The project is ready for DEMO trading. Live trading requires the ATR fix and
-the mandatory 4-week demo validation period before enabling LIVE_TRADING=true.
+The project is ready for DEMO trading. Live trading still requires the mandatory
+4-week demo validation period and walk-forward test completion before enabling
+LIVE_TRADING=true (see 09_PRODUCTION_READINESS.txt).
 
 PROJECT STATUS
 ================================================================================
@@ -43,7 +43,7 @@ ORIGINAL REQUIREMENTS COMPLIANCE
 [✓] Backtesting engine
 [✓] Walk-forward validation
 [✓] 1518 pytest tests, MT5 fully mocked for Linux/Replit
-[!] Volatility filter bypassed — hardcoded ATR (ISSUE-005)
+[✓] Volatility filter — real H1 ATR(14) wired via MT5 OHLCV + indicators module
 
 ROADMAP COMPLIANCE
 ================================================================================
@@ -54,13 +54,13 @@ Phase 04 (Data Layer):        COMPLETE
 Phase 05 (Strategy Engine):   COMPLETE
 Phase 06 (Confluence Engine): COMPLETE
 Phase 07 (Risk Engine):       COMPLETE
-Phase 08 (Filters):           COMPLETE — volatility filter has hardcoded ATR
+Phase 08 (Filters):           COMPLETE
 Phase 09 (Execution Engine):  COMPLETE
 Phase 10 (Position Mgmt):     COMPLETE
-Phase 11 (Automation):        COMPLETE — ATR wiring deferred
+Phase 11 (Automation):        COMPLETE
 Phase 12 (Notifications):     COMPLETE
 Phase 13 (Trade Journal):     COMPLETE
-Phase 14 (Dashboard):         COMPLETE — scan_state filter_results stub
+Phase 14 (Dashboard):         COMPLETE
 Phase 15 (Backtesting):       COMPLETE
 Phase 16 (Validation):        COMPLETE
 Phase 17 (Self-Improvement):  COMPLETE

@@ -7,7 +7,7 @@ File I/O uses tmp_path — never touches data/.
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -25,7 +25,7 @@ from backtesting.historical_data import DataValidationResult, HistoricalDataMana
 def _make_clean_df(n: int = 20, timeframe_minutes: int = 15) -> pd.DataFrame:
     """Return a clean, gapless OHLCV DataFrame with n bars."""
     base = datetime(2024, 1, 2, 8, 0, 0, tzinfo=timezone.utc)
-    times = [base + pd.Timedelta(minutes=i * timeframe_minutes) for i in range(n)]
+    times = [base + timedelta(minutes=i * timeframe_minutes) for i in range(n)]
     rows = []
     for t in times:
         rows.append({
@@ -94,7 +94,7 @@ class TestGapDetection:
         mgr = _make_manager(tmp_path)
         df = _make_clean_df(n=40, timeframe_minutes=15)
         # Insert a 2-hour gap after bar 20 (8 missing M15 bars × 15 min = 120 min)
-        df.loc[20:, "time"] = df.loc[20:, "time"] + pd.Timedelta(minutes=120)
+        df.loc[20:, "time"] = df.loc[20:, "time"] + timedelta(minutes=120)
 
         result = mgr.validate(df, timeframe="M15")
 
@@ -105,7 +105,7 @@ class TestGapDetection:
         """Gap details should describe when the gap occurred."""
         mgr = _make_manager(tmp_path)
         df = _make_clean_df(n=20, timeframe_minutes=15)
-        df.loc[10:, "time"] = df.loc[10:, "time"] + pd.Timedelta(hours=3)
+        df.loc[10:, "time"] = df.loc[10:, "time"] + timedelta(hours=3)
 
         result = mgr.validate(df, timeframe="M15")
 
@@ -126,7 +126,7 @@ class TestGapDetection:
         mgr = _make_manager(tmp_path)
         df = _make_clean_df(n=20, timeframe_minutes=15)
         # Introduce a 3-hour gap right before the last bar (terminal interval)
-        df.loc[19, "time"] = df.loc[18, "time"] + pd.Timedelta(hours=3)
+        df.loc[19, "time"] = df.loc[18, "time"] + timedelta(hours=3)
 
         # Must not raise; gap should be detected
         result = mgr.validate(df, timeframe="M15")
@@ -140,7 +140,7 @@ class TestGapDetection:
         # Insert a 90-minute extra offset between bars 10 and 11.
         # Normal spacing = 15 min; total interval becomes 105 min → ~7 M15 bars.
         # Threshold = 5 × 15 = 75 min, so 105 > 75 triggers detection.
-        df.loc[11:, "time"] = df.loc[11:, "time"] + pd.Timedelta(minutes=90)
+        df.loc[11:, "time"] = df.loc[11:, "time"] + timedelta(minutes=90)
 
         result = mgr.validate(df, timeframe="M15")
 

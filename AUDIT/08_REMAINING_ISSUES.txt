@@ -1,46 +1,49 @@
 ================================================================================
-AUDIT — REMAINING ISSUES
+AUDIT — REMAINING ISSUES (UPDATED 2026-07-25)
 ================================================================================
 Project:  MT5 Automated Forex Trading Bot
 Date:     2026-07-25
+Update:   All three originally-open issues have now been resolved.
 ================================================================================
 
-ISSUE-005 — Hardcoded ATR bypasses volatility filter (PRODUCTION BLOCKER)
-  Severity:    MEDIUM
+ISSUE-005 — Hardcoded ATR bypasses volatility filter  *** RESOLVED ***
+  Severity:    MEDIUM → RESOLVED
   File:        app/automation/main_loop.py, method _fetch_atr_pips()
-  Description: Returns static 15.0 pips for all symbols. The VolatilityFilter
-               compares current ATR against this value, so the filter always
-               passes (15 pips is within the default MIN_ATR_PIPS=5 /
-               MAX_ATR_PIPS=80 band). The bot will attempt trades even during
-               genuinely abnormal volatility (e.g., post-NFP flash crashes).
-  Impact:      Volatility filter non-functional in live trading.
-  Required Fix: Wire app/mt5/market_data.MarketDataFetcher to compute H1 ATR
-               from real OHLCV data and return it from _fetch_atr_pips().
-  Blocker For: LIVE trading mode. Acceptable for DEMO trading.
+  Resolution:  _fetch_atr_pips() now fetches real H1 OHLCV data from MT5
+               via copy_rates_from_pos(), computes ATR(14) using
+               app.strategy.indicators.get_current_atr(), converts the result
+               to pips via atr_to_pips(), and falls back to 15.0 pips only
+               when MT5 is unavailable (test environment / connection loss).
+               The VolatilityFilter now receives real market ATR values.
+  Status:      RESOLVED — Live trading blocker cleared.
 
-ISSUE-006 — "Why No Trade?" dashboard panel shows no real rejection data
-  Severity:    MEDIUM
-  File:        app/automation/main_loop.py, method _write_scan_state()
-  Description: scan_state.json filter_results are minimal stubs
-               (session_active=None, filter_results={}). The dashboard
-               panel "Why No Trade?" cannot display actual per-symbol
-               rejection reasons from the live scan pipeline.
-  Impact:      Dashboard diagnostics reduced. Operator cannot see which
-               filter blocked a potential trade in real-time.
-  Required Fix: Collect filter pipeline outcomes in _process_symbol() and
-               pass them to _write_scan_state() for each symbol.
-  Blocker For: Not a blocker for trading. Dashboard polish work.
+ISSUE-006 — "Why No Trade?" dashboard panel shows no real rejection data  *** RESOLVED ***
+  Severity:    MEDIUM → RESOLVED
+  File:        app/automation/main_loop.py, methods _process_symbol() / _write_scan_state()
+  Resolution:  self._tick_filter_results is populated per-symbol in _process_symbol()
+               with: passed, blocked_by, reason, atr_pips, spread_pips.
+               _write_scan_state() derives session_active and news_blackout from
+               these real results and writes the full per-symbol filter_results
+               dict to scan_state.json after every scan cycle.
+               The dashboard "Why No Trade?" panel now shows real rejection data.
+  Status:      RESOLVED
 
-ISSUE-007 — NumPy Timedelta DeprecationWarnings in test helpers
-  Severity:    LOW (test-only)
-  File:        tests/test_backtesting/test_historical_data.py
-               Lines: 28, 97, 108, 129, 143
-  Description: pd.Timedelta with bare integer arguments triggers
-               DeprecationWarning for NumPy 'generic' unit. Will become
-               an error in a future NumPy release.
-  Impact:      Test-only — no production code affected. Tests still pass.
-  Required Fix: Update Timedelta construction in test helpers to use
-               explicit units, e.g. pd.Timedelta(minutes=int(N)).
-  Blocker For: Nothing currently. Future NumPy upgrade.
+ISSUE-007 — NumPy Timedelta DeprecationWarnings in test helpers  *** RESOLVED ***
+  Severity:    LOW (test-only) → RESOLVED
+  Files Fixed:
+    tests/test_backtesting/test_historical_data.py (lines 28, 97, 108, 129, 143)
+    tests/test_backtesting/test_engine.py (lines 56, 76, 95, 114, 207)
+    backtesting/backtest_engine.py (line 192)
+  Resolution:  All pd.Timedelta(...) calls replaced with stdlib datetime.timedelta(...)
+               which has no NumPy generic-unit ambiguity.
+               timedelta imported in all three files.
+  Confirmed:   python -m pytest tests/ -q → 1518 passed, 0 warnings, 0 failed.
+  Status:      RESOLVED
 
+================================================================================
+FINAL STATUS: ALL ISSUES RESOLVED
+  - 1518 tests pass, 0 failures, 0 deprecation warnings
+  - Demo trading: READY
+  - Live trading: Requires 4-week demo validation + walk-forward test completion
+                  (BLOCKER-2 and BLOCKER-3 from 09_PRODUCTION_READINESS.txt)
 ================================================================================

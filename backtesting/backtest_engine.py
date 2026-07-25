@@ -37,7 +37,7 @@ from __future__ import annotations
 import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Optional
 
 import pandas as pd
@@ -189,7 +189,7 @@ class BacktestDataProvider:
 
         # Closed-bar filter for H4 / H1 / M5
         tf_mins = _TF_MINUTES.get(timeframe.upper(), 15)
-        td = pd.Timedelta(minutes=tf_mins)
+        td = timedelta(minutes=int(tf_mins))
         # Include a bar only when its close time ≤ current bar's open time.
         visible = df[df["time"] + td <= self._current_bar_open_time]
         return visible.copy()

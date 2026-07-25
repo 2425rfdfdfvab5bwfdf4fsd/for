@@ -7,7 +7,7 @@ File I/O uses tmp_path — never touches data/.
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
@@ -53,7 +53,7 @@ def _make_m15_df(n: int = 120, base_price: float = 1.1000) -> pd.DataFrame:
     rows = []
     price = base_price
     for i in range(n):
-        ts = base + pd.Timedelta(minutes=i * 15)
+        ts = base + timedelta(minutes=i * 15)
         rows.append({
             "time": pd.Timestamp(ts),
             "open": price,
@@ -73,7 +73,7 @@ def _make_h4_df(n: int = 50, base_price: float = 1.1000) -> pd.DataFrame:
     rows = []
     price = base_price
     for i in range(n):
-        ts = base + pd.Timedelta(hours=i * 4)
+        ts = base + timedelta(hours=i * 4)
         rows.append({
             "time": pd.Timestamp(ts),
             "open": price,
@@ -92,7 +92,7 @@ def _make_h1_df(n: int = 100, base_price: float = 1.1000) -> pd.DataFrame:
     rows = []
     price = base_price
     for i in range(n):
-        ts = base + pd.Timedelta(hours=i)
+        ts = base + timedelta(hours=i)
         rows.append({
             "time": pd.Timestamp(ts),
             "open": price,
@@ -111,7 +111,7 @@ def _make_m5_df(n: int = 300, base_price: float = 1.1000) -> pd.DataFrame:
     rows = []
     price = base_price
     for i in range(n):
-        ts = base + pd.Timedelta(minutes=i * 5)
+        ts = base + timedelta(minutes=i * 5)
         rows.append({
             "time": pd.Timestamp(ts),
             "open": price,
@@ -204,7 +204,7 @@ class TestBacktestDataProvider:
 
         # Every returned bar must have its close time ≤ current_bar open time
         for _, row in result.iterrows():
-            close_time = row["time"] + pd.Timedelta(hours=4)
+            close_time = row["time"] + timedelta(hours=4)
             assert close_time <= current_bar_open, (
                 f"H4 bar at {row['time']} (close={close_time}) "
                 f"should not be visible at current_bar_open={current_bar_open}"
