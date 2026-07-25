@@ -218,15 +218,41 @@ class RiskManager:
             )
             return self._reject("MARGIN_SAFETY", "ACCOUNT_INFO_UNAVAILABLE", signal)
 
-        # Estimate required margin from lot size, contract size, and entry price.
+        # Estimate required margin from lot size and contract size.
         # Assumes 1:100 leverage as a conservative guard; the exact figure comes
         # from MT5 order_check at execution time (Phase 09).
-        estimated_margin = (
-            context.symbol_info.contract_size
-            * size_result.lot_size
-            * sltp_result.entry_price
-            / 100.0
-        ) if context.symbol_info else 0.0
+        #
+        # Formula depends on whether the base currency == account currency (USD):
+        #
+        #   USD-base pairs (e.g. USDJPY, USDCHF):
+        #       margin_USD = contract_size × lots / leverage
+        #       The base IS already USD — no exchange-rate conversion needed.
+        #       Multiplying by entry_price (≈158 for USDJPY) would inflate the
+        #       estimate by ~158×, blocking all trades on a small account.
+        #
+        #   Non-USD-base pairs (e.g. EURUSD, GBPUSD):
+        #       margin_USD = contract_size × lots × price / leverage
+        #       The base is a foreign currency; price converts it to USD.
+        #
+        # Detection: the first 3 characters of the canonical symbol name are "USD".
+        # This handles broker suffixes (USDJPYm, USDJPY.pro, USDJPYecn, …).
+        if context.symbol_info:
+            usd_base = signal.symbol.upper()[:3] == "USD"
+            if usd_base:
+                estimated_margin = (
+                    context.symbol_info.contract_size
+                    * size_result.lot_size
+                    / 100.0
+                )
+            else:
+                estimated_margin = (
+                    context.symbol_info.contract_size
+                    * size_result.lot_size
+                    * sltp_result.entry_price
+                    / 100.0
+                )
+        else:
+            estimated_margin = 0.0
 
         margin_result: MarginCheckResult = self._margin.check(
             account_info=context.account_info,
