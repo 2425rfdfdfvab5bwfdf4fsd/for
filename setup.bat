@@ -33,6 +33,7 @@ set ENV_OK=0
 set MT5_OK=0
 set MT5_FOUND=0
 set HEALTH_OK=0
+set PREFLIGHT_OK=0
 
 :: -------------------------------------------------------
 :: STEP 1: Check Python version >= 3.11
@@ -221,7 +222,20 @@ if !MT5_FOUND! EQU 0 (
 )
 
 :: -------------------------------------------------------
-:: STEP 11: Run health check
+:: STEP 11: Run pre-flight safety check
+:: -------------------------------------------------------
+echo [7/8] Running pre-flight safety check...
+
+python scripts\preflight_check.py
+if errorlevel 1 (
+    echo [WARNING] Pre-flight check reported issues — review output above
+    echo          Run 'python scripts\preflight_check.py' for details.
+) else (
+    set PREFLIGHT_OK=1
+)
+
+:: -------------------------------------------------------
+:: STEP 12: Run health check
 :: -------------------------------------------------------
 echo [8/8] Running health check...
 
@@ -292,6 +306,12 @@ if !MT5_FOUND! EQU 1 (
     echo  [OK] MT5 terminal found
 ) else (
     echo  [!] MT5 terminal not found — install from https://www.metatrader5.com
+)
+
+if !PREFLIGHT_OK! EQU 1 (
+    echo  [OK] Pre-flight safety check passed
+) else (
+    echo  [!] Pre-flight check reported warnings — run: python scripts\preflight_check.py
 )
 
 if !HEALTH_OK! EQU 1 (

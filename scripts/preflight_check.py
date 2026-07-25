@@ -200,8 +200,8 @@ def _check_telegram(config) -> None:
     token = config.TELEGRAM_BOT_TOKEN or ""
     chat_id = config.TELEGRAM_CHAT_ID or ""
 
-    _PLACEHOLDER_TOKENS = {"", "YOUR_TELEGRAM_BOT_TOKEN", "placeholder", "none"}
-    _PLACEHOLDER_CHATS = {"", "YOUR_CHAT_ID", "placeholder", "0", "none"}
+    _PLACEHOLDER_TOKENS = {"", "your_telegram_bot_token", "placeholder", "none"}
+    _PLACEHOLDER_CHATS = {"", "your_chat_id", "placeholder", "0", "none"}
 
     token_ok = token.lower() not in _PLACEHOLDER_TOKENS
     chat_ok = chat_id.lower() not in _PLACEHOLDER_CHATS
