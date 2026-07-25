@@ -64,7 +64,7 @@ logs/                          ← app.log trading.log errors.log strategy.log
 ## How to Run on Replit
 
 ```bash
-# Run all tests (1516 tests, Phases 01–20 complete + Phase 21 tasks 21-01, 21-02)
+# Run all tests (1516 tests, Phases 01–21 complete)
 python -m pytest tests/ -v --tb=short
 
 # Or use the "Run Tests" workflow in the Replit UI
@@ -74,7 +74,7 @@ python -m pytest tests/ -v --tb=short
 runs on Windows; Replit is used for development, testing, and code review only.
 MT5_LOGIN / MT5_PASSWORD / MT5_SERVER are not needed for testing.
 
-**Current test count:** 1516/1516 passing (Phases 01–20 complete + Phase 21 tasks 21-01, 21-02)
+**Current test count:** 1516/1516 passing (Phases 01–21 complete)
 
 ## How to Run (Windows)
 
