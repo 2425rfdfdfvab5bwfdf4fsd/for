@@ -1,0 +1,388 @@
+# =============================================================================
+# MT5 Automated Forex Trading Bot — Environment Configuration
+# =============================================================================
+#
+# HOW TO USE:
+#   Copy the full content of this file and paste it into your .env file.
+#   NEVER commit .env to git — it contains your credentials.
+#
+# Broker: Exness-MT5Trial15 (Demo / Hedge account)
+# Symbols use the Exness "m" suffix (e.g. EURUSDm, not EURUSD)
+#
+# =============================================================================
+
+
+# =============================================================================
+# TRADING MODE
+# =============================================================================
+
+# Operating mode: DEMO | PAPER | LIVE | BACKTEST
+# DEMO   = Connect to MT5 demo account, paper-track trades (no real orders)
+# PAPER  = Same as DEMO but internally paper-trades without MT5 order placement
+# LIVE   = Real money trading (requires LIVE_TRADING=true as additional guard)
+# BACKTEST = Historical backtesting mode (requires backtesting/ module)
+TRADING_MODE=DEMO
+
+# Safety guard — must be explicitly set to true for any real order to be placed.
+# NEVER change this to true during development or testing.
+LIVE_TRADING=false
+
+# MT5 magic number — unique ID for all orders placed by this bot.
+# Change this if you run other EAs on the same account to avoid conflicts.
+MAGIC_NUMBER=20260001
+
+
+# =============================================================================
+# MT5 CONNECTION
+# =============================================================================
+# Leave blank if MT5 terminal is already open and logged in.
+# Fill in if you want the bot to log in automatically at startup.
+
+MT5_LOGIN=474143810
+MT5_PASSWORD=BotTest1!
+MT5_SERVER=Exness-MT5Trial15
+
+# Full path to your MT5 terminal executable (Windows path)
+# Example: C:\Program Files\MetaTrader 5\terminal64.exe
+MT5_TERMINAL_PATH=C:\Program Files\MetaTrader 5\terminal64.exe
+
+
+# =============================================================================
+# TRADING PAIRS
+# =============================================================================
+
+# Comma-separated list of pairs to scan (canonical names)
+BOT_PAIRS=EURUSD,GBPUSD,USDJPY
+
+# Broker-specific symbol names (handles suffixes like EURUSDm, EURUSD.pro)
+# Exness uses the "m" suffix — these match exactly what Market Watch shows
+EURUSD_SYMBOL=EURUSDm
+GBPUSD_SYMBOL=GBPUSDm
+USDJPY_SYMBOL=USDJPYm
+
+
+# =============================================================================
+# RISK MANAGEMENT
+# =============================================================================
+
+# Risk per trade as a percentage of account equity (0.01 to 5.0)
+# Default: 0.5% — risk $50 on a $10,000 account
+RISK_PER_TRADE=0.5
+
+# Maximum number of trades per day (0 to 10)
+# The bot will NEVER force a trade just to reach this number
+MAX_DAILY_TRADES=3
+
+# Daily loss limit as a percentage of starting daily equity (0.1 to 20.0)
+# If daily losses reach this %, trading stops for the rest of the day
+MAX_DAILY_LOSS_PCT=2.0
+
+# Stop trading after this many consecutive losing trades
+MAX_CONSECUTIVE_LOSSES=2
+
+# Minimum account equity in USD required to place any trade.
+# If account equity drops below this, all new trades are blocked.
+# Set to 0.0 to disable (no minimum enforced).
+MIN_ACCOUNT_EQUITY_USD=50.0
+
+# Hard cap on lot size for any single trade (safety net)
+MAX_LOT_SIZE=10.0
+
+# Minimum margin level % required before placing any order
+# If margin level falls below this, no new orders are placed
+MARGIN_SAFETY_LEVEL=150.0
+
+
+# =============================================================================
+# STRATEGY
+# =============================================================================
+
+# Minimum confluence score required to take a trade (1 to 10)
+# 8 = require 8 out of 10 confluence factors to be present
+MIN_CONFLUENCE_SCORE=8
+
+# Minimum Risk:Reward ratio required for a valid trade (>= 1.0)
+# 2.0 = require at least 1:2 R:R (TP must be at least 2x the SL distance)
+MIN_RR_RATIO=2.0
+
+# Number of candles to look back when scanning for swing highs/lows
+SWING_LOOKBACK=20
+
+# Number of candles required on EACH SIDE to confirm a swing point (Decision-017)
+# 2 = a candle is a swing high only if 2 candles on each side are lower
+SWING_LOOKBACK_CANDLES=2
+
+# EMA periods for trend filter
+EMA_FAST=20
+EMA_SLOW=50
+
+# ATR period for volatility and stop-loss calculations
+ATR_PERIOD=14
+
+# ATR multiplier for stop-loss buffer (added to structure-based SL)
+# 0.3 = add 30% of ATR as buffer beyond the structural level
+ATR_SL_BUFFER_MULT=0.3
+
+# ATR multiplier for equal high/low tolerance (Decision-019)
+# 0.1 = two levels are "equal" if they are within 10% of ATR of each other
+EQUAL_LEVEL_ATR_MULTIPLIER=0.1
+
+# Displacement candle close ratio (Decision-020)
+# 0.75 = for a bullish displacement, close must be in upper 25% of candle range
+DISPLACEMENT_CLOSE_RATIO=0.75
+
+# M5 confirmation lookback (Decision-022)
+# How many M5 candles back to look for BOS/Displacement/CHoCH entry confirmation
+M5_CONFIRMATION_LOOKBACK_CANDLES=5
+
+
+# =============================================================================
+# MARKET REGIME (Decision-021)
+# =============================================================================
+
+# ATR is HIGH_VOLATILITY if current ATR > this multiple of 50-period average ATR
+REGIME_VOLATILITY_HIGH_MULT=2.5
+
+# ATR is LOW_VOLATILITY if current ATR < this multiple of 50-period average ATR
+REGIME_VOLATILITY_LOW_MULT=0.4
+
+# EMA slope threshold for TRENDING regime (% per bar)
+REGIME_TREND_SLOPE_THRESHOLD=0.05
+
+# EMA slope threshold for RANGING regime (% per bar)
+REGIME_RANGE_SLOPE_THRESHOLD=0.01
+
+# Period for calculating the average ATR used in regime classification
+REGIME_ATR_AVERAGE_PERIOD=50
+
+
+# =============================================================================
+# TRADING SESSIONS
+# =============================================================================
+# All times are UTC. The bot only trades during active session windows.
+
+LONDON_SESSION_ENABLED=true
+LONDON_START_UTC=07:00
+LONDON_END_UTC=16:00
+
+NEW_YORK_SESSION_ENABLED=true
+NY_START_UTC=12:00
+NY_END_UTC=21:00
+
+
+# =============================================================================
+# POSITION MANAGEMENT
+# =============================================================================
+
+# Break-even management (Decision-005)
+# Move SL to break-even when trade reaches BREAK_EVEN_R_MULTIPLE x initial risk
+ENABLE_BREAK_EVEN=true
+BREAK_EVEN_R_MULTIPLE=1.0
+BREAK_EVEN_BUFFER_PIPS=2
+
+# Trailing stop
+# structure = trail behind swing structure
+# atr       = trail using ATR-based calculation
+ENABLE_TRAILING_STOP=true
+TRAILING_STOP_TYPE=structure
+
+# Partial profit taking — DISABLED by default (Decision-006)
+# Enable only after backtesting confirms it improves performance
+ENABLE_PARTIAL_PROFIT=false
+PARTIAL_PROFIT_R_TRIGGER=1.0
+PARTIAL_PROFIT_PCT=0.5
+
+
+# =============================================================================
+# OVERNIGHT / WEEKEND MANAGEMENT
+# =============================================================================
+
+# Allow positions to be held overnight (Decision-008)
+# false = close all positions before overnight cutoff
+ALLOW_OVERNIGHT=false
+
+# What to do with existing PROFITABLE positions at overnight cutoff
+# close = close the position (safe default)
+# hold  = keep the position open
+OVERNIGHT_POLICY=close
+
+# Time on Friday (UTC) after which no new trades are opened
+FRIDAY_CUTOFF_UTC=20:00
+
+
+# =============================================================================
+# TP TARGET SELECTION (Decision-023)
+# =============================================================================
+
+# Prefer equal highs/lows as TP target (vs. swing highs/lows)
+TP_PREFER_EQUAL_LEVELS=true
+
+# Fall back to swing high/low if no equal level target is found
+TP_FALLBACK_TO_SWING=true
+
+
+# =============================================================================
+# FILTERS
+# =============================================================================
+
+# News filter — avoid trading around high-impact news events (Decision-004)
+ENABLE_NEWS_FILTER=true
+NEWS_FILTER_MINUTES_BEFORE=30
+NEWS_FILTER_MINUTES_AFTER=30
+
+# Maximum allowed spread per pair (in pips) before trade is rejected
+MAX_SPREAD_EURUSD=3.0
+MAX_SPREAD_GBPUSD=4.0
+MAX_SPREAD_USDJPY=3.0
+
+# Volatility filter — reject trades when ATR is abnormally low or high
+# MIN: reject if ATR < MULT * average_ATR (too quiet — no momentum)
+# MAX: reject if ATR > MULT * average_ATR (too volatile — unpredictable)
+VOLATILITY_MIN_ATR_MULT=0.5
+VOLATILITY_MAX_ATR_MULT=3.0
+
+
+# =============================================================================
+# TELEGRAM NOTIFICATIONS (Decision-014)
+# =============================================================================
+# Telegram is OPTIONAL. The bot trades safely without it.
+# If Telegram fails, the bot logs the failure and continues trading.
+
+TELEGRAM_ENABLED=false
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+
+# Report delivery times (UTC, HH:MM format)
+# Daily report  — sent every day at this time
+# Weekly report — sent every Sunday at this time
+# Monthly report — sent on the 1st of each month at this time
+DAILY_REPORT_TIME_UTC=20:30
+WEEKLY_REPORT_TIME_UTC=20:00
+MONTHLY_REPORT_TIME_UTC=08:00
+
+
+# =============================================================================
+# DASHBOARD
+# =============================================================================
+
+DASHBOARD_HOST=127.0.0.1
+DASHBOARD_PORT=8080
+
+
+# =============================================================================
+# DATABASE
+# =============================================================================
+
+DATABASE_PATH=data/trading_bot.db
+
+
+# =============================================================================
+# LOGGING
+# =============================================================================
+
+# Log level: DEBUG | INFO | WARNING | ERROR | CRITICAL
+LOG_LEVEL=INFO
+
+# Directory where log files are stored
+LOG_DIR=logs
+
+# Maximum size per log file before rotation (bytes). Default: 10MB
+LOG_MAX_BYTES=10485760
+
+# Number of rotated backup log files to keep
+LOG_BACKUP_COUNT=5
+
+
+# =============================================================================
+# BACKTESTING
+# =============================================================================
+# These values simulate real trading costs in backtests.
+# Use your broker's actual values for realistic results.
+
+# Spread added to every fill (pips). Replace with your broker's typical spread.
+BACKTEST_SPREAD_PIPS=1.5
+
+# Maximum random slippage per fill (pips). Uniform random [0, SLIPPAGE_PIPS].
+BACKTEST_SLIPPAGE_PIPS=0.5
+
+# Round-trip commission per lot in account currency (e.g. USD).
+# Typical ECN: $7/lot round-trip. Set 0 for spread-only brokers.
+BACKTEST_COMMISSION_PER_LOT=7.0
+
+# Overnight swap per lot per night (in pips). Negative = you pay.
+# Replace with your broker's actual swap table values.
+BACKTEST_OVERNIGHT_SWAP_LONG=-0.50
+BACKTEST_OVERNIGHT_SWAP_SHORT=-0.30
+
+
+# =============================================================================
+# BROKER SERVER TIMEZONE (CHG-008)
+# =============================================================================
+# Most MT5 brokers use UTC+2 (summer) or UTC+3 (winter / DST shift).
+# This offset is used to align the daily loss limit reset with the broker's day.
+# The bot auto-detects this at startup — set here only as a fallback/override.
+# Exness servers run on UTC+3.
+
+SERVER_UTC_OFFSET_HOURS=3
+
+
+# =============================================================================
+# RISK ENGINE (Phase 07)
+# =============================================================================
+
+# Minimum stop-loss distance in pips — setups with tighter SLs are rejected
+MIN_SL_PIPS=10.0
+
+# Margin safety buffer: free_margin must be >= required_margin * this factor
+MARGIN_SAFETY_FACTOR=3.0
+
+# Pair correlation blocking (CHG-015)
+# Threshold used for documentation/logging — actual blocking follows hard rules
+CORRELATION_BLOCK_THRESHOLD=0.80
+
+# Block USDJPY when EURUSD is open in the same direction (default: false)
+BLOCK_USDJPY_WITH_EURUSD=false
+
+# Block USDJPY when GBPUSD is open in the same direction (default: false)
+BLOCK_USDJPY_WITH_GBPUSD=false
+
+# Maximum number of correlated concurrent positions allowed
+MAX_CORRELATED_POSITIONS=1
+
+
+# =============================================================================
+# EXECUTION ENGINE (Phase 09)
+# =============================================================================
+
+# Safety switch — set to false to block ALL order placement (positions still managed)
+EXECUTION_ENABLED=true
+
+# Reject entry price if it has drifted more than this many pips from current price
+PRICE_STALENESS_PIPS=2.0
+
+# Maximum order-send retries on REQUOTE or PRICE_CHANGED (never more than 2)
+MAX_EXECUTION_RETRIES=1
+
+# Seconds to wait between execution retries
+RETRY_DELAY_SECONDS=0.5
+
+# Order fill mode: FOK (Fill-or-Kill) | IOC (Immediate-or-Cancel) | RETURN
+# FOK is the safest default — entire order fills or nothing
+ORDER_FILLING_MODE=FOK
+
+# How to handle positions in MT5 that have no matching database record
+# Options: alert (default) | close | adopt
+# alert = log CRITICAL + flag for human review (NEVER auto-close)
+# close = auto-close at market price
+# adopt = reconstruct and add to bot management (best-effort parameters)
+ORPHAN_POLICY=alert
+
+
+# =============================================================================
+# SCREENSHOTS (Decision-015)
+# =============================================================================
+# Chart screenshots are DISABLED by default.
+# Uses matplotlib to render OHLCV data — no GUI/MT5 screenshot automation.
+
+ENABLE_SCREENSHOTS=false
+SCREENSHOT_DIR=data/screenshots
