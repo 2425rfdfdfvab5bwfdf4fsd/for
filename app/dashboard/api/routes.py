@@ -151,6 +151,97 @@ def signals_history():
         return jsonify({"error": "internal error"}), 500
 
 
+@api_bp.route("/backtest/reports", methods=["GET"])
+def backtest_reports():
+    """List all available backtest HTML reports in data/reports/."""
+    import json
+    from pathlib import Path
+    reports_dir = Path("data") / "reports"
+    results = []
+    if reports_dir.exists():
+        for f in sorted(reports_dir.glob("backtest_*.html"), reverse=True):
+            stat = f.stat()
+            results.append({
+                "filename": f.name,
+                "path": str(f),
+                "size_kb": round(stat.st_size / 1024, 1),
+                "modified": stat.st_mtime,
+            })
+    return jsonify({"reports": results, "count": len(results)}), 200
+
+
+@api_bp.route("/backtest/data-status", methods=["GET"])
+def backtest_data_status():
+    """Check whether historical data CSV files exist for each symbol/timeframe."""
+    from pathlib import Path
+    cache_dir = Path("data") / "historical"
+    pairs = ["EURUSD", "GBPUSD", "USDJPY"]
+    timeframes = ["M5", "M15", "H1", "H4"]
+    status = {}
+    total_bars = 0
+    for sym in pairs:
+        status[sym] = {}
+        for tf in timeframes:
+            path = cache_dir / f"{sym}_{tf}.csv"
+            if path.exists():
+                try:
+                    import pandas as pd
+                    df = pd.read_csv(path, usecols=["time"])
+                    bars = len(df)
+                    status[sym][tf] = {"exists": True, "bars": bars}
+                    total_bars += bars
+                except Exception:
+                    status[sym][tf] = {"exists": True, "bars": -1}
+            else:
+                status[sym][tf] = {"exists": False, "bars": 0}
+    has_data = any(
+        status[s][tf]["exists"]
+        for s in pairs
+        for tf in timeframes
+    )
+    return jsonify({
+        "has_data": has_data,
+        "total_bars": total_bars,
+        "by_symbol": status,
+    }), 200
+
+
+@api_bp.route("/backtest/run", methods=["POST"])
+def backtest_run():
+    """
+    Trigger a backtest run as a background subprocess.
+    Returns immediately — poll /api/backtest/reports to see when the
+    HTML report appears.
+    """
+    import subprocess
+    import sys
+    from flask import request as freq
+    body = freq.get_json(silent=True) or {}
+    symbol  = body.get("symbol", "EURUSD")
+    from_d  = body.get("from_date", "")
+    to_d    = body.get("to_date", "")
+    capital = body.get("capital", 10000)
+
+    cmd = [sys.executable, "run_backtest.py", "--symbol", symbol, "--capital", str(capital)]
+    if from_d:
+        cmd += ["--from", from_d]
+    if to_d:
+        cmd += ["--to", to_d]
+
+    try:
+        proc = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            start_new_session=True,
+        )
+        return jsonify({"started": True, "pid": proc.pid, "cmd": " ".join(cmd)}), 202
+    except Exception as exc:
+        logger.error("/api/backtest/run error: %s", exc)
+        return jsonify({"started": False, "error": str(exc)}), 500
+
+
 @api_bp.route("/why-no-trade", methods=["GET"])
 def why_no_trade():
     """

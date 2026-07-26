@@ -379,7 +379,7 @@ class Config:
         self.MARGIN_SAFETY_LEVEL = _get_float("MARGIN_SAFETY_LEVEL", 150.0)
 
         # --- STRATEGY ---
-        self.MIN_CONFLUENCE_SCORE = _get_int("MIN_CONFLUENCE_SCORE", 8)
+        self.MIN_CONFLUENCE_SCORE = _get_int("MIN_CONFLUENCE_SCORE", 6)
         self.MIN_RR_RATIO = _get_float("MIN_RR_RATIO", 2.0)
         self.SWING_LOOKBACK = _get_int("SWING_LOOKBACK", 20)
         self.SWING_LOOKBACK_CANDLES = _get_int("SWING_LOOKBACK_CANDLES", 2)

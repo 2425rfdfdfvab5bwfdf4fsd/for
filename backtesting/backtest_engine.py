@@ -428,6 +428,9 @@ class BacktestEngine:
                 if sym_bar_idx is None:
                     continue                 # Symbol has no bar at this timestamp
 
+                # Retrieve the current bar up-front — needed for entry-price fallback
+                sym_bar_current = all_data[symbol]["M15"].iloc[sym_bar_idx]
+
                 # Run strategy on visible slices
                 try:
                     setup = self._run_strategy(provider, symbol)
@@ -439,6 +442,22 @@ class BacktestEngine:
 
                 if setup is None:
                     continue
+
+                # BUG-FIX: when no OB or FVG is found the signal engine sets
+                # entry_target=0.0, causing SLTPCalculator to reject immediately
+                # with INVALID_ENTRY_PRICE.  In backtest mode we execute at bar
+                # open regardless, so use the current bar's open as the entry
+                # reference price for SL/TP geometry.
+                if setup.entry_target <= 0.0:
+                    bar_open = float(sym_bar_current["open"])
+                    setup.entry_target = bar_open
+                    setup.entry_zone_high = bar_open
+                    setup.entry_zone_low = bar_open
+                    logger.debug(
+                        "Bar %d %s: entry_target patched to bar open %.5f "
+                        "(no OB/FVG entry zone from strategy)",
+                        i, symbol, bar_open,
+                    )
 
                 # Confluence scoring
                 #
@@ -507,10 +526,10 @@ class BacktestEngine:
                     continue
 
                 # Entry: use THIS SYMBOL'S bar at the current timestamp
-                sym_bar = all_data[symbol]["M15"].iloc[sym_bar_idx]
+                # (sym_bar_current already retrieved above for entry_target patch)
                 tp = risk_result.trade_params
                 entry_price = _simulated_entry_price(
-                    sym_bar["open"], tp.direction, pip_size, cfg
+                    sym_bar_current["open"], tp.direction, pip_size, cfg
                 )
 
                 commission = cfg.BACKTEST_COMMISSION_PER_LOT * tp.lot_size

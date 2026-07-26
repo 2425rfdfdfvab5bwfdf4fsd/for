@@ -109,17 +109,20 @@ def test_short_sl_above_ob(test_config):
     assert result.sl_price > result.entry_price, "SL must be above entry for SELL"
 
 
-def test_rr_below_minimum_invalid(test_config):
+def test_rr_below_minimum_uses_atr_fallback(test_config):
     """
-    When the best structural TP produces rr < MIN_RR_RATIO, result must be invalid.
-    suggested_tp must be 0 to ensure no valid fallback sneaks through.
+    When the structural swing TP has rr < MIN_RR, the ATR-based fallback TP
+    is used instead and the result is VALID.
+
+    Old behaviour (pre ATR-fallback): result was invalid with INSUFFICIENT_RR.
+    New behaviour: ATR fallback provides TP at entry + sl_pips*(MIN_RR+0.5)*pip_size,
+    which always satisfies MIN_RR, so result is valid.
     """
     test_config.MIN_SL_PIPS = 5.0
     test_config.MIN_RR_RATIO = 2.0
     test_config.TP_PREFER_EQUAL_LEVELS = False
     test_config.TP_FALLBACK_TO_SWING = True
 
-    # suggested_tp=0.0 so no fallback TP is available beyond swing_levels
     setup = _make_setup(
         direction="BUY",
         entry_target=1.10000,
@@ -127,14 +130,47 @@ def test_rr_below_minimum_invalid(test_config):
         suggested_tp=0.0,
     )
     calc = SLTPCalculator(test_config)
-    # TP only 30 pips away → R:R ≈ 0.56 (below MIN_RR 2.0)
+    # TP only 30 pips away → structural RR ≈ 0.56 → rejected; ATR fallback used
     result = calc.calculate(
         signal=setup,
         atr=0.00100,
         pip_size=0.0001,
-        swing_levels=[1.10300],   # only 30 pips above entry
+        swing_levels=[1.10300],   # only 30 pips above entry — below MIN_RR
     )
-    assert not result.valid, "Expected invalid due to insufficient R:R"
+    assert result.valid, (
+        "ATR-based TP fallback should produce a valid result even when structural "
+        f"TP has insufficient R:R. reason={result.rejection_reason}"
+    )
+    assert result.rr_ratio >= test_config.MIN_RR_RATIO, (
+        f"ATR fallback must satisfy MIN_RR; got rr={result.rr_ratio}"
+    )
+    assert result.tp2_price > result.entry_price, "TP must be above entry for BUY"
+
+
+def test_rr_below_minimum_no_atr_is_invalid(test_config):
+    """
+    When the structural TP has rr < MIN_RR *and* atr=0 (no fallback possible),
+    the result must be invalid.
+    """
+    test_config.MIN_SL_PIPS = 5.0
+    test_config.MIN_RR_RATIO = 2.0
+    test_config.TP_PREFER_EQUAL_LEVELS = False
+    test_config.TP_FALLBACK_TO_SWING = True
+
+    setup = _make_setup(
+        direction="BUY",
+        entry_target=1.10000,
+        ob_low=1.09500,
+        suggested_tp=0.0,
+    )
+    calc = SLTPCalculator(test_config)
+    result = calc.calculate(
+        signal=setup,
+        atr=0.0,              # ATR unavailable → no fallback TP
+        pip_size=0.0001,
+        swing_levels=[1.10300],
+    )
+    assert not result.valid, "Expected invalid — no structural TP and no ATR for fallback"
     assert result.rejection_reason in ("INSUFFICIENT_RR", "NO_TP_TARGET_IDENTIFIED"), (
         f"Unexpected reason: {result.rejection_reason}"
     )
@@ -231,9 +267,49 @@ def test_tp_equal_levels_preferred(test_config):
     )
 
 
-def test_no_tp_target_returns_invalid(test_config):
+def test_no_structural_tp_uses_atr_fallback(test_config):
     """
-    With no equal or swing levels and no valid suggested_tp, result is invalid.
+    With no equal/swing levels and no suggested_tp the ATR-based fallback TP
+    is used and the result is VALID (provided atr > 0).
+
+    Old behaviour (pre ATR-fallback): result was invalid with NO_TP_TARGET_IDENTIFIED.
+    New behaviour: ATR TP = entry + sl_pips * (MIN_RR + 0.5) * pip_size.
+    """
+    test_config.MIN_SL_PIPS = 5.0
+    test_config.MIN_RR_RATIO = 2.0
+    test_config.TP_PREFER_EQUAL_LEVELS = True
+    test_config.TP_FALLBACK_TO_SWING = True
+
+    setup = MagicMock()
+    setup.symbol = "EURUSD"
+    setup.direction = "BUY"
+    setup.entry_target = 1.10000
+    setup.suggested_sl = 1.09000   # 100 pip SL
+    setup.suggested_tp = 0.0        # no structural TP
+    setup.m15_order_block = None
+
+    calc = SLTPCalculator(test_config)
+    result = calc.calculate(
+        signal=setup,
+        atr=0.00050,
+        pip_size=0.0001,
+        equal_levels=[],
+        swing_levels=[],
+    )
+    assert result.valid, (
+        "ATR-based TP fallback should produce a valid result when no structural "
+        f"TP exists. reason={result.rejection_reason}"
+    )
+    assert result.rr_ratio >= test_config.MIN_RR_RATIO, (
+        f"ATR fallback must satisfy MIN_RR; got rr={result.rr_ratio}"
+    )
+    assert result.tp2_price > result.entry_price, "TP must be above entry for BUY"
+
+
+def test_no_tp_and_no_atr_returns_invalid(test_config):
+    """
+    With no structural TP levels AND atr=0, the calculator cannot derive any
+    TP and must return valid=False with NO_TP_TARGET_IDENTIFIED.
     """
     test_config.MIN_SL_PIPS = 5.0
     test_config.MIN_RR_RATIO = 2.0
@@ -245,16 +321,16 @@ def test_no_tp_target_returns_invalid(test_config):
     setup.direction = "BUY"
     setup.entry_target = 1.10000
     setup.suggested_sl = 1.09000
-    setup.suggested_tp = 0.0   # no suggestion
+    setup.suggested_tp = 0.0
     setup.m15_order_block = None
 
     calc = SLTPCalculator(test_config)
     result = calc.calculate(
         signal=setup,
-        atr=0.00050,
+        atr=0.0,               # ATR unavailable → no fallback
         pip_size=0.0001,
         equal_levels=[],
         swing_levels=[],
     )
-    assert not result.valid, "Expected invalid — no TP target"
+    assert not result.valid, "Expected invalid — no TP and no ATR for fallback"
     assert result.rejection_reason == "NO_TP_TARGET_IDENTIFIED"

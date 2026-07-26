@@ -76,7 +76,10 @@ class SLTPCalculator:
         # ----------------------------------------------------------------
         # Determine SL price
         # ----------------------------------------------------------------
-        sl_price = self._determine_sl(signal, atr, pip_size, direction)
+        sl_price = self._determine_sl(
+            signal, atr, pip_size, direction,
+            atr_buffer_mult=cfg.ATR_SL_BUFFER_MULT,
+        )
 
         if sl_price <= 0.0:
             logger.warning(
@@ -205,28 +208,52 @@ class SLTPCalculator:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _determine_sl(signal, atr: float, pip_size: float, direction: str) -> float:
+    def _determine_sl(
+        signal,
+        atr: float,
+        pip_size: float,
+        direction: str,
+        atr_buffer_mult: float = 0.3,
+    ) -> float:
         """
         Derive the SL price from the signal's structural reference points.
 
         Priority:
           1. Order Block boundary + ATR buffer (most precise structural level)
           2. signal.suggested_sl (pre-computed by signal engine)
-          3. 0.0 (caller handles as invalid)
+          3. ATR-based SL (2× ATR from entry — fallback when no structural ref)
+          4. 0.0 (caller handles as invalid — should never reach here)
         """
-        atr_buffer = atr * 0.3  # matches ATR_SL_BUFFER_MULT default
+        atr_buffer = atr * atr_buffer_mult
+        entry = getattr(signal, "entry_target", 0.0)
 
         ob = getattr(signal, "m15_order_block", None)
         if ob is not None:
             if direction == "BUY":
-                return ob.low - atr_buffer
+                candidate = ob.low - atr_buffer
+                # Only use OB SL when it is actually below entry (valid structure)
+                if entry <= 0.0 or candidate < entry:
+                    return candidate
             else:
-                return ob.high + atr_buffer
+                candidate = ob.high + atr_buffer
+                if entry <= 0.0 or candidate > entry:
+                    return candidate
 
-        # Fall back to signal engine's pre-computed SL
+        # Fall back to signal engine's pre-computed structural SL
         suggested = getattr(signal, "suggested_sl", 0.0)
         if suggested > 0.0:
-            return suggested
+            if direction == "BUY" and (entry <= 0.0 or suggested < entry):
+                return suggested
+            if direction == "SELL" and (entry <= 0.0 or suggested > entry):
+                return suggested
+
+        # Final fallback: ATR-based SL (2× ATR from entry)
+        # Provides a reasonable stop when no structural reference exists.
+        if entry > 0.0 and atr > 0.0:
+            if direction == "BUY":
+                return entry - atr * 2.0
+            else:
+                return entry + atr * 2.0
 
         return 0.0
 
@@ -281,5 +308,19 @@ class SLTPCalculator:
         if suggested_tp > 0.0 and is_valid_tp(suggested_tp):
             return suggested_tp
 
-        # Priority 3 — No valid structural target
+        # Priority 3 — ATR-based TP: entry ± (min_rr + 0.5) × sl_distance
+        # Guarantees the trade satisfies MIN_RR even when no structural level exists.
+        atr_tp_distance = sl_pips * (min_rr + 0.5) * pip_size
+        if direction == "BUY":
+            atr_tp = entry_price + atr_tp_distance
+        else:
+            atr_tp = entry_price - atr_tp_distance
+        if is_valid_tp(atr_tp):
+            logger.debug(
+                "_select_tp: using ATR-based TP fallback (%.5f) — no structural level found",
+                atr_tp,
+            )
+            return atr_tp
+
+        # Priority 4 — No valid target at all
         return None

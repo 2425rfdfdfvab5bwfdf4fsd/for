@@ -106,6 +106,11 @@ def create_app(
     def health_page():  # pylint: disable=unused-variable
         return render_template("health.html", active_page="health")
 
+    # Backtest route — run & review backtests
+    @app.route("/backtest")
+    def backtest_page():  # pylint: disable=unused-variable
+        return render_template("backtest.html", active_page="backtest")
+
     logger.info(
         "Dashboard app created — host=%s port=%s",
         config.DASHBOARD_HOST,

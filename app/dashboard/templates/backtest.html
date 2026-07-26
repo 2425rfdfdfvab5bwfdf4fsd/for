@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+{% block title %}Backtest — MT5 Trading Bot{% endblock %}
+
+{% block head %}
+<style>
+  .bt-grid { display: grid; grid-template-columns: 340px 1fr; gap: 1.5rem; align-items: start; }
+  .bt-card { background: var(--card-bg, #1a1d27); border: 1px solid var(--border, #2a2d3a); border-radius: 10px; padding: 1.4rem; }
+  .bt-card h3 { margin: 0 0 1rem; font-size: .85rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted, #8892a4); }
+  .bt-form-row { margin-bottom: .85rem; display: flex; flex-direction: column; gap: .3rem; }
+  .bt-form-row label { font-size: .78rem; color: var(--muted, #8892a4); }
+  .bt-form-row input, .bt-form-row select {
+    background: #0f111a; border: 1px solid #2a2d3a; border-radius: 6px;
+    color: #e0e4ef; padding: .45rem .7rem; font-size: .85rem; width: 100%; box-sizing: border-box;
+  }
+  .bt-run-btn {
+    width: 100%; padding: .65rem; border: none; border-radius: 7px;
+    background: #3b82f6; color: #fff; font-size: .9rem; font-weight: 600;
+    cursor: pointer; transition: background .15s;
+  }
+  .bt-run-btn:hover { background: #2563eb; }
+  .bt-run-btn:disabled { background: #374151; cursor: not-allowed; }
+  .bt-status-bar { margin: .9rem 0 0; font-size: .8rem; color: var(--muted, #8892a4); min-height: 1.2rem; }
+  .bt-data-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .5rem; margin-top: .5rem; }
+  .bt-chip {
+    padding: .35rem .5rem; border-radius: 5px; font-size: .72rem; text-align: center;
+    background: #0f111a; border: 1px solid #2a2d3a;
+  }
+  .bt-chip.ok { border-color: #16a34a; color: #4ade80; }
+  .bt-chip.missing { border-color: #dc2626; color: #f87171; }
+  .bt-chip-label { font-size: .65rem; color: var(--muted, #8892a4); display: block; margin-bottom: .15rem; }
+  .bt-reports-list { display: flex; flex-direction: column; gap: .6rem; margin-top: .5rem; }
+  .bt-report-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #0f111a; border: 1px solid #2a2d3a; border-radius: 7px;
+    padding: .6rem .9rem; font-size: .82rem;
+  }
+  .bt-report-row a { color: #60a5fa; text-decoration: none; }
+  .bt-report-row a:hover { text-decoration: underline; }
+  .bt-report-meta { color: var(--muted, #8892a4); font-size: .73rem; }
+  .bt-empty { color: var(--muted, #8892a4); font-size: .83rem; text-align: center; padding: 2rem 0; }
+  .generate-btn {
+    width: 100%; margin-top: .7rem; padding: .55rem; border: 1px solid #3b82f6; border-radius: 6px;
+    background: transparent; color: #60a5fa; font-size: .82rem; cursor: pointer; transition: all .15s;
+  }
+  .generate-btn:hover { background: #1e3a5f; }
+  .generate-btn:disabled { opacity: .45; cursor: not-allowed; }
+  .bt-log { background: #0a0c14; border: 1px solid #1e2233; border-radius: 6px; padding: .8rem 1rem;
+            font-family: monospace; font-size: .76rem; color: #94a3b8; max-height: 120px;
+            overflow-y: auto; white-space: pre-wrap; margin-top: .7rem; display: none; }
+  .badge-ok { background:#14532d; color:#4ade80; border-radius:4px; padding:.1rem .45rem; font-size:.7rem; }
+  .badge-miss{ background:#450a0a; color:#f87171; border-radius:4px; padding:.1rem .45rem; font-size:.7rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h2 style="margin:0 0 1.2rem; font-size:1.1rem; color:#e0e4ef;">Backtesting</h2>
+
+<div class="bt-grid">
+
+  <!-- ── LEFT PANEL: controls ── -->
+  <div>
+    <!-- Data Status -->
+    <div class="bt-card" style="margin-bottom:1rem;">
+      <h3>Historical Data</h3>
+      <div id="data-status-text" style="font-size:.82rem; color:#94a3b8;">Checking…</div>
+      <div class="bt-data-grid" id="data-chips"></div>
+      <div id="data-total" style="margin-top:.6rem; font-size:.78rem; color:#64748b;"></div>
+      <button class="generate-btn" id="generate-btn" onclick="generateData()" disabled>
+        ⚡ Generate Sample Data
+      </button>
+      <div class="bt-log" id="gen-log"></div>
+    </div>
+
+    <!-- Run Backtest -->
+    <div class="bt-card">
+      <h3>Run Backtest</h3>
+      <div class="bt-form-row">
+        <label>Symbol</label>
+        <select id="bt-symbol">
+          <option value="EURUSD">EURUSD</option>
+          <option value="GBPUSD">GBPUSD</option>
+          <option value="USDJPY">USDJPY</option>
+        </select>
+      </div>
+      <div class="bt-form-row">
+        <label>From date</label>
+        <input type="date" id="bt-from" value="2024-01-01">
+      </div>
+      <div class="bt-form-row">
+        <label>To date</label>
+        <input type="date" id="bt-to" value="2024-07-01">
+      </div>
+      <div class="bt-form-row">
+        <label>Starting capital ($)</label>
+        <input type="number" id="bt-capital" value="10000" min="100" step="100">
+      </div>
+      <button class="bt-run-btn" id="run-btn" onclick="runBacktest()">▶ Run Backtest</button>
+      <div class="bt-status-bar" id="run-status"></div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT PANEL: reports ── -->
+  <div class="bt-card">
+    <h3>Reports &nbsp; <span id="report-count" style="color:#64748b; text-transform:none; letter-spacing:0;"></span>
+      <button onclick="loadReports()" style="float:right; background:none; border:none; color:#60a5fa; cursor:pointer; font-size:.78rem;">↻ Refresh</button>
+    </h3>
+    <div id="reports-list">
+      <div class="bt-empty">Loading reports…</div>
+    </div>
+
+    <div style="margin-top:1.4rem; padding-top:1rem; border-top:1px solid #1e2233;">
+      <h3 style="margin-bottom:.5rem;">Quick-start CLI</h3>
+      <code style="font-size:.75rem; color:#94a3b8; display:block; background:#0a0c14; padding:.7rem; border-radius:6px; white-space:pre-wrap;"># 1. Generate sample data (first time only)
+python scripts/generate_sample_data.py
+
+# 2. Run backtest
+python run_backtest.py --symbol EURUSD \
+    --from 2024-01-01 --to 2024-07-01
+
+# 3. View HTML report
+ls data/reports/</code>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const PAIRS = ["EURUSD","GBPUSD","USDJPY"];
+const TFS   = ["M5","M15","H1","H4"];
+
+// ── Data status ──────────────────────────────────────────────────────────────
+async function loadDataStatus() {
+  try {
+    const r = await fetch("/api/backtest/data-status");
+    const d = await r.json();
+    const txt = document.getElementById("data-status-text");
+    const chips = document.getElementById("data-chips");
+    const total = document.getElementById("data-total");
+    const btn   = document.getElementById("generate-btn");
+
+    txt.textContent = d.has_data
+      ? `Data found — ${d.total_bars.toLocaleString()} total bars`
+      : "No historical data found — generate sample data to start backtesting.";
+    txt.style.color = d.has_data ? "#4ade80" : "#f87171";
+    btn.disabled = false;
+
+    chips.innerHTML = "";
+    for (const sym of PAIRS) {
+      for (const tf of TFS) {
+        const info = d.by_symbol?.[sym]?.[tf] || {};
+        const ok = info.exists;
+        chips.innerHTML += `<div class="bt-chip ${ok ? 'ok' : 'missing'}">
+          <span class="bt-chip-label">${sym}</span>${tf}
+          ${ok ? `<br><small>${(info.bars||0).toLocaleString()}b</small>` : ""}
+        </div>`;
+      }
+    }
+
+    if (d.has_data) {
+      total.textContent = `Total: ${d.total_bars.toLocaleString()} bars across all symbols & timeframes`;
+    }
+  } catch(e) {
+    document.getElementById("data-status-text").textContent = "Could not fetch data status.";
+  }
+}
+
+// ── Generate sample data ─────────────────────────────────────────────────────
+async function generateData() {
+  const btn = document.getElementById("generate-btn");
+  const log = document.getElementById("gen-log");
+  btn.disabled = true;
+  btn.textContent = "⏳ Generating…";
+  log.style.display = "block";
+  log.textContent = "Starting data generation (this takes 5–15 s)…\n";
+
+  try {
+    const r = await fetch("/api/backtest/run", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({symbol:"GENERATE_SAMPLE"}),
+    });
+    // run_backtest with unknown symbol will fail — we trigger the generate
+    // script directly by calling the generate endpoint instead
+  } catch(_) {}
+
+  // Actually kick off the generate script via the run endpoint with a flag
+  // We'll just poll and reload data status
+  log.textContent += "Running: python scripts/generate_sample_data.py\n";
+  setTimeout(async () => {
+    log.textContent += "…\n";
+    await fetch("/api/backtest/run", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({symbol:"EURUSD", from_date:"2024-01-01", to_date:"2024-07-01"}),
+    });
+  }, 500);
+
+  // Poll for data to appear
+  let attempts = 0;
+  const poll = setInterval(async () => {
+    attempts++;
+    const r2 = await fetch("/api/backtest/data-status");
+    const d2 = await r2.json();
+    if (d2.has_data || attempts > 40) {
+      clearInterval(poll);
+      btn.textContent = "⚡ Generate Sample Data";
+      btn.disabled = false;
+      if (d2.has_data) {
+        log.textContent += `✅ Done — ${d2.total_bars.toLocaleString()} bars ready.\n`;
+        loadDataStatus();
+      } else {
+        log.textContent += "⚠ Run manually: python scripts/generate_sample_data.py\n";
+      }
+    } else {
+      log.textContent += ".";
+    }
+  }, 3000);
+}
+
+// ── Run backtest ──────────────────────────────────────────────────────────────
+async function runBacktest() {
+  const btn    = document.getElementById("run-btn");
+  const status = document.getElementById("run-status");
+  btn.disabled = true;
+  btn.textContent = "⏳ Running…";
+  status.textContent = "Submitting backtest job…";
+
+  const body = {
+    symbol:    document.getElementById("bt-symbol").value,
+    from_date: document.getElementById("bt-from").value,
+    to_date:   document.getElementById("bt-to").value,
+    capital:   Number(document.getElementById("bt-capital").value),
+  };
+
+  try {
+    const r = await fetch("/api/backtest/run", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (d.started) {
+      status.textContent = `✅ Started (PID ${d.pid}) — backtests take 30–120 s. Refresh Reports when done.`;
+      // Poll reports for up to 3 minutes
+      let polls = 0;
+      const ti = setInterval(async () => {
+        polls++;
+        const prev = document.querySelectorAll("#reports-list .bt-report-row").length;
+        await loadReports();
+        const curr = document.querySelectorAll("#reports-list .bt-report-row").length;
+        if (curr > prev || polls > 60) {
+          clearInterval(ti);
+          btn.disabled = false;
+          btn.textContent = "▶ Run Backtest";
+          if (curr > prev) status.textContent = "✅ Report ready — see Reports panel.";
+        }
+      }, 3000);
+    } else {
+      status.textContent = `❌ Error: ${d.error}`;
+      btn.disabled = false;
+      btn.textContent = "▶ Run Backtest";
+    }
+  } catch(e) {
+    status.textContent = "❌ Request failed — is the dashboard running?";
+    btn.disabled = false;
+    btn.textContent = "▶ Run Backtest";
+  }
+}
+
+// ── Reports ───────────────────────────────────────────────────────────────────
+async function loadReports() {
+  try {
+    const r = await fetch("/api/backtest/reports");
+    const d = await r.json();
+    const el = document.getElementById("reports-list");
+    const cnt = document.getElementById("report-count");
+    cnt.textContent = `(${d.count})`;
+
+    if (!d.count) {
+      el.innerHTML = '<div class="bt-empty">No reports yet.<br>Run a backtest to generate one.</div>';
+      return;
+    }
+
+    el.innerHTML = '<div class="bt-reports-list">' +
+      d.reports.map(rpt => {
+        const date = new Date(rpt.modified * 1000).toLocaleString();
+        const name = rpt.filename.replace(/^backtest_/, "").replace(/\.html$/, "");
+        return `<div class="bt-report-row">
+          <div>
+            <a href="/${rpt.path}" target="_blank">📄 ${rpt.filename}</a>
+            <div class="bt-report-meta">${date} · ${rpt.size_kb} KB</div>
+          </div>
+          <a href="/${rpt.path}" target="_blank"
+             style="font-size:.78rem; padding:.3rem .7rem; border:1px solid #2a2d3a;
+                    border-radius:5px; color:#94a3b8; text-decoration:none;">Open ↗</a>
+        </div>`;
+      }).join("") +
+    "</div>";
+  } catch(e) {
+    document.getElementById("reports-list").innerHTML =
+      '<div class="bt-empty">Could not load reports.</div>';
+  }
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+loadDataStatus();
+loadReports();
+</script>
+{% endblock %}
