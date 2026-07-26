@@ -5,7 +5,7 @@ description: >-
   "continue", "next task", "implement next", or any similar instruction to
   advance the roadmap. Reads project status, finds the next task, builds the
   master prompt, and implements it — no manual prompt-filling required.
-enabled: true
+enabled: false
 ---
 
 # MT5 Next-Task Automation Skill
